@@ -1,4 +1,4 @@
-# DevCycle Feature Flag Cleanup Instructions
+# DevCycle SDK Installation Instructions
 
 Use this guide to install DevCycle SDK into a project.
 
