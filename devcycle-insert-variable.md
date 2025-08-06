@@ -1,4 +1,4 @@
-# DevCycle Feature Flag Cleanup Instructions
+# DevCycle Variable Creation Instructions
 
 Use this guide to insert a new DevCycle Feature Flag Variable into this project.
 
