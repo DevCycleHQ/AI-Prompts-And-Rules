@@ -46,14 +46,12 @@ See the [Typescript Schema](https://raw.githubusercontent.com/DevCycleHQ/js-sdks
 
 ## Setup Steps
 
-- [] Identify from the application what version of the DevCycle SDK that should be used: DevCycle Javascript Web SDK (`@devcycle/js-client-sdk`), or DevCycle React SDK (`@devcycle/react-client-sdk`), or DevCycle NextJS SDK (`@devcycle/nextjs-sdk`), or DevCycle NodeJS SDK (`@devcycle/nodejs-server-sdk`).
+- Identify from the application what version of the DevCycle SDK that should be used. For example: DevCycle Javascript Web SDK (`@devcycle/js-client-sdk`), or DevCycle React SDK (`@devcycle/react-client-sdk`), or DevCycle NextJS SDK (`@devcycle/nextjs-sdk`), or DevCycle NodeJS SDK (`@devcycle/nodejs-server-sdk`).
 
-- [] Add the DevCycle SDK to the package.json file.
+- Add the DevCycle SDK to the package.json file.
 
-- [] Install the DevCycle SDK into the codebase at the starting point of the application. The DevCycle SDK should be installed as early as possible in the application lifecycle. Setup the DevCycle SDK Client as a singleton that can be used throughout the application.
+- Use the DevCycle MCP if available to grab the relevant SDK Key(s) or prompt the user to provide them.
 
-- [] Identify from the user's prompt if they want a new feature flag added as well, and what the variable key, default value, and type (String, Boolean, Number, or Object) are and where the flag should be inserted in the codebase.
+- Install the DevCycle SDK into the codebase at the starting point of the application. The DevCycle SDK should be installed as early as possible in the application lifecycle. Setup the DevCycle SDK Client as a singleton that can be used throughout the application.
 
-- [] If required insert the new feature flag variable into the codebase at the location specified by the user. Refactor the code as needed, matching the style of the existing codebase. You should not need to create any new files.
-
-- [] Instruct the user to install the updated package using the package manager that is being used by the application.
+- Run any install commands for the relevant package manager, or instruct the user to install the updated package using the package manager that is being used by the application.
