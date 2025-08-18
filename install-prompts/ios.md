@@ -3,11 +3,13 @@
 You are helping to install and configure the DevCycle iOS SDK in an iOS application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **IMPORTANT: First detect which language and package manager the project uses:**
+
 - Check if the project uses Swift or Objective-C
 - Identify the package manager: Swift Package Manager (Package.swift or Xcode packages), CocoaPods (Podfile), or Carthage (Cartfile)
 - Use the appropriate code examples based on the detected language
 
 **Do not use the SDK for:**
+
 - React Native apps (use `@devcycle/react-native-client-sdk` instead)
 - Flutter apps (use the Flutter SDK instead)
 - Web applications (use JavaScript/React/Angular SDKs instead)
@@ -18,6 +20,7 @@ If you detect that the user is trying to have you install the iOS SDK in an appl
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] iOS 12.0+ / macOS 10.13+ / tvOS 12.0+ / watchOS 7.0+
@@ -35,6 +38,7 @@ Choose the installation method based on the detected package manager:
 #### Swift Package Manager (Recommended)
 
 **In Package.swift:**
+
 ```swift
 dependencies: [
     .package(url: "https://github.com/DevCycleHQ/ios-client-sdk.git", .upToNextMajor(from: "1.19.0"))
@@ -48,6 +52,7 @@ targets: [
 ```
 
 **Or via Xcode:**
+
 1. File > Add Package Dependencies
 2. Enter: `https://github.com/DevCycleHQ/ios-client-sdk.git`
 3. Choose version rule: Up to Next Major Version
@@ -56,11 +61,13 @@ targets: [
 #### CocoaPods
 
 Add to your `Podfile`:
+
 ```ruby
 pod 'DevCycle'
 ```
 
 Then run:
+
 ```bash
 pod install
 ```
@@ -68,11 +75,13 @@ pod install
 #### Carthage
 
 Add to your `Cartfile`:
-```
+
+```text
 github "DevCycleHQ/ios-client-sdk"
 ```
 
 Then run:
+
 ```bash
 carthage update --platform iOS --use-xcframeworks
 ```
@@ -166,6 +175,7 @@ For Swift, you can pass the client instance through dependency injection or make
 ### 4. Store Your SDK Key Securely
 
 Instead of hardcoding the SDK key, consider using:
+
 - Xcode configuration files (.xcconfig)
 - Environment variables
 - Secure key management solutions
@@ -199,6 +209,7 @@ After installation, build and run your application to verify everything works wi
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Update the user object with real user data when available
 2. Create your first feature flag via the DevCycle MCP and use it in your app
 3. Learn how to use variables throughout your iOS application
@@ -216,6 +227,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

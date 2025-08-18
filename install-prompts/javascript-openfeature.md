@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for JavaScript web applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - React applications (use `javascript-openfeature.md` or `react-openfeature.md` instead)
 - Node.js server applications (use `nodejs-openfeature.md` instead)
 - Applications already using the DevCycle JavaScript SDK directly
@@ -10,6 +11,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for J
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
 - [ ] JavaScript application or website
@@ -174,6 +176,7 @@ After installation, run your application and verify everything works with no err
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create your first feature flag via the DevCycle MCP
 2. Set up event tracking for feature flag evaluations
 3. Implement proper error handling
@@ -190,6 +193,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

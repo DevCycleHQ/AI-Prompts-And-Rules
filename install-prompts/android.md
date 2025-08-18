@@ -3,12 +3,14 @@
 You are helping to install and configure the DevCycle Android SDK in an Android application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **IMPORTANT: First detect the project configuration:**
+
 - Check if the project uses Kotlin or Java
 - Identify the build system: Gradle (most common) or Maven
 - Check the minimum Android SDK version (requires API 21+)
 - Use the appropriate code examples based on the detected language
 
 **Do not use the SDK for:**
+
 - React Native apps (use `@devcycle/react-native-client-sdk` instead)
 - Flutter apps (use the Flutter SDK instead)
 - Web applications (use JavaScript/React/Angular SDKs instead)
@@ -19,6 +21,7 @@ If you detect that the user is trying to have you install the Android SDK in an 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] Android project with minimum API level 21 (Android 5.0)
@@ -34,6 +37,7 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 #### For Gradle (build.gradle or build.gradle.kts)
 
 **In your module-level build.gradle file:**
+
 ```groovy
 dependencies {
     implementation 'com.devcycle:android-client-sdk:2.+'
@@ -41,6 +45,7 @@ dependencies {
 ```
 
 **For Kotlin DSL (build.gradle.kts):**
+
 ```kotlin
 dependencies {
     implementation("com.devcycle:android-client-sdk:2.+")
@@ -72,6 +77,7 @@ Create or update your Application class:
 #### For Kotlin Projects
 
 **Application.kt:**
+
 ```kotlin
 import android.app.Application
 import com.devcycle.sdk.android.api.DVCClient
@@ -112,6 +118,7 @@ class MyApplication : Application() {
 #### For Java Projects
 
 **MyApplication.java:**
+
 ```java
 import android.app.Application;
 import com.devcycle.sdk.android.api.DVCClient;
@@ -170,6 +177,7 @@ In your `AndroidManifest.xml`, register your custom Application class:
 ### 5. Store Your SDK Key Securely
 
 Instead of hardcoding the SDK key, consider using:
+
 - BuildConfig fields
 - Android resource files
 - Secure key management solutions
@@ -205,6 +213,7 @@ After installation, build and run your application to verify everything works wi
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Update the user object with real user data when available
 2. Create your first feature flag via the DevCycle MCP and use it in your app
 3. Learn how to use variables throughout your Android application
@@ -222,6 +231,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

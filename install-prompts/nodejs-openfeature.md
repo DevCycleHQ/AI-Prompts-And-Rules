@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for Node.js server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - Client-side JavaScript applications (use `javascript-openfeature.md` instead)
 - React applications (use `react-openfeature.md` instead)
 - NestJS applications (consider NestJS-specific patterns)
@@ -10,6 +11,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for N
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] Node.js 14+ installed
@@ -218,6 +220,7 @@ NODE_ENV=development
 ```
 
 Load with dotenv:
+
 ```javascript
 require('dotenv').config();
 ```
@@ -253,6 +256,7 @@ After installation, run your Node.js application and verify everything works wit
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement evaluation context strategies
 3. Set up proper error handling and fallbacks
@@ -269,6 +273,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

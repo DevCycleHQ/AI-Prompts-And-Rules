@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for Ruby server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
 - Mobile applications (use iOS/Android SDKs instead)
@@ -10,6 +11,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for R
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] Ruby 2.7+ installed
@@ -31,11 +33,13 @@ gem 'devcycle-ruby-server-sdk-openfeature'
 ```
 
 Then run:
+
 ```bash
 bundle install
 ```
 
 Or install directly:
+
 ```bash
 gem install openfeature-sdk
 gem install devcycle-ruby-server-sdk
@@ -285,11 +289,13 @@ end
 Using dotenv for Rails/Ruby:
 
 Add to `Gemfile`:
+
 ```ruby
 gem 'dotenv-rails', groups: [:development, :test]
 ```
 
 Create `.env` file:
+
 ```bash
 # .env
 DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
@@ -297,17 +303,20 @@ RAILS_ENV=development
 ```
 
 Using Rails credentials:
+
 ```bash
 rails credentials:edit
 ```
 
 Add:
+
 ```yaml
 devcycle:
   server_sdk_key: your_server_sdk_key_here
 ```
 
 Then update initialization:
+
 ```ruby
 sdk_key = Rails.application.credentials.devcycle[:server_sdk_key] ||
           ENV['DEVCYCLE_SERVER_SDK_KEY']
@@ -344,6 +353,7 @@ After installation, run your Ruby application and verify everything works with n
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement evaluation context strategies
 3. Set up proper error handling and logging
@@ -360,6 +370,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

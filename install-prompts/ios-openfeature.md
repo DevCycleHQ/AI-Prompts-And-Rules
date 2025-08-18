@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for iOS applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - React Native apps (use React Native SDK instead)
 - Flutter apps (use Flutter SDK instead)
 - Web applications (use JavaScript/React SDKs instead)
@@ -10,6 +11,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for i
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] iOS 12.0+ / macOS 10.13+ / tvOS 12.0+ / watchOS 7.0+
@@ -34,6 +36,7 @@ dependencies: [
 ```
 
 Or via Xcode:
+
 1. File > Add Package Dependencies
 2. Add OpenFeature Swift SDK: `https://github.com/open-feature/swift-sdk.git`
 3. Add DevCycle iOS SDK: `https://github.com/DevCycleHQ/ios-client-sdk.git`
@@ -48,6 +51,7 @@ pod 'DevCycle'
 ```
 
 Then run:
+
 ```bash
 pod install
 ```
@@ -238,6 +242,7 @@ After installation, build and run your iOS application to verify everything work
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement feature flag-based UI logic
 3. Set up proper error handling
@@ -254,6 +259,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

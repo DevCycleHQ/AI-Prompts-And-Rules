@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle React Native SDK in a React Native application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - React web applications (use `@devcycle/react-client-sdk` instead)
 - Native iOS apps (use iOS SDK instead)
 - Native Android apps (use Android SDK instead)
@@ -14,6 +15,7 @@ If you detect that the user is trying to have you install the React Native SDK i
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] React Native 0.64+ installed
@@ -45,6 +47,7 @@ cd ios && pod install
 ```
 
 **Note:** Ensure your iOS deployment target is set to iOS 12.0 or higher in your `Podfile`:
+
 ```ruby
 platform :ios, '12.0'
 ```
@@ -54,6 +57,7 @@ platform :ios, '12.0'
 No additional setup required for Android. The SDK automatically configures itself during the build process.
 
 **Note:** Ensure your minimum SDK version is API 21 or higher in `android/build.gradle`:
+
 ```groovy
 minSdkVersion = 21
 ```
@@ -114,28 +118,31 @@ export default function App() {
 For better security, use environment variables:
 
 1. Install react-native-config:
-```bash
-npm install react-native-config
-```
+
+   ```bash
+   npm install react-native-config
+   ```
 
 2. Create `.env` files for different environments:
-```bash
-# .env.development
-DEVCYCLE_MOBILE_SDK_KEY=your_dev_mobile_sdk_key
 
-# .env.production
-DEVCYCLE_MOBILE_SDK_KEY=your_prod_mobile_sdk_key
-```
+   ```bash
+   # .env.development
+   DEVCYCLE_MOBILE_SDK_KEY=your_dev_mobile_sdk_key
+
+   # .env.production
+   DEVCYCLE_MOBILE_SDK_KEY=your_prod_mobile_sdk_key
+   ```
 
 3. Use in your code:
-```javascript
-import Config from 'react-native-config'
 
-export default withDevCycleProvider({
-  sdkKey: Config.DEVCYCLE_MOBILE_SDK_KEY,
-  user: { user_id: 'default-user' }
-})(App)
-```
+    ```javascript
+    import Config from 'react-native-config'
+
+    export default withDevCycleProvider({
+      sdkKey: Config.DEVCYCLE_MOBILE_SDK_KEY,
+      user: { user_id: 'default-user' }
+    })(App)
+    ```
 
 After installation, rebuild your application for both platforms and verify everything runs with no errors.
 
@@ -172,6 +179,7 @@ After installation, rebuild your application for both platforms and verify every
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Update the user object with real user data when users log in
 2. Create your first feature flag via the DevCycle MCP and use it in your app
 3. Learn how to use feature flags with React Native hooks
@@ -189,6 +197,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

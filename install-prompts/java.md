@@ -3,11 +3,13 @@
 You are helping to install and configure the DevCycle Java SDK in a Java server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **IMPORTANT: First detect the project configuration:**
+
 - Check the build system: Maven (pom.xml) or Gradle (build.gradle)
 - Identify the framework: Spring Boot, Micronaut, Quarkus, or plain Java
 - Check Java version (requires Java 8+)
 
 **Do not use the SDK for:**
+
 - Android applications (use Android SDK instead)
 - Client-side applications (use appropriate client SDKs instead)
 - Kotlin-only projects (while compatible, consider Kotlin-specific patterns)
@@ -17,6 +19,7 @@ If you detect that the user is trying to have you install the Java SDK in an app
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] Java 8+ installed
@@ -155,10 +158,14 @@ public class DevCycleSpringConfig {
 
 Add to `application.properties` or `application.yml`:
 
+**application.properties:**
+
 ```properties
 # application.properties
 devcycle.server.sdk.key=${DEVCYCLE_SERVER_SDK_KEY:your_default_key_here}
 ```
+
+**application.yml:**
 
 ```yaml
 # application.yml
@@ -258,6 +265,7 @@ After installation, build and run your Java application to verify everything wor
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Set up user identification logic for your application
 2. Create your first feature flag via the DevCycle MCP and use it in your services
 3. Implement proper error handling for feature flag evaluations
@@ -275,6 +283,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

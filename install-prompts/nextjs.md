@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle Next.js SDK in a Next.js application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - React applications without Next.js (use `@devcycle/react-client-sdk` instead)
 - Plain JavaScript/TypeScript web apps (use `@devcycle/js-client-sdk` instead)
 - React Native mobile apps (use `@devcycle/react-native-client-sdk`)
@@ -13,6 +14,7 @@ If you detect that the user is trying to have you install the Next.js SDK in an 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
@@ -49,6 +51,7 @@ If using TypeScript with App Router, ensure your `tsconfig.json` includes:
 ```
 
 Required minimum versions for TypeScript:
+
 - TypeScript: 5.1.3+
 - @types/react: 18.2.8+
 
@@ -114,7 +117,7 @@ NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
 
 **Important:** The client SDK key MUST be prefixed with `NEXT_PUBLIC_` to be available in browser code.
 
-## Setup for Pages Router (Legacy)
+## Setup for Pages Router
 
 ### 3. Wrap Your App Component
 
@@ -161,7 +164,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 }
 ```
 
-### 5. Set Environment Variables
+### 6. Set Environment Variables
 
 Create or update your `.env.local` file:
 
@@ -198,6 +201,7 @@ After installation, restart your development server and verify everything runs w
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Customize the `getUserIdentity` function to fetch real user data
 2. Create your first feature flag via the DevCycle MCP and use it in your components
 3. Learn how to use variables in both server and client components
@@ -214,6 +218,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard
