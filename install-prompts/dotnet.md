@@ -3,11 +3,13 @@
 You are helping to install and configure the DevCycle .NET SDK in a .NET server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **IMPORTANT: First detect the project configuration:**
+
 - Check the .NET version (.NET Core 3.1+ or .NET 5+)
 - Identify the project type: ASP.NET Core, Console App, or other
 - Check the package manager: NuGet Package Manager, .NET CLI, or PackageReference
 
 **Do not use the SDK for:**
+
 - Client-side Blazor WebAssembly (use appropriate client SDK approach)
 - Unity games (consider Unity-specific patterns)
 - Mobile applications (use iOS/Android SDKs instead)
@@ -17,6 +19,7 @@ If you detect that the user is trying to have you install the .NET SDK in an app
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] .NET Core 3.1+ or .NET 5+ installed
@@ -307,9 +310,13 @@ After installation, build and run your .NET application to verify everything wor
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Set up user identification logic for your application
+
 2. Create your first feature flag via the DevCycle MCP and use it in your controllers
+
 3. Implement proper error handling and logging
+
 4. Set up targeting rules for different user segments
 
 ## Helpful Resources
@@ -324,7 +331,11 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
+
 2. Review the troubleshooting section above
+
 3. Contact DevCycle support through the dashboard
+
 4. Check the GitHub repository for known issues

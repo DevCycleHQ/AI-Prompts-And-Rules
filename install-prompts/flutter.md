@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle Flutter SDK in a Flutter application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - React Native apps (use `@devcycle/react-native-client-sdk` instead)
 - Native iOS apps (use iOS SDK instead)
 - Native Android apps (use Android SDK instead)
@@ -13,6 +14,7 @@ If you detect that the user is trying to have you install the Flutter SDK in an 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] Flutter 2.0+ and Dart 2.12+ installed
@@ -33,6 +35,7 @@ dependencies:
 ```
 
 Then run:
+
 ```bash
 flutter pub get
 ```
@@ -44,6 +47,7 @@ flutter pub get
 No additional configuration required. The SDK automatically configures itself during the build process.
 
 **Note:** Ensure your iOS deployment target is set to iOS 11.0 or higher in `ios/Podfile`:
+
 ```ruby
 platform :ios, '11.0'
 ```
@@ -53,6 +57,7 @@ platform :ios, '11.0'
 No additional configuration required. The SDK automatically configures itself during the build process.
 
 **Note:** Ensure your minimum SDK version is API 21 or higher in `android/app/build.gradle`:
+
 ```groovy
 minSdkVersion 21
 ```
@@ -155,17 +160,18 @@ void main() async {
 For better security, use different configurations for different environments:
 
 1. Create environment configuration files:
-```dart
-// lib/config/dev_config.dart
-class DevConfig {
-  static const String devcycleSdkKey = 'your_dev_mobile_sdk_key';
-}
 
-// lib/config/prod_config.dart
-class ProdConfig {
-  static const String devcycleSdkKey = 'your_prod_mobile_sdk_key';
-}
-```
+    ```dart
+    // lib/config/dev_config.dart
+    class DevConfig {
+      static const String devcycleSdkKey = 'your_dev_mobile_sdk_key';
+    }
+
+    // lib/config/prod_config.dart
+    class ProdConfig {
+      static const String devcycleSdkKey = 'your_prod_mobile_sdk_key';
+    }
+    ```
 
 2. Use compile-time environment variables or build flavors to select the appropriate configuration.
 
@@ -199,6 +205,7 @@ After installation, run your application on both iOS and Android to verify every
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Update the user object with real user data when available
 2. Create your first feature flag via the DevCycle MCP and use it in your app
 3. Learn how to use variables in your Flutter widgets
@@ -216,6 +223,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

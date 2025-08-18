@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for Android applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - React Native apps (use React Native SDK instead)
 - Flutter apps (use Flutter SDK instead)
 - Web applications (use JavaScript/React SDKs instead)
@@ -11,6 +12,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for A
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] Android project with minimum API level 21 (Android 5.0)
@@ -26,6 +28,7 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 #### For Gradle (build.gradle or build.gradle.kts)
 
 **In your module-level build.gradle file:**
+
 ```groovy
 dependencies {
     implementation 'dev.openfeature:android-sdk:0.2.0'
@@ -35,6 +38,7 @@ dependencies {
 ```
 
 **For Kotlin DSL (build.gradle.kts):**
+
 ```kotlin
 dependencies {
     implementation("dev.openfeature:android-sdk:0.2.0")
@@ -58,6 +62,7 @@ Create or update your Application class:
 #### For Kotlin Projects
 
 **Application.kt:**
+
 ```kotlin
 import android.app.Application
 import dev.openfeature.sdk.OpenFeatureAPI
@@ -110,6 +115,7 @@ class MyApplication : Application() {
 #### For Java Projects
 
 **MyApplication.java:**
+
 ```java
 import android.app.Application;
 import dev.openfeature.sdk.OpenFeatureAPI;
@@ -286,6 +292,7 @@ After installation, build and run your Android application to verify everything 
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement feature flag-based UI logic
 3. Set up proper error handling
@@ -302,6 +309,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

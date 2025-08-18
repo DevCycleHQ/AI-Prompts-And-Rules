@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for React applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - Next.js applications (use Next.js SDK instead)
 - React Native apps (use React Native SDK instead)
 - Non-React JavaScript applications (use `javascript-openfeature.md` instead)
@@ -11,6 +12,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for R
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
 - [ ] React 16.8+ installed (hooks support required)
@@ -243,6 +245,7 @@ After installation, run your React application and verify everything works with 
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create your first feature flag via the DevCycle MCP
 2. Implement feature flag-based routing
 3. Set up error boundaries for feature components
@@ -259,6 +262,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

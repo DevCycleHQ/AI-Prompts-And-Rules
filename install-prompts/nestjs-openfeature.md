@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for NestJS server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - Plain Node.js applications (use `nodejs-openfeature.md` instead)
 - Client-side applications (use appropriate client SDKs instead)
 - Express applications without NestJS (use Node.js OpenFeature instead)
@@ -10,6 +11,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for N
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] NestJS 8+ installed
@@ -401,6 +403,7 @@ After installation, run your NestJS application and verify everything works with
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement guards for feature-based route protection
 3. Set up evaluation context strategies
@@ -418,6 +421,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

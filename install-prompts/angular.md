@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle Angular SDK in an Angular application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - React applications (use `@devcycle/react-client-sdk` instead)
 - Next.js applications (use `@devcycle/nextjs-sdk` instead)
 - Plain JavaScript/TypeScript web apps (use `@devcycle/js-client-sdk` instead)
@@ -14,6 +15,7 @@ If you detect that the user is trying to have you install the Angular SDK in an 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
 - [ ] Angular application (Angular 12+)
@@ -80,6 +82,7 @@ export class AppModule { }
 Create or update your environment files to store the SDK key:
 
 In `src/environments/environment.ts`:
+
 ```typescript
 export const environment = {
   production: false,
@@ -88,6 +91,7 @@ export const environment = {
 ```
 
 In `src/environments/environment.prod.ts`:
+
 ```typescript
 export const environment = {
   production: true,
@@ -96,6 +100,7 @@ export const environment = {
 ```
 
 Then update your module to use the environment variable:
+
 ```typescript
 import { environment } from '../environments/environment'
 
@@ -132,6 +137,7 @@ After installation, run your Angular application and verify everything runs with
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Update the user context with real user data when users log in
 2. Create your first feature flag via the DevCycle MCP and use it in your components
 3. Learn how to use feature flags in your Angular components
@@ -149,6 +155,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

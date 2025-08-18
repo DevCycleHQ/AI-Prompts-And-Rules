@@ -3,12 +3,14 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for Go server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - Client-side applications (use appropriate client SDKs instead)
 - Applications already using the DevCycle Go SDK directly
 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] Go 1.19+ installed
@@ -299,6 +301,7 @@ GO_ENV=development
 ```
 
 Load with godotenv:
+
 ```bash
 go get github.com/joho/godotenv
 ```
@@ -338,6 +341,7 @@ After installation, run your Go application and verify everything works with no 
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement evaluation context strategies
 3. Set up proper error handling and fallbacks
@@ -354,6 +358,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

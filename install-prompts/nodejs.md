@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle Node.js SDK in a Node.js server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - Client-side JavaScript applications (use `@devcycle/js-client-sdk` instead)
 - React applications (use `@devcycle/react-client-sdk` instead)
 - Next.js applications (use `@devcycle/nextjs-sdk` instead)
@@ -13,6 +14,7 @@ If you detect that the user is trying to have you install the Node.js SDK in an 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] Node.js 12+ installed
@@ -166,11 +168,13 @@ NODE_ENV=development
 ```
 
 Install dotenv if not already installed:
+
 ```bash
 npm install --save dotenv
 ```
 
 Load environment variables at the top of your main file:
+
 ```javascript
 require('dotenv').config()
 ```
@@ -206,6 +210,7 @@ After installation, run your Node.js application and verify everything works wit
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Set up user identification logic for your application
 2. Create your first feature flag via the DevCycle MCP and use it in your routes
 3. Implement proper error handling for feature flag evaluations
@@ -223,6 +228,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

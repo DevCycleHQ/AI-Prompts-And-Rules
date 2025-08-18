@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle JavaScript SDK in a web application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - React applications (use `@devcycle/react-client-sdk` instead)
 - Next.js applications (use `@devcycle/nextjs-sdk` instead)
 - Angular applications (use `@devcycle/angular-client-sdk` instead)
@@ -14,6 +15,7 @@ If you detect that the user is trying to have you install the JavaScript SDK in 
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
 - [ ] A JavaScript application or website
@@ -134,6 +136,7 @@ After installation, verify everything runs with no errors.
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create your first feature flag via the DevCycle MCP and wrap your code in its Variable
 2. Set up targeting rules for different user segments
 3. Implement proper error handling around feature flag evaluations
@@ -150,6 +153,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

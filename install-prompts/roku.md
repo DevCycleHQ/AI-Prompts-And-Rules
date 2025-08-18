@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle Roku SDK in a Roku channel application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use the SDK for:**
+
 - Web applications (use JavaScript/React SDKs instead)
 - Mobile applications (use iOS/Android/React Native/Flutter SDKs instead)
 - Smart TV platforms other than Roku (use appropriate platform SDKs)
@@ -12,6 +13,7 @@ If you detect that the user is trying to have you install the Roku SDK in an app
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] Roku development environment set up
@@ -30,7 +32,7 @@ Download the latest DevCycle Roku SDK from the GitHub releases or package reposi
 
 Copy the DevCycle SDK files to your Roku project's source directory:
 
-```
+```text
 your-roku-project/
 ├── source/
 │   ├── devcycle/
@@ -110,7 +112,7 @@ Create a DevCycle component file (`components/DevCycleClient.xml`):
 
 Ensure your `manifest` file includes necessary permissions:
 
-```
+```text
 title=Your Channel Name
 major_version=1
 minor_version=0
@@ -171,6 +173,7 @@ After installation, deploy your channel to a Roku device and verify everything r
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Update the user object with real user data when available
 2. Create your first feature flag via the DevCycle MCP and use it in your channel
 3. Learn how to use variables throughout your Roku application
@@ -188,6 +191,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

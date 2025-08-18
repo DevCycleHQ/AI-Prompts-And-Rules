@@ -3,11 +3,13 @@
 You are helping to install and configure the DevCycle PHP SDK in a PHP server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **IMPORTANT: First detect the project configuration:**
+
 - Check if using Composer for dependency management
 - Identify the framework: Laravel, Symfony, Slim, or plain PHP
 - Check PHP version (requires PHP 7.4+)
 
 **Do not use the SDK for:**
+
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
 - Mobile applications (use iOS/Android SDKs instead)
@@ -17,6 +19,7 @@ If you detect that the user is trying to have you install the PHP SDK in an appl
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] PHP 7.4+ installed
@@ -263,6 +266,7 @@ APP_ENV=development
 ```
 
 For plain PHP, install phpdotenv if needed:
+
 ```bash
 composer require vlucas/phpdotenv
 ```
@@ -298,6 +302,7 @@ After installation, run your PHP application and verify everything works with no
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Set up user identification logic for your application
 2. Create your first feature flag via the DevCycle MCP and use it in your controllers
 3. Implement proper error handling for feature flag evaluations
@@ -315,6 +320,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard

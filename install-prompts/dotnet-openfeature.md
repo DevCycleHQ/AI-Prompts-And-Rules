@@ -3,6 +3,7 @@
 You are helping to install and configure the DevCycle OpenFeature Provider for .NET server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
 
 **Do not use this for:**
+
 - Client-side Blazor WebAssembly (use appropriate client SDK approach)
 - Unity games (consider Unity-specific patterns)
 - Mobile applications (use iOS/Android SDKs instead)
@@ -10,6 +11,7 @@ You are helping to install and configure the DevCycle OpenFeature Provider for .
 ## Required Information
 
 Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] .NET Core 3.1+ or .NET 5+ installed
@@ -337,6 +339,7 @@ After installation, build and run your .NET application to verify everything wor
 Suggest these as next steps to the user.
 
 After successful installation:
+
 1. Create feature flags via the DevCycle MCP
 2. Implement evaluation context strategies
 3. Set up proper error handling and logging
@@ -353,6 +356,7 @@ After successful installation:
 ## Support
 
 If you encounter issues:
+
 1. Check the official documentation
 2. Review the troubleshooting section above
 3. Contact DevCycle support through the dashboard
