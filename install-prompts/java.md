@@ -28,6 +28,35 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Java backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration files.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create a configuration file** (application.properties or application.yml):
+
+   ```properties
+   # application.properties
+   devcycle.server.sdk.key=your_server_sdk_key_here
+   ```
+
+   Or use environment variables:
+
+   ```bash
+   export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with configuration files or environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up
+
+**Note:** Always prefer configuration files or environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Add DevCycle Java SDK Dependency
@@ -74,7 +103,7 @@ public class DevCycleConfig {
     private static final Logger logger = LoggerFactory.getLogger(DevCycleConfig.class);
     private static DevCycleLocalClient client;
     private static final Object lock = new Object();
-    
+
     public static DevCycleLocalClient getInstance() {
         if (client == null) {
             synchronized (lock) {
@@ -85,13 +114,13 @@ public class DevCycleConfig {
         }
         return client;
     }
-    
+
     private static void initializeClient() {
         String sdkKey = System.getenv("DEVCYCLE_SERVER_SDK_KEY");
         if (sdkKey == null || sdkKey.isEmpty()) {
             sdkKey = "<DEVCYCLE_SERVER_SDK_KEY>"; // Replace with your server SDK key
         }
-        
+
         try {
             client = new DevCycleLocalClient(sdkKey);
             logger.info("DevCycle initialized successfully");
@@ -100,7 +129,7 @@ public class DevCycleConfig {
             throw new RuntimeException("DevCycle initialization failed", e);
         }
     }
-    
+
     public static void shutdown() {
         if (client != null) {
             try {
@@ -131,22 +160,22 @@ import javax.annotation.PreDestroy;
 
 @Configuration
 public class DevCycleSpringConfig {
-    
+
     @Value("${devcycle.server.sdk.key:#{environment.DEVCYCLE_SERVER_SDK_KEY}}")
     private String sdkKey;
-    
+
     private DevCycleLocalClient client;
-    
+
     @Bean
     public DevCycleLocalClient devCycleClient() {
         if (sdkKey == null || sdkKey.isEmpty()) {
             throw new IllegalStateException("DevCycle SDK key is not configured");
         }
-        
+
         client = new DevCycleLocalClient(sdkKey);
         return client;
     }
-    
+
     @PreDestroy
     public void cleanup() {
         if (client != null) {
@@ -190,10 +219,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FeatureService {
-    
+
     @Autowired
     private DevCycleLocalClient devCycleClient;
-    
+
     public boolean isFeatureEnabled(String userId, String userEmail) {
         // Create user object
         DevCycleUser user = DevCycleUser.builder()
@@ -204,7 +233,7 @@ public class FeatureService {
                 "role", "admin"
             ))
             .build();
-        
+
         // Check feature flag value
         Variable<Boolean> variable = devCycleClient.variable(user, "feature-key", false);
         return variable.getValue();
@@ -218,17 +247,17 @@ Example REST controller:
 @RestController
 @RequestMapping("/api")
 public class FeatureController {
-    
+
     @Autowired
     private FeatureService featureService;
-    
+
     @GetMapping("/feature")
     public ResponseEntity<?> checkFeature(@RequestHeader(value = "X-User-Id", defaultValue = "anonymous") String userId) {
         boolean enabled = featureService.isFeatureEnabled(userId, null);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("featureEnabled", enabled);
-        
+
         return ResponseEntity.ok(response);
     }
 }
@@ -241,16 +270,19 @@ After installation, build and run your Java application to verify everything wor
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure the client is properly initialized on application startup
    - Check that your SDK key is correctly set (server SDK key)
    - Verify Spring beans are properly configured if using Spring
 
 2. **Dependency resolution errors:**
+
    - Run `mvn clean install` or `gradle clean build`
    - Check for version conflicts with other dependencies
    - Ensure repository access for DevCycle artifacts
 
 3. **Environment variable not found:**
+
    - Ensure environment variables are set before starting the application
    - Check Spring property resolution if using Spring Boot
    - Verify the SDK key environment variable name matches
@@ -267,9 +299,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your services
-3. Implement proper error handling for feature flag evaluations
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. Implement proper error handling for feature flag evaluations if needed
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

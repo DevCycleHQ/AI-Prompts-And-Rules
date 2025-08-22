@@ -20,6 +20,34 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for .NET backend applications. Never expose server keys to client-side code. Store keys in appsettings.json, environment variables, or Azure Key Vault.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to add the SDK key to appsettings.json or appsettings.Development.json**:
+
+   ```json
+   {
+     "DevCycle": {
+       "ServerSdkKey": "your_server_sdk_key_here"
+     }
+   }
+   ```
+
+   Or use environment variables or user secrets for development.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with configuration files
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up
+
+**Note:** Always prefer configuration files, user secrets, or Azure Key Vault over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -72,19 +100,19 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var sdkKey = configuration["DevCycle:ServerSdkKey"] 
+    var sdkKey = configuration["DevCycle:ServerSdkKey"]
         ?? Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY")
         ?? throw new InvalidOperationException("DevCycle SDK key is not configured");
-    
+
     // Initialize DevCycle client
     var devCycleClient = new DevCycleLocalClient(sdkKey);
-    
+
     // Create DevCycle provider
     var provider = new DevCycleProvider(devCycleClient);
-    
+
     // Set the provider for OpenFeature
     Api.Instance.SetProviderAsync(provider).GetAwaiter().GetResult();
-    
+
     // Return the OpenFeature client
     return Api.Instance.GetClient();
 });
@@ -122,27 +150,27 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
-        
+
         // Configure OpenFeature with DevCycle
         services.AddSingleton(serviceProvider =>
         {
-            var sdkKey = Configuration["DevCycle:ServerSdkKey"] 
+            var sdkKey = Configuration["DevCycle:ServerSdkKey"]
                 ?? Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY");
-                
+
             if (string.IsNullOrEmpty(sdkKey))
             {
                 throw new InvalidOperationException("DevCycle SDK key is not configured");
             }
-            
+
             // Initialize DevCycle client
             var devCycleClient = new DevCycleLocalClient(sdkKey);
-            
+
             // Create DevCycle provider
             var provider = new DevCycleProvider(devCycleClient);
-            
+
             // Set the provider
             Api.Instance.SetProviderAsync(provider).GetAwaiter().GetResult();
-            
+
             return Api.Instance.GetClient();
         });
     }
@@ -295,14 +323,14 @@ public class FeaturesController : ControllerBase
     public async Task<IActionResult> CheckFeature(string featureKey)
     {
         var userId = User.Identity?.Name ?? "anonymous";
-        
+
         var context = EvaluationContext.Builder()
             .Set("targetingKey", userId)
             .Set("email", User.Claims.FirstOrDefault(c => c.Type == "email")?.Value)
             .Build();
-        
+
         var isEnabled = await _openFeatureClient.GetBooleanValueAsync(featureKey, false, context);
-        
+
         return Ok(new { featureEnabled = isEnabled, userId });
     }
 }
@@ -315,16 +343,19 @@ After installation, build and run your .NET application to verify everything wor
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure Api.Instance.SetProviderAsync() completes
    - Check that your SDK key is correctly set (server SDK key)
    - Verify dependency injection is configured properly
 
 2. **NuGet package installation errors:**
+
    - Clear NuGet cache: `dotnet nuget locals all --clear`
    - Update NuGet package sources
    - Check .NET version compatibility
 
 3. **Feature flags returning default values only:**
+
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
    - Verify feature flags are configured in DevCycle dashboard
@@ -340,10 +371,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement evaluation context strategies
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement evaluation context strategies
 3. Set up proper error handling and logging
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

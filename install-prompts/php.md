@@ -28,6 +28,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for PHP backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration files.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure the environment file is loaded in your application.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables or configuration files over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle PHP SDK
@@ -49,21 +74,21 @@ use DevCycle\Model\DevCycleUser;
 
 class DevCycleConfig {
     private static ?DevCycleClient $client = null;
-    
+
     public static function getClient(): DevCycleClient {
         if (self::$client === null) {
             self::initialize();
         }
         return self::$client;
     }
-    
+
     private static function initialize(): void {
         $sdkKey = $_ENV['DEVCYCLE_SERVER_SDK_KEY'] ?? '<DEVCYCLE_SERVER_SDK_KEY>';
-        
+
         if (empty($sdkKey)) {
             throw new \RuntimeException('DevCycle SDK key is not configured');
         }
-        
+
         try {
             self::$client = new DevCycleClient($sdkKey);
             error_log('DevCycle initialized successfully');
@@ -72,7 +97,7 @@ class DevCycleConfig {
             throw $e;
         }
     }
-    
+
     public static function shutdown(): void {
         if (self::$client !== null) {
             self::$client->close();
@@ -101,15 +126,15 @@ class DevCycleServiceProvider extends ServiceProvider
     {
         $this->app->singleton(DevCycleClient::class, function ($app) {
             $sdkKey = config('services.devcycle.server_sdk_key');
-            
+
             if (empty($sdkKey)) {
                 throw new \RuntimeException('DevCycle SDK key is not configured');
             }
-            
+
             return new DevCycleClient($sdkKey);
         });
     }
-    
+
     public function boot()
     {
         // Optional: Close client on application shutdown
@@ -146,10 +171,10 @@ Create a service configuration:
 ```yaml
 # config/services.yaml
 services:
-    DevCycle\Sdk\DevCycleClient:
-        arguments:
-            - '%env(DEVCYCLE_SERVER_SDK_KEY)%'
-        public: true
+  DevCycle\Sdk\DevCycleClient:
+    arguments:
+      - "%env(DEVCYCLE_SERVER_SDK_KEY)%"
+    public: true
 ```
 
 #### For Plain PHP Applications
@@ -186,11 +211,11 @@ use DevCycle\Model\DevCycleUser;
 
 class FeatureService {
     private $devcycleClient;
-    
+
     public function __construct($devcycleClient) {
         $this->devcycleClient = $devcycleClient;
     }
-    
+
     public function isFeatureEnabled($userId, $email = null) {
         // Create user object
         $user = new DevCycleUser([
@@ -201,14 +226,14 @@ class FeatureService {
                 'role' => 'admin'
             ]
         ]);
-        
+
         // Check feature flag value
         $variable = $this->devcycleClient->variableValue(
             $user,
             'feature-key',
             false // default value
         );
-        
+
         return $variable;
     }
 }
@@ -227,27 +252,27 @@ use DevCycle\Model\DevCycleUser;
 class FeatureController extends Controller
 {
     private $devcycleClient;
-    
+
     public function __construct(DevCycleClient $devcycleClient)
     {
         $this->devcycleClient = $devcycleClient;
     }
-    
+
     public function checkFeature(Request $request)
     {
         $userId = $request->user()->id ?? 'anonymous';
-        
+
         $user = new DevCycleUser([
             'user_id' => $userId,
             'email' => $request->user()->email ?? null
         ]);
-        
+
         $featureEnabled = $this->devcycleClient->variableValue(
             $user,
             'feature-key',
             false
         );
-        
+
         return response()->json([
             'featureEnabled' => $featureEnabled
         ]);
@@ -278,16 +303,19 @@ After installation, run your PHP application and verify everything works with no
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure the client is properly initialized on application startup
    - Check that your SDK key is correctly set (server SDK key)
    - Verify service provider is registered if using Laravel
 
 2. **Composer installation errors:**
+
    - Run `composer update` to update dependencies
    - Check PHP version compatibility (7.4+)
    - Clear Composer cache: `composer clear-cache`
 
 3. **Environment variable not found:**
+
    - Ensure `.env` file is in the project root
    - Check that phpdotenv is configured if using it
    - Verify the SDK key environment variable name matches
@@ -304,9 +332,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your controllers
-3. Implement proper error handling for feature flag evaluations
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. Implement proper error handling for feature flag evaluations if needed
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

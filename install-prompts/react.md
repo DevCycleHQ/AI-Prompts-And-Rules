@@ -22,6 +22,29 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a CLIENT SDK key for React apps, not a server SDK key. Store it in environment variables like `REACT_APP_DEVCYCLE_CLIENT_SDK_KEY`.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env or .env.local) in the project root:
+
+   ```bash
+   # .env or .env.local
+   REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
+   ```
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle React SDK
@@ -42,8 +65,8 @@ pnpm add @devcycle/react-client-sdk
 Add the DevCycle provider to your root App component. This should be done as early as possible in your application initialization:
 
 ```javascript
-import React from 'react'
-import { withDevCycleProvider } from '@devcycle/react-client-sdk'
+import React from "react";
+import { withDevCycleProvider } from "@devcycle/react-client-sdk";
 
 function App() {
   return (
@@ -51,17 +74,17 @@ function App() {
       <h1>My React App</h1>
       {/* Your app components here */}
     </div>
-  )
+  );
 }
 
 export default withDevCycleProvider({
   sdkKey: process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY,
-  user: { 
-    user_id: 'example-user',  // Required: unique identifier
-    email: 'user@example.com',  // Optional: for better targeting
+  user: {
+    user_id: "example-user", // Required: unique identifier
+    email: "user@example.com", // Optional: for better targeting
     isAnonymous: false, // Recommended to be explicit on whether or not to use an Anonymous ID
-  }
-})(App)
+  },
+})(App);
 ```
 
 After installation, verify everything runs with no errors.
@@ -71,6 +94,7 @@ After installation, verify everything runs with no errors.
 **Common Issues:**
 
 1. **"DevCycle is not initialized" error:**
+
    - Ensure the provider wraps your entire app
    - Check that your SDK key is correctly set in environment variables
    - Verify you're using a CLIENT SDK key, not a server key
@@ -84,9 +108,9 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create your first feature flag via the DevCycle MCP and wrap your code in its Variable
-2. Set up targeting rules for different user segments
-3. Implement proper error boundaries around feature-flagged components
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help set up targeting rules for different user segments
+3. Implement proper error boundaries around feature-flagged components if needed
 
 ## Helpful Resources
 

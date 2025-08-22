@@ -20,6 +20,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Python backend applications. Never expose server keys to client-side code. Store keys in environment variables.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure python-dotenv is configured if not already present.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -50,30 +75,30 @@ openfeature_client: OpenFeatureClient = None
 def init_openfeature():
     """Initialize OpenFeature with DevCycle provider."""
     global openfeature_client
-    
+
     if openfeature_client is not None:
         return openfeature_client
-    
+
     sdk_key = os.environ.get('DEVCYCLE_SERVER_SDK_KEY')
     if not sdk_key:
         raise ValueError("DEVCYCLE_SERVER_SDK_KEY environment variable is not set")
-    
+
     try:
         # Initialize DevCycle client
         devcycle_client = DevCycleLocalClient(sdk_key)
-        
+
         # Create DevCycle provider
         provider = DevCycleProvider(devcycle_client)
-        
+
         # Set the provider for OpenFeature
         api.set_provider(provider)
-        
+
         # Get OpenFeature client
         openfeature_client = api.get_client()
-        
+
         print("OpenFeature with DevCycle initialized successfully")
         return openfeature_client
-    
+
     except Exception as e:
         print(f"Failed to initialize OpenFeature: {e}")
         raise
@@ -104,7 +129,7 @@ def initialize_services():
 @app.route('/api/feature/<feature_key>')
 def check_feature(feature_key):
     client = get_openfeature_client()
-    
+
     # Create evaluation context
     user_id = request.headers.get('X-User-Id', 'anonymous')
     context = EvaluationContext(
@@ -115,14 +140,14 @@ def check_feature(feature_key):
             'role': 'admin'
         }
     )
-    
+
     # Get feature flag value
     feature_enabled = client.get_boolean_value(
         flag_key=feature_key,
         default_value=False,
         evaluation_context=context
     )
-    
+
     return jsonify({
         'feature_key': feature_key,
         'enabled': feature_enabled,
@@ -146,7 +171,7 @@ from openfeature_config import init_openfeature
 class MyAppConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'myapp'
-    
+
     def ready(self):
         # Initialize OpenFeature when Django starts
         init_openfeature()
@@ -162,7 +187,7 @@ from openfeature.evaluation_context import EvaluationContext
 
 def check_feature(request, feature_key):
     client = get_openfeature_client()
-    
+
     # Create evaluation context
     user_id = request.user.id if request.user.is_authenticated else 'anonymous'
     context = EvaluationContext(
@@ -172,12 +197,12 @@ def check_feature(request, feature_key):
             'authenticated': request.user.is_authenticated
         }
     )
-    
+
     # Get different types of feature flags
     bool_value = client.get_boolean_value(feature_key, False, context)
     string_value = client.get_string_value(f"{feature_key}_text", "default", context)
     number_value = client.get_integer_value(f"{feature_key}_limit", 100, context)
-    
+
     return JsonResponse({
         'boolean': bool_value,
         'string': string_value,
@@ -209,7 +234,7 @@ async def check_feature(
     user_email: str = Header(default=None, alias="X-User-Email")
 ):
     client = get_openfeature_client()
-    
+
     # Create evaluation context
     context = EvaluationContext(
         targeting_key=user_id,
@@ -219,16 +244,16 @@ async def check_feature(
             'role': 'admin'
         }
     )
-    
+
     # Get feature flag values
     feature_enabled = client.get_boolean_value(feature_key, False, context)
     button_text = client.get_string_value(f"{feature_key}_text", "Click Here", context)
     rate_limit = client.get_integer_value(f"{feature_key}_limit", 100, context)
-    
+
     # Get object value
     default_config = {'theme': 'light', 'fontSize': 14}
     ui_config = client.get_object_value(f"{feature_key}_config", default_config, context)
-    
+
     return {
         "feature_enabled": feature_enabled,
         "button_text": button_text,
@@ -247,33 +272,33 @@ from typing import Any, Dict
 class FeatureService:
     def __init__(self):
         self.client = get_openfeature_client()
-    
+
     def is_feature_enabled_for_user(self, user_id: str, feature_key: str) -> bool:
         """Check if a feature is enabled for a specific user."""
         context = EvaluationContext(
             targeting_key=user_id,
             attributes={}
         )
-        
+
         return self.client.get_boolean_value(feature_key, False, context)
-    
+
     def get_config_for_user(self, user_id: str, config_key: str) -> Dict[str, Any]:
         """Get configuration object for a user."""
         context = EvaluationContext(
             targeting_key=user_id,
             attributes={}
         )
-        
+
         default_config = {'enabled': False}
         return self.client.get_object_value(config_key, default_config, context)
-    
+
     def get_all_flags_for_user(self, user_id: str, email: str = None) -> Dict[str, Any]:
         """Get all feature flag values for a user."""
         context = EvaluationContext(
             targeting_key=user_id,
             attributes={'email': email} if email else {}
         )
-        
+
         # Example of getting multiple flag values
         return {
             'new_feature': self.client.get_boolean_value('new-feature', False, context),
@@ -306,16 +331,19 @@ After installation, run your Python application and verify everything works with
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure `api.set_provider()` is called
    - Check that DevCycle client initializes successfully
    - Verify your SDK key is correct (server SDK key)
 
 2. **Import errors:**
+
    - Ensure all packages are installed: `pip list | grep -E "openfeature|devcycle"`
    - Check Python version compatibility (3.8+)
    - Verify virtual environment is activated if using one
 
 3. **Feature flags returning default values only:**
+
    - Confirm the provider is initialized before use
    - Check that evaluation context has targeting_key
    - Verify feature flags are configured in DevCycle dashboard
@@ -331,10 +359,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement evaluation context strategies
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement evaluation context strategies
 3. Set up proper error handling and logging
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

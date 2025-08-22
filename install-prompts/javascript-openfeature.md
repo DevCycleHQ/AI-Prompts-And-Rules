@@ -19,6 +19,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a CLIENT SDK key for JavaScript apps, not a server SDK key. Store it securely and avoid hardcoding in production.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root if using a build tool:
+
+   ```bash
+   # .env
+   DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
+   ```
+
+   Or set up in your build configuration.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables or build configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up
+
+**Note:** For production, consider using build-time environment variables or configuration files.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -37,24 +62,24 @@ pnpm add @openfeature/web-sdk @devcycle/openfeature-web-provider
 ### 2. Initialize OpenFeature with DevCycle Provider
 
 ```javascript
-import { OpenFeature } from '@openfeature/web-sdk';
-import { DevCycleProvider } from '@devcycle/openfeature-web-provider';
+import { OpenFeature } from "@openfeature/web-sdk";
+import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
 
 async function initializeFeatureFlags() {
   // Create the DevCycle provider
-  const devCycleProvider = new DevCycleProvider('<DEVCYCLE_CLIENT_SDK_KEY>'); // Replace with your client SDK key
-  
+  const devCycleProvider = new DevCycleProvider("<DEVCYCLE_CLIENT_SDK_KEY>"); // Replace with your client SDK key
+
   // Set user context
   await OpenFeature.setContext({
-    targetingKey: 'default-user', // Required: unique user identifier
-    email: 'user@example.com', // Optional: for better targeting
-    name: 'User Name' // Optional: additional user data
+    targetingKey: "default-user", // Required: unique user identifier
+    email: "user@example.com", // Optional: for better targeting
+    name: "User Name", // Optional: additional user data
   });
-  
+
   // Set DevCycle as the provider and wait for initialization
   await OpenFeature.setProviderAndWait(devCycleProvider);
-  
-  console.log('OpenFeature with DevCycle initialized successfully');
+
+  console.log("OpenFeature with DevCycle initialized successfully");
 }
 
 // Initialize on page load
@@ -64,41 +89,41 @@ initializeFeatureFlags().catch(console.error);
 ### 3. Using Feature Flags in Your Application
 
 ```javascript
-import { OpenFeature } from '@openfeature/web-sdk';
+import { OpenFeature } from "@openfeature/web-sdk";
 
 // Get the OpenFeature client
 const client = OpenFeature.getClient();
 
 // Check boolean feature flag
 async function checkFeature() {
-  const isEnabled = await client.getBooleanValue('new-feature', false);
-  
+  const isEnabled = await client.getBooleanValue("new-feature", false);
+
   if (isEnabled) {
-    console.log('New feature is enabled!');
+    console.log("New feature is enabled!");
     // Show new feature
   } else {
-    console.log('Using default experience');
+    console.log("Using default experience");
     // Show default experience
   }
 }
 
 // Get string value
 async function getStringConfig() {
-  const value = await client.getStringValue('button-text', 'Click Here');
-  document.getElementById('myButton').textContent = value;
+  const value = await client.getStringValue("button-text", "Click Here");
+  document.getElementById("myButton").textContent = value;
 }
 
 // Get number value
 async function getNumberConfig() {
-  const limit = await client.getNumberValue('api-rate-limit', 100);
+  const limit = await client.getNumberValue("api-rate-limit", 100);
   console.log(`Rate limit: ${limit}`);
 }
 
 // Get object/JSON value
 async function getObjectConfig() {
-  const config = await client.getObjectValue('ui-config', {
-    theme: 'light',
-    fontSize: 14
+  const config = await client.getObjectValue("ui-config", {
+    theme: "light",
+    fontSize: 14,
   });
   applyUIConfig(config);
 }
@@ -114,10 +139,10 @@ async function onUserLogin(userId, userEmail) {
     email: userEmail,
     authenticated: true,
     // Add any custom attributes for targeting
-    plan: 'premium',
-    role: 'admin'
+    plan: "premium",
+    role: "admin",
   });
-  
+
   // Feature flag values will automatically update
 }
 
@@ -125,7 +150,7 @@ async function onUserLogin(userId, userEmail) {
 async function setAnonymousUser() {
   await OpenFeature.setContext({
     targetingKey: `anon-${Date.now()}`, // Generate unique ID for anonymous user
-    anonymous: true
+    anonymous: true,
   });
 }
 ```
@@ -137,12 +162,12 @@ For better security, use environment variables or configuration files:
 ```javascript
 // config.js
 export const config = {
-  devcycleClientKey: process.env.DEVCYCLE_CLIENT_SDK_KEY || 'fallback_key',
-  environment: process.env.NODE_ENV || 'development'
+  devcycleClientKey: process.env.DEVCYCLE_CLIENT_SDK_KEY || "fallback_key",
+  environment: process.env.NODE_ENV || "development",
 };
 
 // main.js
-import { config } from './config.js';
+import { config } from "./config.js";
 
 const devCycleProvider = new DevCycleProvider(config.devcycleClientKey);
 ```
@@ -154,16 +179,19 @@ After installation, run your application and verify everything works with no err
 **Common Issues:**
 
 1. **"Provider not ready" error:**
+
    - Ensure you await `OpenFeature.setProviderAndWait()`
    - Check that your SDK key is correctly set (client SDK key)
    - Verify the context has a valid `targetingKey`
 
 2. **Feature flags returning default values only:**
+
    - Confirm the provider has finished initializing
    - Check that your feature flags are properly configured in DevCycle dashboard
    - Verify the user context is set correctly
 
 3. **TypeScript errors:**
+
    - Both packages include TypeScript definitions
    - Ensure your TypeScript version is compatible
 
@@ -177,10 +205,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create your first feature flag via the DevCycle MCP
-2. Set up event tracking for feature flag evaluations
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help set up event tracking for feature flag evaluations
 3. Implement proper error handling
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

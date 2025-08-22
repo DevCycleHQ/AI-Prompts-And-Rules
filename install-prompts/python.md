@@ -22,6 +22,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Python backend applications. Never expose server keys to client-side code. Store keys in environment variables.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure python-dotenv is configured if not already present.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle Python SDK
@@ -48,14 +73,14 @@ devcycle_client = None
 def init_devcycle():
     """Initialize the DevCycle client."""
     global devcycle_client
-    
+
     if devcycle_client is None:
         sdk_key = os.environ.get('DEVCYCLE_SERVER_SDK_KEY', '<DEVCYCLE_SERVER_SDK_KEY>')
-        
+
         # Initialize the client
         devcycle_client = DevCycleLocalClient(sdk_key)
         print("DevCycle initialized successfully")
-    
+
     return devcycle_client
 
 def get_devcycle_client():
@@ -102,7 +127,7 @@ from devcycle_config import init_devcycle
 class MyAppConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'myapp'
-    
+
     def ready(self):
         # Initialize DevCycle when Django starts
         init_devcycle()
@@ -140,7 +165,7 @@ from devcycle_python_server_sdk import DevCycleUser
 def check_feature_for_user(user_id, email=None):
     """Check if a feature is enabled for a specific user."""
     client = get_devcycle_client()
-    
+
     # Create user object
     user = DevCycleUser(
         user_id=user_id,
@@ -150,21 +175,21 @@ def check_feature_for_user(user_id, email=None):
             'role': 'admin'
         }
     )
-    
+
     # Check feature flag value
     feature_enabled = client.variable_value(
         user,
         'feature-key',
         False  # default value
     )
-    
+
     return feature_enabled
 
 # Example usage in a route
 @app.route('/api/feature')
 def feature_endpoint():
     user_id = request.user.id if hasattr(request, 'user') else 'anonymous'
-    
+
     if check_feature_for_user(user_id):
         return {'feature': 'enabled'}
     else:
@@ -203,16 +228,19 @@ After installation, run your Python application and verify everything works with
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure `init_devcycle()` is called on application startup
    - Check that your SDK key is correctly set (server SDK key)
    - Verify environment variables are loaded
 
 2. **Import errors:**
+
    - Ensure the SDK is installed: `pip list | grep devcycle`
    - Check Python version compatibility (3.7+)
    - Verify virtual environment is activated if using one
 
 3. **Environment variable not found:**
+
    - Ensure `.env` file is in the project root
    - Check that python-dotenv is installed and loaded
    - Verify the SDK key environment variable name matches
@@ -229,9 +257,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your routes
-3. Implement proper error handling for feature flag evaluations
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. Implement proper error handling for feature flag evaluations if needed
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

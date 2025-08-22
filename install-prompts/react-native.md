@@ -24,6 +24,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for React Native apps, not a client or server SDK key. Store it securely using environment variables or secure storage solutions.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
+   ```
+
+   And ensure react-native-dotenv or similar is configured if not already present.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables or secure storage over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle React Native SDK
@@ -92,24 +117,24 @@ export default withDevCycleProvider({
 If you prefer using a provider component pattern:
 
 ```javascript
-import React from 'react'
-import { DevCycleProvider } from '@devcycle/react-native-client-sdk'
+import React from "react";
+import { DevCycleProvider } from "@devcycle/react-native-client-sdk";
 
 export default function App() {
   const user = {
-    user_id: 'default-user',  // Replace with actual user ID
-    email: 'user@example.com',  // Optional
-    isAnonymous: false
-  }
+    user_id: "default-user", // Replace with actual user ID
+    email: "user@example.com", // Optional
+    isAnonymous: false,
+  };
 
   return (
     <DevCycleProvider
-      sdkKey='<DEVCYCLE_MOBILE_SDK_KEY>'  // Replace with your mobile SDK key
+      sdkKey="<DEVCYCLE_MOBILE_SDK_KEY>" // Replace with your mobile SDK key
       user={user}
     >
       {/* Your app components */}
     </DevCycleProvider>
-  )
+  );
 }
 ```
 
@@ -135,14 +160,14 @@ For better security, use environment variables:
 
 3. Use in your code:
 
-    ```javascript
-    import Config from 'react-native-config'
+   ```javascript
+   import Config from "react-native-config";
 
-    export default withDevCycleProvider({
-      sdkKey: Config.DEVCYCLE_MOBILE_SDK_KEY,
-      user: { user_id: 'default-user' }
-    })(App)
-    ```
+   export default withDevCycleProvider({
+     sdkKey: Config.DEVCYCLE_MOBILE_SDK_KEY,
+     user: { user_id: "default-user" },
+   })(App);
+   ```
 
 After installation, rebuild your application for both platforms and verify everything runs with no errors.
 
@@ -151,21 +176,25 @@ After installation, rebuild your application for both platforms and verify every
 **Common Issues:**
 
 1. **"DevCycle is not initialized" error:**
+
    - Ensure the provider wraps your entire app
    - Check that your SDK key is correctly set (mobile SDK key)
    - Verify the user object has a valid `user_id` or `isAnonymous: true`
 
 2. **iOS build errors:**
+
    - Run `cd ios && pod install` again
    - Clean build: `cd ios && xcodebuild clean`
    - Check that iOS deployment target is 12.0+
 
 3. **Android build errors:**
+
    - Clean and rebuild: `cd android && ./gradlew clean`
    - Check that minSdkVersion is 21+
    - Sync project with Gradle files
 
 4. **Metro bundler issues:**
+
    - Clear cache: `npx react-native start --reset-cache`
    - Delete node_modules and reinstall
    - Restart Metro bundler
@@ -181,9 +210,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Update the user object with real user data when users log in
-2. Create your first feature flag via the DevCycle MCP and use it in your app
-3. Learn how to use feature flags with React Native hooks
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement feature flags with React Native hooks
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

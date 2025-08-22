@@ -20,6 +20,29 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a CLIENT SDK key for React apps, not a server SDK key. Store it in environment variables like `REACT_APP_DEVCYCLE_CLIENT_SDK_KEY`.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env or .env.local) in the project root:
+
+   ```bash
+   # .env or .env.local
+   REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
+   ```
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -40,24 +63,24 @@ pnpm add @openfeature/react-sdk @devcycle/openfeature-web-provider
 In your main App component or entry point:
 
 ```javascript
-import React from 'react';
-import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
-import { DevCycleProvider } from '@devcycle/openfeature-web-provider';
+import React from "react";
+import { OpenFeatureProvider, OpenFeature } from "@openfeature/react-sdk";
+import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
 
 // Initialize OpenFeature with DevCycle
 async function setupOpenFeature() {
   // Set initial user context
   await OpenFeature.setContext({
-    targetingKey: 'default-user', // Required: unique user identifier
-    email: 'user@example.com', // Optional
-    anonymous: false
+    targetingKey: "default-user", // Required: unique user identifier
+    email: "user@example.com", // Optional
+    anonymous: false,
   });
-  
+
   // Create and set the DevCycle provider
   const devCycleProvider = new DevCycleProvider(
     process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY // Use environment variable
   );
-  
+
   await OpenFeature.setProviderAndWait(devCycleProvider);
 }
 
@@ -83,9 +106,9 @@ export default App;
 For more control over initialization timing:
 
 ```javascript
-import React, { useEffect, useState } from 'react';
-import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
-import { DevCycleProvider } from '@devcycle/openfeature-web-provider';
+import React, { useEffect, useState } from "react";
+import { OpenFeatureProvider, OpenFeature } from "@openfeature/react-sdk";
+import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
 
 function App() {
   const [isReady, setIsReady] = useState(false);
@@ -93,14 +116,14 @@ function App() {
   useEffect(() => {
     const initializeFeatureFlags = async () => {
       await OpenFeature.setContext({
-        targetingKey: 'default-user',
-        email: 'user@example.com'
+        targetingKey: "default-user",
+        email: "user@example.com",
       });
-      
+
       const provider = new DevCycleProvider(
         process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY
       );
-      
+
       await OpenFeature.setProviderAndWait(provider);
       setIsReady(true);
     };
@@ -114,9 +137,7 @@ function App() {
 
   return (
     <OpenFeatureProvider>
-      <div className="App">
-        {/* Your app components */}
-      </div>
+      <div className="App">{/* Your app components */}</div>
     </OpenFeatureProvider>
   );
 }
@@ -127,23 +148,28 @@ export default App;
 ### 4. Using Feature Flags with OpenFeature Hooks
 
 ```javascript
-import React from 'react';
-import { useBooleanFlagValue, useStringFlagValue, useNumberFlagValue, useObjectFlagValue } from '@openfeature/react-sdk';
+import React from "react";
+import {
+  useBooleanFlagValue,
+  useStringFlagValue,
+  useNumberFlagValue,
+  useObjectFlagValue,
+} from "@openfeature/react-sdk";
 
 function FeatureComponent() {
   // Boolean flag
-  const showNewFeature = useBooleanFlagValue('new-feature', false);
-  
+  const showNewFeature = useBooleanFlagValue("new-feature", false);
+
   // String flag
-  const buttonText = useStringFlagValue('button-text', 'Click Here');
-  
+  const buttonText = useStringFlagValue("button-text", "Click Here");
+
   // Number flag
-  const maxItems = useNumberFlagValue('max-items', 10);
-  
+  const maxItems = useNumberFlagValue("max-items", 10);
+
   // Object flag
-  const uiConfig = useObjectFlagValue('ui-config', {
-    theme: 'light',
-    fontSize: 14
+  const uiConfig = useObjectFlagValue("ui-config", {
+    theme: "light",
+    fontSize: 14,
   });
 
   return (
@@ -167,8 +193,8 @@ function FeatureComponent() {
 ### 5. Updating User Context
 
 ```javascript
-import { useContext } from 'react';
-import { OpenFeature } from '@openfeature/react-sdk';
+import { useContext } from "react";
+import { OpenFeature } from "@openfeature/react-sdk";
 
 function UserProfile() {
   const handleLogin = async (userId, userEmail) => {
@@ -177,10 +203,10 @@ function UserProfile() {
       targetingKey: userId,
       email: userEmail,
       authenticated: true,
-      plan: 'premium',
-      role: 'admin'
+      plan: "premium",
+      role: "admin",
     });
-    
+
     // Feature flags will automatically re-evaluate
   };
 
@@ -188,13 +214,13 @@ function UserProfile() {
     // Set anonymous context on logout
     await OpenFeature.setContext({
       targetingKey: `anon-${Date.now()}`,
-      anonymous: true
+      anonymous: true,
     });
   };
 
   return (
     <div>
-      <button onClick={() => handleLogin('user123', 'user@example.com')}>
+      <button onClick={() => handleLogin("user123", "user@example.com")}>
         Login
       </button>
       <button onClick={handleLogout}>Logout</button>
@@ -222,16 +248,19 @@ After installation, run your React application and verify everything works with 
 **Common Issues:**
 
 1. **"Provider not ready" error:**
+
    - Ensure OpenFeatureProvider wraps your app
    - Wait for provider initialization before rendering
    - Check that your SDK key is correctly set (client SDK key)
 
 2. **Hooks returning default values only:**
+
    - Confirm the provider has finished initializing
    - Check that your feature flags are configured in DevCycle dashboard
    - Verify the context has a valid `targetingKey`
 
 3. **React hooks errors:**
+
    - Ensure hooks are called at the top level of components
    - Check that React version is 16.8+
    - Verify OpenFeatureProvider is in the component tree
@@ -246,10 +275,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create your first feature flag via the DevCycle MCP
-2. Implement feature flag-based routing
-3. Set up error boundaries for feature components
-4. Configure targeting rules in DevCycle dashboard
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, you can help implement feature flag-based routing
+3. Set up error boundaries for feature components if needed
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

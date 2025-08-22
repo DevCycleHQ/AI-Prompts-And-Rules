@@ -19,6 +19,30 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Go backend applications. Never expose server keys to client-side code. Store keys in environment variables.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to set up the SDK key using environment variables**:
+
+   ```bash
+   export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   Or add it to a .env file and load it using a package like godotenv.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -42,7 +66,7 @@ import (
     "log"
     "os"
     "sync"
-    
+
     "github.com/open-feature/go-sdk/openfeature"
     devcycle "github.com/devcyclehq/go-server-sdk/v2"
     devcycleprovider "github.com/devcyclehq/go-server-sdk/v2/openfeature"
@@ -57,37 +81,37 @@ var (
 // Initialize sets up OpenFeature with DevCycle provider
 func Initialize(ctx context.Context) error {
     var initErr error
-    
+
     once.Do(func() {
         sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
         if sdkKey == "" {
             initErr = fmt.Errorf("DEVCYCLE_SERVER_SDK_KEY is not set")
             return
         }
-        
+
         // Create DevCycle client
         config := devcycle.ClientConfig{
             SDKKey: sdkKey,
         }
-        
+
         devcycleClient, err := devcycle.NewClient(config)
         if err != nil {
             initErr = fmt.Errorf("failed to create DevCycle client: %w", err)
             return
         }
-        
+
         // Create DevCycle provider for OpenFeature
         provider := devcycleprovider.NewProvider(devcycleClient)
-        
+
         // Set the provider
         openfeature.SetProvider(provider)
-        
+
         // Create OpenFeature client
         client = openfeature.NewClient("my-app")
-        
+
         log.Println("OpenFeature with DevCycle initialized successfully")
     })
-    
+
     return initErr
 }
 
@@ -95,7 +119,7 @@ func Initialize(ctx context.Context) error {
 func GetClient() (*openfeature.Client, error) {
     mu.RLock()
     defer mu.RUnlock()
-    
+
     if client == nil {
         return nil, fmt.Errorf("OpenFeature client not initialized")
     }
@@ -117,34 +141,34 @@ import (
     "os"
     "os/signal"
     "syscall"
-    
+
     "your-module/openfeature"
 )
 
 func main() {
     ctx := context.Background()
-    
+
     // Initialize OpenFeature with DevCycle
     if err := openfeature.Initialize(ctx); err != nil {
         log.Fatal("Failed to initialize OpenFeature:", err)
     }
-    
+
     // Set up HTTP server
     http.HandleFunc("/", homeHandler)
     http.HandleFunc("/api/feature", featureHandler)
-    
+
     server := &http.Server{Addr: ":8080"}
-    
+
     // Handle graceful shutdown
     go func() {
         sigChan := make(chan os.Signal, 1)
         signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
         <-sigChan
-        
+
         log.Println("Shutting down server...")
         server.Close()
     }()
-    
+
     log.Println("Server starting on :8080")
     if err := server.ListenAndServe(); err != http.ErrServerClosed {
         log.Fatal("Server failed:", err)
@@ -165,7 +189,7 @@ import (
     "context"
     "encoding/json"
     "net/http"
-    
+
     "github.com/open-feature/go-sdk/openfeature"
     "your-module/openfeature"
 )
@@ -176,7 +200,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "OpenFeature not available", http.StatusInternalServerError)
         return
     }
-    
+
     // Set evaluation context
     ctx := openfeature.NewEvaluationContext(
         "user-123", // targetingKey
@@ -186,7 +210,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
             "role": "admin",
         },
     )
-    
+
     // Get boolean value
     featureEnabled, err := client.BooleanValue(
         context.Background(),
@@ -198,7 +222,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Error evaluating feature", http.StatusInternalServerError)
         return
     }
-    
+
     // Get string value
     buttonText, _ := client.StringValue(
         context.Background(),
@@ -206,7 +230,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         "Click Here",
         ctx,
     )
-    
+
     // Get number value
     rateLimit, _ := client.FloatValue(
         context.Background(),
@@ -214,7 +238,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         100.0,
         ctx,
     )
-    
+
     // Get object value
     config, _ := client.ObjectValue(
         context.Background(),
@@ -222,14 +246,14 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         map[string]interface{}{"theme": "light"},
         ctx,
     )
-    
+
     response := map[string]interface{}{
         "featureEnabled": featureEnabled,
         "buttonText": buttonText,
         "rateLimit": rateLimit,
         "config": config,
     }
-    
+
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(response)
 }
@@ -242,7 +266,7 @@ package services
 
 import (
     "context"
-    
+
     "github.com/open-feature/go-sdk/openfeature"
 )
 
@@ -255,7 +279,7 @@ func NewFeatureService() (*FeatureService, error) {
     if err != nil {
         return nil, err
     }
-    
+
     return &FeatureService{
         client: client,
     }, nil
@@ -266,7 +290,7 @@ func (s *FeatureService) IsFeatureEnabledForUser(userID string, featureKey strin
         userID,
         map[string]interface{}{},
     )
-    
+
     return s.client.BooleanValue(
         context.Background(),
         featureKey,
@@ -280,7 +304,7 @@ func (s *FeatureService) GetConfigForUser(userID string, configKey string) (map[
         userID,
         map[string]interface{}{},
     )
-    
+
     return s.client.ObjectValue(
         context.Background(),
         configKey,
@@ -317,16 +341,19 @@ After installation, run your Go application and verify everything works with no 
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure OpenFeature.SetProvider() is called
    - Check that DevCycle client initializes successfully
    - Verify your SDK key is correct (server SDK key)
 
 2. **Feature flags returning default values only:**
+
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
    - Verify feature flags are configured in DevCycle dashboard
 
 3. **Import errors:**
+
    - Run `go mod tidy` to resolve dependencies
    - Check Go version compatibility (1.19+)
    - Verify import paths are correct
@@ -342,10 +369,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement evaluation context strategies
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement evaluation context strategies
 3. Set up proper error handling and fallbacks
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

@@ -20,6 +20,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for PHP backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration files.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure the environment file is loaded in your application.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables or configuration files over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -47,44 +72,44 @@ use DevCycle\OpenFeature\DevCycleProvider;
 class OpenFeatureConfig {
     private static ?OpenFeatureAPI $api = null;
     private static ?DevCycleClient $devCycleClient = null;
-    
+
     public static function initialize(): void {
         if (self::$api !== null) {
             return;
         }
-        
+
         $sdkKey = $_ENV['DEVCYCLE_SERVER_SDK_KEY'] ?? null;
-        
+
         if (empty($sdkKey)) {
             throw new \RuntimeException('DEVCYCLE_SERVER_SDK_KEY is not configured');
         }
-        
+
         try {
             // Initialize DevCycle client
             self::$devCycleClient = new DevCycleClient($sdkKey);
-            
+
             // Create DevCycle provider
             $provider = new DevCycleProvider(self::$devCycleClient);
-            
+
             // Get OpenFeature API instance and set provider
             self::$api = OpenFeatureAPI::getInstance();
             self::$api->setProvider($provider);
-            
+
             error_log('OpenFeature with DevCycle initialized successfully');
         } catch (\Exception $e) {
             error_log('Failed to initialize OpenFeature: ' . $e->getMessage());
             throw $e;
         }
     }
-    
+
     public static function getClient(): \OpenFeature\interfaces\flags\FlagValueResolver {
         if (self::$api === null) {
             throw new \RuntimeException('OpenFeature not initialized. Call initialize() first.');
         }
-        
+
         return self::$api->getClient();
     }
-    
+
     public static function shutdown(): void {
         if (self::$devCycleClient !== null) {
             self::$devCycleClient->close();
@@ -116,25 +141,25 @@ class OpenFeatureServiceProvider extends ServiceProvider
     {
         $this->app->singleton(FlagValueResolver::class, function ($app) {
             $sdkKey = config('services.devcycle.server_sdk_key');
-            
+
             if (empty($sdkKey)) {
                 throw new \RuntimeException('DevCycle SDK key is not configured');
             }
-            
+
             // Initialize DevCycle client
             $devCycleClient = new DevCycleClient($sdkKey);
-            
+
             // Create DevCycle provider
             $provider = new DevCycleProvider($devCycleClient);
-            
+
             // Set provider
             $api = OpenFeatureAPI::getInstance();
             $api->setProvider($provider);
-            
+
             return $api->getClient();
         });
     }
-    
+
     public function boot()
     {
         // Optional: Close client on application shutdown
@@ -161,21 +186,21 @@ Create a service configuration:
 ```yaml
 # config/services.yaml
 services:
-    DevCycle\Sdk\DevCycleClient:
-        arguments:
-            - '%env(DEVCYCLE_SERVER_SDK_KEY)%'
-    
-    DevCycle\OpenFeature\DevCycleProvider:
-        arguments:
-            - '@DevCycle\Sdk\DevCycleClient'
-    
-    OpenFeature\OpenFeatureAPI:
-        factory: ['OpenFeature\OpenFeatureAPI', 'getInstance']
-        calls:
-            - setProvider: ['@DevCycle\OpenFeature\DevCycleProvider']
-    
-    openfeature.client:
-        factory: ['@OpenFeature\OpenFeatureAPI', 'getClient']
+  DevCycle\Sdk\DevCycleClient:
+    arguments:
+      - "%env(DEVCYCLE_SERVER_SDK_KEY)%"
+
+  DevCycle\OpenFeature\DevCycleProvider:
+    arguments:
+      - '@DevCycle\Sdk\DevCycleClient'
+
+  OpenFeature\OpenFeatureAPI:
+    factory: ['OpenFeature\OpenFeatureAPI', "getInstance"]
+    calls:
+      - setProvider: ['@DevCycle\OpenFeature\DevCycleProvider']
+
+  openfeature.client:
+    factory: ['@OpenFeature\OpenFeatureAPI', "getClient"]
 ```
 
 #### For Plain PHP Applications
@@ -212,11 +237,11 @@ use App\Config\OpenFeatureConfig;
 
 class FeatureService {
     private $client;
-    
+
     public function __construct() {
         $this->client = OpenFeatureConfig::getClient();
     }
-    
+
     public function isFeatureEnabled($userId, $featureKey) {
         // Create evaluation context
         $attributes = new Attributes([
@@ -224,31 +249,31 @@ class FeatureService {
             'plan' => 'premium',
             'role' => 'admin'
         ]);
-        
+
         $context = new EvaluationContext($userId, $attributes);
-        
+
         // Get boolean value
         return $this->client->getBooleanValue($featureKey, false, $context);
     }
-    
+
     public function getStringConfig($userId, $configKey) {
         $context = new EvaluationContext($userId);
         return $this->client->getStringValue($configKey, 'default', $context);
     }
-    
+
     public function getNumberConfig($userId, $configKey) {
         $context = new EvaluationContext($userId);
         return $this->client->getIntegerValue($configKey, 100, $context);
     }
-    
+
     public function getObjectConfig($userId, $configKey) {
         $context = new EvaluationContext($userId);
-        
+
         $defaultValue = [
             'theme' => 'light',
             'fontSize' => 14
         ];
-        
+
         return $this->client->getObjectValue($configKey, $defaultValue, $context);
     }
 }
@@ -268,29 +293,29 @@ use OpenFeature\implementation\flags\Attributes;
 class FeatureController extends Controller
 {
     private $openFeatureClient;
-    
+
     public function __construct(FlagValueResolver $openFeatureClient)
     {
         $this->openFeatureClient = $openFeatureClient;
     }
-    
+
     public function checkFeature(Request $request, $featureKey)
     {
         $userId = $request->user()->id ?? 'anonymous';
-        
+
         // Create evaluation context
         $attributes = new Attributes([
             'email' => $request->user()->email ?? null,
             'authenticated' => $request->user() !== null
         ]);
-        
+
         $context = new EvaluationContext($userId, $attributes);
-        
+
         // Get different types of values
         $boolValue = $this->openFeatureClient->getBooleanValue($featureKey, false, $context);
         $stringValue = $this->openFeatureClient->getStringValue("{$featureKey}_text", 'default', $context);
         $numberValue = $this->openFeatureClient->getIntegerValue("{$featureKey}_limit", 100, $context);
-        
+
         return response()->json([
             'featureEnabled' => $boolValue,
             'text' => $stringValue,
@@ -317,16 +342,19 @@ After installation, run your PHP application and verify everything works with no
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure OpenFeatureAPI::setProvider() is called
    - Check that DevCycle client initializes successfully
    - Verify your SDK key is correct (server SDK key)
 
 2. **Composer installation errors:**
+
    - Run `composer update` to update dependencies
    - Check PHP version compatibility (7.4+)
    - Clear Composer cache: `composer clear-cache`
 
 3. **Feature flags returning default values only:**
+
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
    - Verify feature flags are configured in DevCycle dashboard
@@ -342,10 +370,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement evaluation context strategies
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement evaluation context strategies
 3. Set up proper error handling and logging
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

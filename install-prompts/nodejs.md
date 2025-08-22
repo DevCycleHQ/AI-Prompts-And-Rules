@@ -23,6 +23,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Node.js backend applications. Never expose server keys to client-side code. Store keys in environment variables.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure dotenv is configured if not already present.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle Node.js SDK
@@ -45,50 +70,53 @@ Create a DevCycle initialization file (e.g., `devcycle.js` or `devcycle.ts`):
 #### JavaScript Example
 
 ```javascript
-const { initializeDevCycle } = require('@devcycle/nodejs-server-sdk')
+const { initializeDevCycle } = require("@devcycle/nodejs-server-sdk");
 
-let devcycleClient
+let devcycleClient;
 
 async function initDevCycle() {
   if (!devcycleClient) {
     // Initialize the DevCycle client
     devcycleClient = await initializeDevCycle(
-      process.env.DEVCYCLE_SERVER_SDK_KEY || '<DEVCYCLE_SERVER_SDK_KEY>'
-    ).onClientInitialized()
-    
-    console.log('DevCycle initialized successfully')
+      process.env.DEVCYCLE_SERVER_SDK_KEY || "<DEVCYCLE_SERVER_SDK_KEY>"
+    ).onClientInitialized();
+
+    console.log("DevCycle initialized successfully");
   }
-  return devcycleClient
+  return devcycleClient;
 }
 
 // Export the initialization function and getter
 module.exports = {
   initDevCycle,
-  getDevCycleClient: () => devcycleClient
-}
+  getDevCycleClient: () => devcycleClient,
+};
 ```
 
 #### TypeScript Example
 
 ```typescript
-import { initializeDevCycle, DevCycleClient } from '@devcycle/nodejs-server-sdk'
+import {
+  initializeDevCycle,
+  DevCycleClient,
+} from "@devcycle/nodejs-server-sdk";
 
-let devcycleClient: DevCycleClient | null = null
+let devcycleClient: DevCycleClient | null = null;
 
 export async function initDevCycle(): Promise<DevCycleClient> {
   if (!devcycleClient) {
     // Initialize the DevCycle client
     devcycleClient = await initializeDevCycle(
-      process.env.DEVCYCLE_SERVER_SDK_KEY || '<DEVCYCLE_SERVER_SDK_KEY>'
-    ).onClientInitialized()
-    
-    console.log('DevCycle initialized successfully')
+      process.env.DEVCYCLE_SERVER_SDK_KEY || "<DEVCYCLE_SERVER_SDK_KEY>"
+    ).onClientInitialized();
+
+    console.log("DevCycle initialized successfully");
   }
-  return devcycleClient
+  return devcycleClient;
 }
 
 export function getDevCycleClient(): DevCycleClient | null {
-  return devcycleClient
+  return devcycleClient;
 }
 ```
 
@@ -97,32 +125,32 @@ export function getDevCycleClient(): DevCycleClient | null {
 In your main application file (e.g., `app.js`, `index.js`, or `server.js`):
 
 ```javascript
-const express = require('express')
-const { initDevCycle } = require('./devcycle')
+const express = require("express");
+const { initDevCycle } = require("./devcycle");
 
-const app = express()
-const PORT = process.env.PORT || 3000
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
     // Initialize DevCycle before starting the server
-    await initDevCycle()
-    
+    await initDevCycle();
+
     // Your application routes and middleware
-    app.get('/', (req, res) => {
-      res.send('Server is running with DevCycle!')
-    })
-    
+    app.get("/", (req, res) => {
+      res.send("Server is running with DevCycle!");
+    });
+
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`)
-    })
+      console.log(`Server is running on port ${PORT}`);
+    });
   } catch (error) {
-    console.error('Failed to initialize server:', error)
-    process.exit(1)
+    console.error("Failed to initialize server:", error);
+    process.exit(1);
   }
 }
 
-startServer()
+startServer();
 ```
 
 ### 4. Using DevCycle in Routes/Controllers
@@ -130,31 +158,31 @@ startServer()
 Example of using DevCycle in an Express route:
 
 ```javascript
-const { getDevCycleClient } = require('./devcycle')
+const { getDevCycleClient } = require("./devcycle");
 
-app.get('/api/feature', async (req, res) => {
-  const devcycleClient = getDevCycleClient()
-  
+app.get("/api/feature", async (req, res) => {
+  const devcycleClient = getDevCycleClient();
+
   // Define user for this request
   const user = {
-    user_id: req.user?.id || 'anonymous',
+    user_id: req.user?.id || "anonymous",
     email: req.user?.email,
     name: req.user?.name,
     customData: {
       plan: req.user?.plan,
-      role: req.user?.role
-    }
-  }
-  
+      role: req.user?.role,
+    },
+  };
+
   // Check feature flag value
   const featureEnabled = await devcycleClient.variableValue(
     user,
-    'feature-key',
-    false  // default value
-  )
-  
-  res.json({ featureEnabled })
-})
+    "feature-key",
+    false // default value
+  );
+
+  res.json({ featureEnabled });
+});
 ```
 
 ### 5. Environment Configuration
@@ -176,7 +204,7 @@ npm install --save dotenv
 Load environment variables at the top of your main file:
 
 ```javascript
-require('dotenv').config()
+require("dotenv").config();
 ```
 
 After installation, run your Node.js application and verify everything works with no errors.
@@ -186,16 +214,19 @@ After installation, run your Node.js application and verify everything works wit
 **Common Issues:**
 
 1. **"DevCycle client is not initialized" error:**
+
    - Ensure `initDevCycle()` is called before using the client
    - Check that your SDK key is correctly set (server SDK key)
    - Verify the initialization promise resolves successfully
 
 2. **Environment variable not found:**
+
    - Ensure `.env` file is in the project root
    - Check that dotenv is installed and configured
    - Verify the SDK key environment variable name matches
 
 3. **TypeScript compilation errors:**
+
    - Ensure @types/node is installed
    - Check that TypeScript version is compatible
    - Verify import statements match your module system
@@ -212,9 +243,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your routes
-3. Implement proper error handling for feature flag evaluations
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. Implement proper error handling for feature flag evaluations if needed
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

@@ -28,6 +28,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Ruby backend applications. Never expose server keys to client-side code. Store keys in environment variables or Rails credentials.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root or use Rails credentials:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   Or for Rails applications, use encrypted credentials.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables or Rails credentials over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle Ruby SDK
@@ -60,14 +85,14 @@ require 'devcycle'
 module DevCycleConfig
   class << self
     attr_reader :client
-    
+
     def initialize_client
       sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY'] || '<DEVCYCLE_SERVER_SDK_KEY>'
-      
+
       if sdk_key.nil? || sdk_key.empty?
         raise 'DevCycle SDK key is not configured'
       end
-      
+
       @client = DevCycle::Client.new(sdk_key)
       Rails.logger.info('DevCycle initialized successfully') if defined?(Rails)
       @client
@@ -75,11 +100,11 @@ module DevCycleConfig
       Rails.logger.error("Failed to initialize DevCycle: #{e.message}") if defined?(Rails)
       raise
     end
-    
+
     def client
       @client ||= initialize_client
     end
-    
+
     def shutdown
       @client&.close
       @client = nil
@@ -92,7 +117,7 @@ if defined?(Rails)
   Rails.application.config.after_initialize do
     DevCycleConfig.client
   end
-  
+
   # Clean up on shutdown
   at_exit do
     DevCycleConfig.shutdown
@@ -119,7 +144,7 @@ module DevCycleHelper
   def devcycle_client
     Rails.application.config.devcycle
   end
-  
+
   def feature_enabled?(key, user_id, default = false)
     user = DevCycle::User.new(
       user_id: user_id,
@@ -129,7 +154,7 @@ module DevCycleHelper
         role: current_user&.role
       }
     )
-    
+
     devcycle_client.variable_value(user, key, default)
   rescue => e
     Rails.logger.error "DevCycle error: #{e.message}"
@@ -153,18 +178,18 @@ class MyApp < Sinatra::Base
   configure do
     set :devcycle, DevCycle::Client.new(ENV['DEVCYCLE_SERVER_SDK_KEY'])
   end
-  
+
   helpers do
     def devcycle_client
       settings.devcycle
     end
-    
+
     def feature_enabled?(key, user_id, default = false)
       user = DevCycle::User.new(user_id: user_id)
       devcycle_client.variable_value(user, key, default)
     end
   end
-  
+
   get '/' do
     'Sinatra app with DevCycle!'
   end
@@ -180,7 +205,7 @@ class FeatureService
   def initialize(devcycle_client = DevCycleConfig.client)
     @devcycle_client = devcycle_client
   end
-  
+
   def feature_enabled_for_user?(feature_key, user_id, email = nil)
     user = DevCycle::User.new(
       user_id: user_id,
@@ -190,7 +215,7 @@ class FeatureService
         role: 'admin'
       }
     )
-    
+
     @devcycle_client.variable_value(user, feature_key, false)
   rescue => e
     Rails.logger.error "Error checking feature #{feature_key}: #{e.message}"
@@ -205,15 +230,15 @@ Example in a Rails controller:
 class FeaturesController < ApplicationController
   def check
     user_id = current_user&.id || 'anonymous'
-    
+
     feature_enabled = feature_enabled?('new-feature', user_id)
-    
+
     render json: { feature_enabled: feature_enabled }
   end
-  
+
   def show
     @feature_service = FeatureService.new
-    
+
     if @feature_service.feature_enabled_for_user?('premium-feature', current_user.id)
       render :premium_view
     else
@@ -263,16 +288,19 @@ After installation, run your Ruby application and verify everything works with n
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure the client is properly initialized on application startup
    - Check that your SDK key is correctly set (server SDK key)
    - Verify Rails initializers are loaded if using Rails
 
 2. **Gem installation errors:**
+
    - Run `bundle update` to update dependencies
    - Check Ruby version compatibility (2.7+)
    - Clear bundler cache: `bundle clean --force`
 
 3. **Environment variable not found:**
+
    - Ensure `.env` file is in the project root
    - Check that dotenv-rails is properly configured
    - Verify Rails credentials are decrypted correctly
@@ -289,9 +317,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your controllers
-3. Implement proper error handling for feature flag evaluations
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. Implement proper error handling for feature flag evaluations if needed
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

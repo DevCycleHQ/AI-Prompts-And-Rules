@@ -23,6 +23,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for NestJS backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration service.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure the NestJS ConfigModule is set up if not already present.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables or ConfigService over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle Node.js SDK
@@ -43,9 +68,9 @@ pnpm add @devcycle/nodejs-server-sdk
 Create a DevCycle module (`src/devcycle/devcycle.module.ts`):
 
 ```typescript
-import { Module, Global } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { DevCycleService } from './devcycle.service';
+import { Module, Global } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { DevCycleService } from "./devcycle.service";
 
 @Global()
 @Module({
@@ -71,9 +96,13 @@ export class DevCycleModule {}
 Create the service (`src/devcycle/devcycle.service.ts`):
 
 ```typescript
-import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { initializeDevCycle, DevCycleClient, DevCycleUser } from '@devcycle/nodejs-server-sdk';
+import { Injectable, OnModuleDestroy, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import {
+  initializeDevCycle,
+  DevCycleClient,
+  DevCycleUser,
+} from "@devcycle/nodejs-server-sdk";
 
 @Injectable()
 export class DevCycleService implements OnModuleDestroy {
@@ -83,17 +112,17 @@ export class DevCycleService implements OnModuleDestroy {
   constructor(private configService: ConfigService) {}
 
   async initialize(): Promise<void> {
-    const sdkKey = this.configService.get<string>('DEVCYCLE_SERVER_SDK_KEY');
-    
+    const sdkKey = this.configService.get<string>("DEVCYCLE_SERVER_SDK_KEY");
+
     if (!sdkKey) {
-      throw new Error('DevCycle SDK key is not configured');
+      throw new Error("DevCycle SDK key is not configured");
     }
 
     try {
       this.client = await initializeDevCycle(sdkKey).onClientInitialized();
-      this.logger.log('DevCycle initialized successfully');
+      this.logger.log("DevCycle initialized successfully");
     } catch (error) {
-      this.logger.error('Failed to initialize DevCycle', error);
+      this.logger.error("Failed to initialize DevCycle", error);
       throw error;
     }
   }
@@ -101,17 +130,19 @@ export class DevCycleService implements OnModuleDestroy {
   async onModuleDestroy() {
     if (this.client) {
       await this.client.close();
-      this.logger.log('DevCycle client closed');
+      this.logger.log("DevCycle client closed");
     }
   }
 
   async getVariableValue<T>(
     user: DevCycleUser,
     key: string,
-    defaultValue: T,
+    defaultValue: T
   ): Promise<T> {
     if (!this.client) {
-      this.logger.warn('DevCycle client not initialized, returning default value');
+      this.logger.warn(
+        "DevCycle client not initialized, returning default value"
+      );
       return defaultValue;
     }
 
@@ -131,7 +162,7 @@ export class DevCycleService implements OnModuleDestroy {
     try {
       return await this.client.allVariables(user);
     } catch (error) {
-      this.logger.error('Error getting all variables:', error);
+      this.logger.error("Error getting all variables:", error);
       return {};
     }
   }
@@ -143,17 +174,17 @@ export class DevCycleService implements OnModuleDestroy {
 Update your `src/app.module.ts`:
 
 ```typescript
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { DevCycleModule } from './devcycle/devcycle.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { DevCycleModule } from "./devcycle/devcycle.module";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: [".env.local", ".env"],
     }),
     DevCycleModule,
   ],
@@ -168,32 +199,32 @@ export class AppModule {}
 Example controller:
 
 ```typescript
-import { Controller, Get, Headers } from '@nestjs/common';
-import { DevCycleService } from './devcycle/devcycle.service';
-import { DevCycleUser } from '@devcycle/nodejs-server-sdk';
+import { Controller, Get, Headers } from "@nestjs/common";
+import { DevCycleService } from "./devcycle/devcycle.service";
+import { DevCycleUser } from "@devcycle/nodejs-server-sdk";
 
-@Controller('features')
+@Controller("features")
 export class FeaturesController {
   constructor(private readonly devCycleService: DevCycleService) {}
 
-  @Get('check')
+  @Get("check")
   async checkFeature(
-    @Headers('x-user-id') userId: string = 'anonymous',
-    @Headers('x-user-email') email?: string,
+    @Headers("x-user-id") userId: string = "anonymous",
+    @Headers("x-user-email") email?: string
   ) {
     const user: DevCycleUser = {
       user_id: userId,
       email,
       customData: {
-        plan: 'premium',
-        role: 'admin',
+        plan: "premium",
+        role: "admin",
       },
     };
 
     const featureEnabled = await this.devCycleService.getVariableValue(
       user,
-      'new-feature',
-      false,
+      "new-feature",
+      false
     );
 
     return {
@@ -202,8 +233,8 @@ export class FeaturesController {
     };
   }
 
-  @Get('all')
-  async getAllFeatures(@Headers('x-user-id') userId: string = 'anonymous') {
+  @Get("all")
+  async getAllFeatures(@Headers("x-user-id") userId: string = "anonymous") {
     const user: DevCycleUser = {
       user_id: userId,
     };
@@ -221,9 +252,9 @@ export class FeaturesController {
 Example service using DevCycle:
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { DevCycleService } from './devcycle/devcycle.service';
-import { DevCycleUser } from '@devcycle/nodejs-server-sdk';
+import { Injectable } from "@nestjs/common";
+import { DevCycleService } from "./devcycle/devcycle.service";
+import { DevCycleUser } from "@devcycle/nodejs-server-sdk";
 
 @Injectable()
 export class FeatureService {
@@ -231,7 +262,7 @@ export class FeatureService {
 
   async isFeatureEnabledForUser(
     userId: string,
-    featureKey: string,
+    featureKey: string
   ): Promise<boolean> {
     const user: DevCycleUser = {
       user_id: userId,
@@ -270,21 +301,21 @@ PORT=3000
 Create a custom decorator (`src/devcycle/feature-flag.decorator.ts`):
 
 ```typescript
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext } from "@nestjs/common";
 
 export const FeatureFlag = createParamDecorator(
   async (featureKey: string, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
     const devCycleService = request.app.get(DevCycleService);
-    
-    const userId = request.user?.id || 'anonymous';
+
+    const userId = request.user?.id || "anonymous";
     const user = {
       user_id: userId,
       email: request.user?.email,
     };
-    
+
     return devCycleService.getVariableValue(user, featureKey, false);
-  },
+  }
 );
 ```
 
@@ -307,16 +338,19 @@ After installation, run your NestJS application and verify everything works with
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure DevCycleModule is imported in AppModule
    - Check that your SDK key is correctly set (server SDK key)
    - Verify the async factory completes initialization
 
 2. **Dependency injection errors:**
+
    - Ensure DevCycleModule is marked as @Global() if used across modules
    - Check that ConfigModule is properly configured
    - Verify service is properly exported from the module
 
 3. **Environment variable not found:**
+
    - Ensure `.env` file is in the project root
    - Check that ConfigModule is configured with correct env file path
    - Verify the SDK key environment variable name matches
@@ -333,9 +367,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your services
-3. Implement guards for feature-based route protection
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement guards for feature-based route protection
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

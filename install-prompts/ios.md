@@ -29,6 +29,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for iOS apps, not a client or server SDK key. Store it securely and avoid committing it to version control.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to set up the SDK key securely** (e.g., in a configuration file or using xcconfig):
+
+   ```swift
+   // In a Config.xcconfig file or environment configuration
+   DEVCYCLE_MOBILE_SDK_KEY = your_mobile_sdk_key_here
+   ```
+
+   Then reference it in your code using build settings.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+
+**Note:** Always prefer configuration files or environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle iOS SDK
@@ -102,19 +127,19 @@ import DevCycle
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    
+
     var devcycleClient: DevCycleClient?
-    
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
+
         // Create user object
         let user = try? DevCycleUser.builder()
             .userId("default-user")  // Replace with actual user ID
             .build()
-        
+
         // Initialize DevCycle client
         guard let user = user else { return true }
-        
+
         self.devcycleClient = try? DevCycleClient.builder()
             .sdkKey("<DEVCYCLE_MOBILE_SDK_KEY>")  // Replace with your mobile SDK key
             .user(user)
@@ -125,7 +150,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     print("DevCycle initialized successfully")
                 }
             })
-        
+
         return true
     }
 }
@@ -146,10 +171,10 @@ In `AppDelegate.m`:
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    
+
     // Create user object
     DevCycleUser *user = [DevCycleUser initializeWithUserId:@"default-user"];
-    
+
     // Initialize DevCycle client
     self.devcycleClient = [DevCycleClient initialize:@"<DEVCYCLE_MOBILE_SDK_KEY>"
                                                  user:user
@@ -161,7 +186,7 @@ In `AppDelegate.m`:
             NSLog(@"DevCycle initialized successfully");
         }
     }];
-    
+
     return YES;
 }
 
@@ -187,17 +212,20 @@ After installation, build and run your application to verify everything works wi
 **Common Issues:**
 
 1. **"DevCycle client is nil" error:**
+
    - Ensure the SDK key is correctly set (mobile SDK key, not client/server)
    - Check that the user object has a valid `userId` or `isAnonymous: true`
    - Verify initialization completes before using the client
 
 2. **Build errors after installation:**
+
    - Clean build folder (Cmd+Shift+K)
    - For SPM: Reset package caches in Xcode
    - For CocoaPods: Run `pod deintegrate` then `pod install`
    - For Carthage: Delete Carthage folder and rebuild
 
 3. **Package conflicts:**
+
    - If you have naming conflicts, use the alternative URL: `https://github.com/DevCycleHQ/devcycle-ios-client-sdk.git`
 
 4. **Platform compatibility issues:**
@@ -211,9 +239,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Update the user object with real user data when available
-2. Create your first feature flag via the DevCycle MCP and use it in your app
-3. Learn how to use variables throughout your iOS application
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement variables throughout the iOS application
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

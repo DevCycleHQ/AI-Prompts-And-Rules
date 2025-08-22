@@ -22,6 +22,30 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for Go backend applications. Never expose server keys to client-side code. Store keys in environment variables.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to set up the SDK key using environment variables**:
+
+   ```bash
+   export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   Or add it to a .env file and load it using a package like godotenv.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle Go SDK
@@ -56,7 +80,7 @@ var (
 // InitializeDevCycle initializes the DevCycle client
 func InitializeDevCycle() error {
     var initErr error
-    
+
     once.Do(func() {
         sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
         if sdkKey == "" {
@@ -88,7 +112,7 @@ func InitializeDevCycle() error {
 func GetClient() (*devcycle.Client, error) {
     mu.RLock()
     defer mu.RUnlock()
-    
+
     if client == nil {
         return nil, fmt.Errorf("DevCycle client not initialized")
     }
@@ -99,7 +123,7 @@ func GetClient() (*devcycle.Client, error) {
 func Close() error {
     mu.Lock()
     defer mu.Unlock()
-    
+
     if client != nil {
         return client.Close()
     }
@@ -120,7 +144,7 @@ import (
     "os"
     "os/signal"
     "syscall"
-    
+
     "your-module/devcycle"
 )
 
@@ -129,31 +153,31 @@ func main() {
     if err := devcycle.InitializeDevCycle(); err != nil {
         log.Fatal("Failed to initialize DevCycle:", err)
     }
-    
+
     // Ensure clean shutdown
     defer func() {
         if err := devcycle.Close(); err != nil {
             log.Printf("Error closing DevCycle client: %v", err)
         }
     }()
-    
+
     // Set up your HTTP server
     http.HandleFunc("/", homeHandler)
     http.HandleFunc("/api/feature", featureHandler)
-    
+
     // Start server
     server := &http.Server{Addr: ":8080"}
-    
+
     // Handle graceful shutdown
     go func() {
         sigChan := make(chan os.Signal, 1)
         signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
         <-sigChan
-        
+
         log.Println("Shutting down server...")
         server.Close()
     }()
-    
+
     log.Println("Server starting on :8080")
     if err := server.ListenAndServe(); err != http.ErrServerClosed {
         log.Fatal("Server failed:", err)
@@ -175,7 +199,7 @@ package main
 import (
     "encoding/json"
     "net/http"
-    
+
     devcycle "github.com/devcyclehq/go-server-sdk/v2"
     "your-module/devcycle"
 )
@@ -186,7 +210,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "DevCycle not available", http.StatusInternalServerError)
         return
     }
-    
+
     // Create user from request context (example)
     user := devcycle.User{
         UserId: "user-123", // Get from auth context
@@ -196,7 +220,7 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
             "role": "admin",
         },
     }
-    
+
     // Check feature flag value
     featureEnabled, err := client.VariableValue(
         user,
@@ -207,11 +231,11 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Error checking feature", http.StatusInternalServerError)
         return
     }
-    
+
     response := map[string]interface{}{
         "featureEnabled": featureEnabled,
     }
-    
+
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(response)
 }
@@ -254,16 +278,19 @@ After installation, run your Go application and verify everything works with no 
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure `InitializeDevCycle()` is called on application startup
    - Check that your SDK key is correctly set (server SDK key)
    - Verify environment variables are loaded
 
 2. **Import errors:**
+
    - Run `go mod tidy` to ensure dependencies are downloaded
    - Check Go version compatibility (1.16+)
    - Verify the import path is correct
 
 3. **Environment variable not found:**
+
    - Ensure `.env` file is in the project root
    - Check that godotenv is properly configured
    - Verify the SDK key environment variable name matches
@@ -280,9 +307,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your handlers
-3. Implement proper error handling for feature flag evaluations
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. Implement proper error handling for feature flag evaluations if needed
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

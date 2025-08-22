@@ -23,6 +23,30 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** You need BOTH a server SDK key and a client SDK key. The server key is used privately on the server, while the client key is public and sent to browsers. Never expose the server key to the client.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK keys, you must set them up properly:
+
+1. **First, attempt to create an environment file** (.env.local) in the project root:
+
+   ```bash
+   # .env.local
+   NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK keys for testing purposes (you'll need to update them later for production)
+     b) Provide you with the SDK keys and instructions so you can set them up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK keys and clear instructions on how to set up the environment variables
+
+**Note:** Always prefer environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle Next.js SDK
@@ -62,23 +86,23 @@ Required minimum versions for TypeScript:
 Create a new file `app/devcycle.ts` (or similar location) to set up DevCycle:
 
 ```typescript
-import { setupDevCycle } from '@devcycle/nextjs-sdk/server'
+import { setupDevCycle } from "@devcycle/nextjs-sdk/server";
 
 const getUserIdentity = async () => {
   // Return a user object for DevCycle
   // You can customize this later to fetch real user data
   return {
-    user_id: 'default-user',
-    isAnonymous: false
-  }
-}
+    user_id: "default-user",
+    isAnonymous: false,
+  };
+};
 
 export const { getVariableValue, getClientContext } = setupDevCycle({
-  serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? '',
-  clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? '',
+  serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? "",
+  clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? "",
   userGetter: getUserIdentity,
-  options: {}
-})
+  options: {},
+});
 ```
 
 ### 4. Add DevCycle Provider to Root Layout
@@ -86,13 +110,13 @@ export const { getVariableValue, getClientContext } = setupDevCycle({
 In your root layout file (typically `app/layout.tsx`):
 
 ```typescript
-import { DevCycleClientsideProvider } from '@devcycle/nextjs-sdk'
-import { getClientContext } from './devcycle'
+import { DevCycleClientsideProvider } from "@devcycle/nextjs-sdk";
+import { getClientContext } from "./devcycle";
 
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
@@ -102,7 +126,7 @@ export default async function RootLayout({
         </DevCycleClientsideProvider>
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -124,15 +148,15 @@ NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
 In your `pages/_app.tsx` file:
 
 ```typescript
-import React from 'react'
-import type { AppProps } from 'next/app'
-import { appWithDevCycle } from '@devcycle/nextjs-sdk/pages'
+import React from "react";
+import type { AppProps } from "next/app";
+import { appWithDevCycle } from "@devcycle/nextjs-sdk/pages";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+  return <Component {...pageProps} />;
 }
 
-export default appWithDevCycle(MyApp)
+export default appWithDevCycle(MyApp);
 ```
 
 ### 4. Add Server-Side Support to Pages
@@ -140,28 +164,28 @@ export default appWithDevCycle(MyApp)
 In each page where you want to use DevCycle, add:
 
 ```typescript
-import { GetServerSideProps } from 'next'
-import { getServerSideDevCycle } from '@devcycle/nextjs-sdk/pages'
+import { GetServerSideProps } from "next";
+import { getServerSideDevCycle } from "@devcycle/nextjs-sdk/pages";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const user = {
-    user_id: 'default-user',
-    isAnonymous: false
-  }
-  
+    user_id: "default-user",
+    isAnonymous: false,
+  };
+
   const devcycleData = await getServerSideDevCycle({
-    serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? '',
-    clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? '',
+    serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? "",
+    clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? "",
     user,
-    context
-  })
+    context,
+  });
 
   return {
     props: {
-      ...devcycleData
-    }
-  }
-}
+      ...devcycleData,
+    },
+  };
+};
 ```
 
 ### 6. Set Environment Variables
@@ -180,15 +204,18 @@ After installation, restart your development server and verify everything runs w
 **Common Issues:**
 
 1. **"DevCycle is not initialized" error:**
+
    - Ensure the DevCycleClientsideProvider wraps your app (App Router)
    - Check that both SDK keys are correctly set in environment variables
    - Verify you're using the correct SDK key types (server vs client)
 
 2. **TypeScript errors with async components:**
+
    - Update TypeScript to 5.1.3+ and @types/react to 18.2.8+
    - Ensure `moduleResolution: "bundler"` is set in tsconfig.json
 
 3. **Realtime updates not working (Next.js < 14.1):**
+
    - Upgrade to Next.js 14.1+ or disable realtime updates in options
 
 4. **Environment variables not found:**
@@ -203,9 +230,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Customize the `getUserIdentity` function to fetch real user data
-2. Create your first feature flag via the DevCycle MCP and use it in your components
-3. Learn how to use variables in both server and client components
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement variables in both server and client components
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

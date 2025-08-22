@@ -23,6 +23,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for Flutter apps, not a client or server SDK key. Store it securely and avoid committing it to version control.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment configuration file** (e.g., .env or config file):
+
+   ```bash
+   # .env
+   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
+   ```
+
+   And ensure flutter_dotenv or similar package is configured if using environment files.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+
+**Note:** Always prefer environment files or secure storage over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Add DevCycle Flutter SDK Dependency
@@ -72,31 +97,31 @@ import 'package:devcycle_flutter_client_sdk/devcycle_flutter_client_sdk.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Create user object
   final user = DVCUser(
     userId: 'default-user',  // Replace with actual user ID
     email: 'user@example.com',  // Optional: for better targeting
     isAnonymous: false,  // Set to true for anonymous users
   );
-  
+
   // Initialize DevCycle client
   final dvcClient = DVCClient.builder()
     .sdkKey('<DEVCYCLE_MOBILE_SDK_KEY>')  // Replace with your mobile SDK key
     .user(user)
     .build();
-  
+
   // Wait for initialization
   await dvcClient.onInitialized;
-  
+
   runApp(MyApp(dvcClient: dvcClient));
 }
 
 class MyApp extends StatelessWidget {
   final DVCClient dvcClient;
-  
+
   const MyApp({Key? key, required this.dvcClient}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -111,9 +136,9 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatelessWidget {
   final DVCClient dvcClient;
-  
+
   const MyHomePage({Key? key, required this.dvcClient}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,15 +162,15 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final user = DVCUser(userId: 'default-user');
   final dvcClient = DVCClient.builder()
     .sdkKey('<DEVCYCLE_MOBILE_SDK_KEY>')
     .user(user)
     .build();
-  
+
   await dvcClient.onInitialized;
-  
+
   runApp(
     Provider<DVCClient>.value(
       value: dvcClient,
@@ -161,17 +186,17 @@ For better security, use different configurations for different environments:
 
 1. Create environment configuration files:
 
-    ```dart
-    // lib/config/dev_config.dart
-    class DevConfig {
-      static const String devcycleSdkKey = 'your_dev_mobile_sdk_key';
-    }
+   ```dart
+   // lib/config/dev_config.dart
+   class DevConfig {
+     static const String devcycleSdkKey = 'your_dev_mobile_sdk_key';
+   }
 
-    // lib/config/prod_config.dart
-    class ProdConfig {
-      static const String devcycleSdkKey = 'your_prod_mobile_sdk_key';
-    }
-    ```
+   // lib/config/prod_config.dart
+   class ProdConfig {
+     static const String devcycleSdkKey = 'your_prod_mobile_sdk_key';
+   }
+   ```
 
 2. Use compile-time environment variables or build flavors to select the appropriate configuration.
 
@@ -182,16 +207,19 @@ After installation, run your application on both iOS and Android to verify every
 **Common Issues:**
 
 1. **"DVCClient initialization failed" error:**
+
    - Ensure you're using a valid mobile SDK key
    - Check that the user object has a valid `userId` or `isAnonymous: true`
    - Verify network connectivity
 
 2. **iOS build errors:**
+
    - Run `cd ios && pod install`
    - Clean build: `flutter clean`
    - Check that iOS deployment target is 11.0+
 
 3. **Android build errors:**
+
    - Clean and rebuild: `flutter clean && flutter pub get`
    - Check that minSdkVersion is 21+
    - Ensure Gradle sync is successful
@@ -207,9 +235,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Update the user object with real user data when available
-2. Create your first feature flag via the DevCycle MCP and use it in your app
-3. Learn how to use variables in your Flutter widgets
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement variables in Flutter widgets
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

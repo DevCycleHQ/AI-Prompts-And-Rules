@@ -21,6 +21,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for NestJS backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration service.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to create an environment file** (.env) in the project root:
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   And ensure the NestJS ConfigModule is set up if not already present.
+
+2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify environment files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+
+**Note:** Always prefer environment variables or ConfigService over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -41,12 +66,12 @@ pnpm add @openfeature/server-sdk @openfeature/nestjs-sdk @devcycle/openfeature-n
 Create an OpenFeature module (`src/openfeature/openfeature.module.ts`):
 
 ```typescript
-import { Module, Global } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { OpenFeatureModule as NestOpenFeatureModule } from '@openfeature/nestjs-sdk';
-import { OpenFeature } from '@openfeature/server-sdk';
-import { DevCycleProvider } from '@devcycle/openfeature-nodejs-provider';
-import { initializeDevCycle } from '@devcycle/nodejs-server-sdk';
+import { Module, Global } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { OpenFeatureModule as NestOpenFeatureModule } from "@openfeature/nestjs-sdk";
+import { OpenFeature } from "@openfeature/server-sdk";
+import { DevCycleProvider } from "@devcycle/openfeature-nodejs-provider";
+import { initializeDevCycle } from "@devcycle/nodejs-server-sdk";
 
 @Global()
 @Module({
@@ -55,21 +80,23 @@ import { initializeDevCycle } from '@devcycle/nodejs-server-sdk';
     NestOpenFeatureModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const sdkKey = configService.get<string>('DEVCYCLE_SERVER_SDK_KEY');
-        
+        const sdkKey = configService.get<string>("DEVCYCLE_SERVER_SDK_KEY");
+
         if (!sdkKey) {
-          throw new Error('DEVCYCLE_SERVER_SDK_KEY is not configured');
+          throw new Error("DEVCYCLE_SERVER_SDK_KEY is not configured");
         }
-        
+
         // Initialize DevCycle client
-        const devcycleClient = await initializeDevCycle(sdkKey).onClientInitialized();
-        
+        const devcycleClient = await initializeDevCycle(
+          sdkKey
+        ).onClientInitialized();
+
         // Create DevCycle provider
         const provider = new DevCycleProvider(devcycleClient);
-        
+
         // Set the provider
         await OpenFeature.setProviderAndWait(provider);
-        
+
         return {
           defaultProvider: provider,
           providers: {
@@ -90,88 +117,102 @@ export class OpenFeatureModule {}
 Create a service wrapper (`src/openfeature/openfeature.service.ts`):
 
 ```typescript
-import { Injectable, Logger } from '@nestjs/common';
-import { OpenFeatureService as NestOpenFeatureService } from '@openfeature/nestjs-sdk';
-import { EvaluationContext } from '@openfeature/server-sdk';
+import { Injectable, Logger } from "@nestjs/common";
+import { OpenFeatureService as NestOpenFeatureService } from "@openfeature/nestjs-sdk";
+import { EvaluationContext } from "@openfeature/server-sdk";
 
 @Injectable()
 export class FeatureFlagService {
   private readonly logger = new Logger(FeatureFlagService.name);
-  
-  constructor(
-    private readonly openFeatureService: NestOpenFeatureService,
-  ) {}
-  
+
+  constructor(private readonly openFeatureService: NestOpenFeatureService) {}
+
   async getBooleanValue(
     key: string,
     defaultValue: boolean,
     userId: string,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, any>
   ): Promise<boolean> {
     const context: EvaluationContext = {
       targetingKey: userId,
       ...attributes,
     };
-    
+
     try {
-      return await this.openFeatureService.getBooleanValue(key, defaultValue, context);
+      return await this.openFeatureService.getBooleanValue(
+        key,
+        defaultValue,
+        context
+      );
     } catch (error) {
       this.logger.error(`Error evaluating boolean flag ${key}:`, error);
       return defaultValue;
     }
   }
-  
+
   async getStringValue(
     key: string,
     defaultValue: string,
     userId: string,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, any>
   ): Promise<string> {
     const context: EvaluationContext = {
       targetingKey: userId,
       ...attributes,
     };
-    
+
     try {
-      return await this.openFeatureService.getStringValue(key, defaultValue, context);
+      return await this.openFeatureService.getStringValue(
+        key,
+        defaultValue,
+        context
+      );
     } catch (error) {
       this.logger.error(`Error evaluating string flag ${key}:`, error);
       return defaultValue;
     }
   }
-  
+
   async getNumberValue(
     key: string,
     defaultValue: number,
     userId: string,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, any>
   ): Promise<number> {
     const context: EvaluationContext = {
       targetingKey: userId,
       ...attributes,
     };
-    
+
     try {
-      return await this.openFeatureService.getNumberValue(key, defaultValue, context);
+      return await this.openFeatureService.getNumberValue(
+        key,
+        defaultValue,
+        context
+      );
     } catch (error) {
       this.logger.error(`Error evaluating number flag ${key}:`, error);
       return defaultValue;
     }
   }
-  
+
   async getObjectValue<T extends object>(
     key: string,
     defaultValue: T,
     userId: string,
-    attributes?: Record<string, any>,
+    attributes?: Record<string, any>
   ): Promise<T> {
     const context: EvaluationContext = {
       targetingKey: userId,
       ...attributes,
     };
-    
+
     try {
-      return await this.openFeatureService.getObjectValue(key, defaultValue, context) as T;
+      return (await this.openFeatureService.getObjectValue(
+        key,
+        defaultValue,
+        context
+      )) as T;
     } catch (error) {
       this.logger.error(`Error evaluating object flag ${key}:`, error);
       return defaultValue;
@@ -185,18 +226,18 @@ export class FeatureFlagService {
 Update your `src/app.module.ts`:
 
 ```typescript
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { OpenFeatureModule } from './openfeature/openfeature.module';
-import { FeatureFlagService } from './openfeature/openfeature.service';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { OpenFeatureModule } from "./openfeature/openfeature.module";
+import { FeatureFlagService } from "./openfeature/openfeature.service";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: [".env.local", ".env"],
     }),
     OpenFeatureModule,
   ],
@@ -211,37 +252,53 @@ export class AppModule {}
 Example controller:
 
 ```typescript
-import { Controller, Get, Headers, Query } from '@nestjs/common';
-import { FeatureFlagService } from './openfeature/openfeature.service';
+import { Controller, Get, Headers, Query } from "@nestjs/common";
+import { FeatureFlagService } from "./openfeature/openfeature.service";
 
-@Controller('features')
+@Controller("features")
 export class FeaturesController {
   constructor(private readonly featureFlagService: FeatureFlagService) {}
-  
-  @Get('check')
+
+  @Get("check")
   async checkFeature(
-    @Query('feature') featureKey: string,
-    @Headers('x-user-id') userId: string = 'anonymous',
-    @Headers('x-user-email') email?: string,
+    @Query("feature") featureKey: string,
+    @Headers("x-user-id") userId: string = "anonymous",
+    @Headers("x-user-email") email?: string
   ) {
     const attributes = {
       email,
-      plan: 'premium',
-      role: 'admin',
+      plan: "premium",
+      role: "admin",
     };
-    
-    const [boolValue, stringValue, numberValue, objectValue] = await Promise.all([
-      this.featureFlagService.getBooleanValue(featureKey, false, userId, attributes),
-      this.featureFlagService.getStringValue(`${featureKey}_text`, 'default', userId, attributes),
-      this.featureFlagService.getNumberValue(`${featureKey}_limit`, 100, userId, attributes),
-      this.featureFlagService.getObjectValue(
-        `${featureKey}_config`,
-        { theme: 'light', fontSize: 14 },
-        userId,
-        attributes,
-      ),
-    ]);
-    
+
+    const [boolValue, stringValue, numberValue, objectValue] =
+      await Promise.all([
+        this.featureFlagService.getBooleanValue(
+          featureKey,
+          false,
+          userId,
+          attributes
+        ),
+        this.featureFlagService.getStringValue(
+          `${featureKey}_text`,
+          "default",
+          userId,
+          attributes
+        ),
+        this.featureFlagService.getNumberValue(
+          `${featureKey}_limit`,
+          100,
+          userId,
+          attributes
+        ),
+        this.featureFlagService.getObjectValue(
+          `${featureKey}_config`,
+          { theme: "light", fontSize: 14 },
+          userId,
+          attributes
+        ),
+      ]);
+
     return {
       featureKey,
       userId,
@@ -261,57 +318,57 @@ export class FeaturesController {
 Example service:
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { FeatureFlagService } from './openfeature/openfeature.service';
+import { Injectable } from "@nestjs/common";
+import { FeatureFlagService } from "./openfeature/openfeature.service";
 
 @Injectable()
 export class UserService {
   constructor(private readonly featureFlagService: FeatureFlagService) {}
-  
+
   async getUserDashboard(userId: string, email?: string) {
     const attributes = { email, authenticated: true };
-    
+
     const showNewDashboard = await this.featureFlagService.getBooleanValue(
-      'new-dashboard',
+      "new-dashboard",
       false,
       userId,
-      attributes,
+      attributes
     );
-    
+
     if (showNewDashboard) {
       return this.getNewDashboard(userId);
     }
-    
+
     return this.getLegacyDashboard(userId);
   }
-  
+
   async getApiLimits(userId: string) {
     const rateLimit = await this.featureFlagService.getNumberValue(
-      'api-rate-limit',
+      "api-rate-limit",
       100,
-      userId,
+      userId
     );
-    
+
     const config = await this.featureFlagService.getObjectValue(
-      'api-config',
+      "api-config",
       { timeout: 30000, retries: 3 },
-      userId,
+      userId
     );
-    
+
     return {
       rateLimit,
       config,
     };
   }
-  
+
   private async getNewDashboard(userId: string) {
     // New dashboard implementation
-    return { type: 'new', userId };
+    return { type: "new", userId };
   }
-  
+
   private async getLegacyDashboard(userId: string) {
     // Legacy dashboard implementation
-    return { type: 'legacy', userId };
+    return { type: "legacy", userId };
   }
 }
 ```
@@ -321,30 +378,33 @@ export class UserService {
 Create a guard (`src/openfeature/feature-flag.guard.ts`):
 
 ```typescript
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { FeatureFlagService } from './openfeature.service';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { FeatureFlagService } from "./openfeature.service";
 
 export const RequireFeature = (featureKey: string) =>
-  Reflect.metadata('featureKey', featureKey);
+  Reflect.metadata("featureKey", featureKey);
 
 @Injectable()
 export class FeatureFlagGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private featureFlagService: FeatureFlagService,
+    private featureFlagService: FeatureFlagService
   ) {}
-  
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const featureKey = this.reflector.get<string>('featureKey', context.getHandler());
-    
+    const featureKey = this.reflector.get<string>(
+      "featureKey",
+      context.getHandler()
+    );
+
     if (!featureKey) {
       return true;
     }
-    
+
     const request = context.switchToHttp().getRequest();
-    const userId = request.user?.id || 'anonymous';
-    
+    const userId = request.user?.id || "anonymous";
+
     return this.featureFlagService.getBooleanValue(featureKey, false, userId);
   }
 }
@@ -379,16 +439,19 @@ After installation, run your NestJS application and verify everything works with
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure OpenFeatureModule is imported in AppModule
    - Check that DevCycle client initializes in the module factory
    - Verify your SDK key is correct (server SDK key)
 
 2. **Dependency injection errors:**
+
    - Ensure all services are properly provided in their modules
    - Check that OpenFeatureModule is marked as @Global() if needed
    - Verify service imports and exports
 
 3. **Feature flags returning default values only:**
+
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
    - Verify feature flags are configured in DevCycle dashboard
@@ -404,10 +467,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement guards for feature-based route protection
-3. Set up evaluation context strategies
-4. Configure targeting rules in DevCycle dashboard
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement guards for feature-based route protection
+3. Set up evaluation context strategies if needed
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

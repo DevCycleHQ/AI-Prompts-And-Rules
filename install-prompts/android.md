@@ -30,6 +30,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for Android apps, not a client or server SDK key. Store it securely using Android best practices.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to set up the SDK key securely** (e.g., in build configuration or gradle.properties):
+
+   ```properties
+   # gradle.properties
+   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
+   ```
+
+   Then reference it in your build.gradle using BuildConfig.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+
+**Note:** Always prefer BuildConfig or secure key management over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Add DevCycle SDK Dependency
@@ -84,19 +109,19 @@ import com.devcycle.sdk.android.api.DVCClient
 import com.devcycle.sdk.android.model.DVCUser
 
 class MyApplication : Application() {
-    
+
     companion object {
         lateinit var dvcClient: DVCClient
     }
-    
+
     override fun onCreate() {
         super.onCreate()
-        
+
         // Create user object
         val user = DVCUser.builder()
             .withUserId("default-user")  // Replace with actual user ID
             .build()
-        
+
         // Initialize DevCycle client
         dvcClient = DVCClient.builder()
             .withContext(this)
@@ -126,18 +151,18 @@ import com.devcycle.sdk.android.model.DVCUser;
 import com.devcycle.sdk.android.api.DVCCallback;
 
 public class MyApplication extends Application {
-    
+
     public static DVCClient dvcClient;
-    
+
     @Override
     public void onCreate() {
         super.onCreate();
-        
+
         // Create user object
         DVCUser user = DVCUser.builder()
             .withUserId("default-user")  // Replace with actual user ID
             .build();
-        
+
         // Initialize DevCycle client
         dvcClient = DVCClient.builder()
             .withContext(this)
@@ -149,7 +174,7 @@ public class MyApplication extends Application {
                     // Successfully initialized
                     System.out.println("DevCycle initialized successfully");
                 }
-                
+
                 @Override
                 public void onError(Throwable error) {
                     // Handle initialization error
@@ -190,16 +215,19 @@ After installation, build and run your application to verify everything works wi
 **Common Issues:**
 
 1. **"DVCClient is null" error:**
+
    - Ensure the Application class is properly registered in AndroidManifest.xml
    - Check that initialization completes before using the client
    - Verify you're using a valid mobile SDK key
 
 2. **Build errors after adding dependency:**
+
    - Sync your project with Gradle files
    - Check for version conflicts with other dependencies
    - Ensure minimum SDK version is API 21+
 
 3. **Network/Internet issues:**
+
    - Verify Internet permission is added to AndroidManifest.xml
    - Check network connectivity on device/emulator
    - Ensure SDK key is correct and active
@@ -215,9 +243,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Update the user object with real user data when available
-2. Create your first feature flag via the DevCycle MCP and use it in your app
-3. Learn how to use variables throughout your Android application
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement variables throughout the Android application
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

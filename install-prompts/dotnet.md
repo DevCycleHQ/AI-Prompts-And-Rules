@@ -28,6 +28,34 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a SERVER SDK key for .NET backend applications. Never expose server keys to client-side code. Store keys in appsettings.json, environment variables, or Azure Key Vault.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to add the SDK key to appsettings.json or appsettings.Development.json**:
+
+   ```json
+   {
+     "DevCycle": {
+       "ServerSdkKey": "your_server_sdk_key_here"
+     }
+   }
+   ```
+
+   Or use environment variables or user secrets for development.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with configuration files
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up
+
+**Note:** Always prefer configuration files, user secrets, or Azure Key Vault over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install the DevCycle .NET SDK
@@ -72,10 +100,10 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IDevCycleClient>(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var sdkKey = configuration["DevCycle:ServerSdkKey"] 
+    var sdkKey = configuration["DevCycle:ServerSdkKey"]
         ?? Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY")
         ?? throw new InvalidOperationException("DevCycle SDK key is not configured");
-    
+
     var client = new DevCycleLocalClient(sdkKey);
     return client;
 });
@@ -111,18 +139,18 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
-        
+
         // Configure DevCycle
         services.AddSingleton<IDevCycleClient>(serviceProvider =>
         {
-            var sdkKey = Configuration["DevCycle:ServerSdkKey"] 
+            var sdkKey = Configuration["DevCycle:ServerSdkKey"]
                 ?? Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY");
-                
+
             if (string.IsNullOrEmpty(sdkKey))
             {
                 throw new InvalidOperationException("DevCycle SDK key is not configured");
             }
-            
+
             return new DevCycleLocalClient(sdkKey);
         });
     }
@@ -248,9 +276,9 @@ public class FeaturesController : ControllerBase
     {
         var userId = User.Identity?.Name ?? "anonymous";
         var email = User.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
-        
+
         var isEnabled = await _featureService.IsFeatureEnabledAsync(featureKey, userId, email);
-        
+
         return Ok(new { featureEnabled = isEnabled });
     }
 }
@@ -266,14 +294,14 @@ public class Program
     public static void Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
-        
+
         var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
         lifetime.ApplicationStopping.Register(() =>
         {
             var devCycleClient = host.Services.GetService<IDevCycleClient>();
             devCycleClient?.Dispose();
         });
-        
+
         host.Run();
     }
 }
@@ -286,16 +314,19 @@ After installation, build and run your .NET application to verify everything wor
 **Common Issues:**
 
 1. **"DevCycle client not initialized" error:**
+
    - Ensure the client is registered in dependency injection
    - Check that your SDK key is correctly set (server SDK key)
    - Verify configuration is loaded properly
 
 2. **NuGet package installation errors:**
+
    - Clear NuGet cache: `dotnet nuget locals all --clear`
    - Update NuGet package sources
    - Check .NET version compatibility
 
 3. **Configuration not found:**
+
    - Ensure appsettings.json is copied to output directory
    - Check environment-specific configuration files
    - Verify environment variables are set
@@ -313,11 +344,11 @@ After successful installation:
 
 1. Set up user identification logic for your application
 
-2. Create your first feature flag via the DevCycle MCP and use it in your controllers
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
 
-3. Implement proper error handling and logging
+3. Implement proper error handling and logging if needed
 
-4. Set up targeting rules for different user segments
+4. Help set up targeting rules for different user segments when requested
 
 ## Helpful Resources
 

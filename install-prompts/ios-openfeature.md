@@ -20,6 +20,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for iOS apps, not a client or server SDK key. Store it securely and avoid committing it to version control.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to set up the SDK key securely** (e.g., in a configuration file or using xcconfig):
+
+   ```swift
+   // In a Config.xcconfig file or environment configuration
+   DEVCYCLE_MOBILE_SDK_KEY = your_mobile_sdk_key_here
+   ```
+
+   Then reference it in your code using build settings.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+
+**Note:** Always prefer configuration files or environment variables over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Install OpenFeature SDK and DevCycle Provider
@@ -69,31 +94,31 @@ import DevCycle
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
+
         // Initialize OpenFeature with DevCycle
         Task {
             await setupOpenFeature()
         }
-        
+
         return true
     }
-    
+
     func setupOpenFeature() async {
         // Create evaluation context (user)
         let evaluationContext = MutableContext(targetingKey: "default-user")
         evaluationContext.add(key: "email", value: Value.string("user@example.com"))
         evaluationContext.add(key: "isAnonymous", value: Value.boolean(false))
-        
+
         // Set the context
         await OpenFeatureAPI.shared.setEvaluationContext(evaluationContext: evaluationContext)
-        
+
         // Create and set DevCycle provider
         let provider = DevCycleOpenFeatureProvider(sdkKey: "<DEVCYCLE_MOBILE_SDK_KEY>") // Replace with your mobile SDK key
-        
+
         await OpenFeatureAPI.shared.setProviderAndWait(provider: provider)
-        
+
         print("OpenFeature with DevCycle initialized successfully")
     }
 }
@@ -111,10 +136,10 @@ In `AppDelegate.m`:
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    
+
     // Initialize OpenFeature with DevCycle
     [self setupOpenFeature];
-    
+
     return YES;
 }
 
@@ -123,16 +148,16 @@ In `AppDelegate.m`:
     MutableContext *context = [[MutableContext alloc] initWithTargetingKey:@"default-user"];
     [context addWithKey:@"email" value:[Value stringValue:@"user@example.com"]];
     [context addWithKey:@"isAnonymous" value:[Value booleanValue:NO]];
-    
+
     // Set the context
     [[OpenFeatureAPI shared] setEvaluationContext:context];
-    
+
     // Create and set DevCycle provider
-    DevCycleOpenFeatureProvider *provider = [[DevCycleOpenFeatureProvider alloc] 
+    DevCycleOpenFeatureProvider *provider = [[DevCycleOpenFeatureProvider alloc]
         initWithSdkKey:@"<DEVCYCLE_MOBILE_SDK_KEY>"]; // Replace with your mobile SDK key
-    
+
     [[OpenFeatureAPI shared] setProvider:provider];
-    
+
     NSLog(@"OpenFeature with DevCycle initialized successfully");
 }
 
@@ -148,40 +173,40 @@ import OpenFeature
 
 class ViewController: UIViewController {
     let client = OpenFeatureAPI.shared.getClient()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         Task {
             await checkFeatures()
         }
     }
-    
+
     func checkFeatures() async {
         // Get boolean value
         let showNewFeature = await client.getBooleanValue(
             key: "new-feature",
             defaultValue: false
         )
-        
+
         if showNewFeature {
             // Show new feature
             showNewFeatureUI()
         }
-        
+
         // Get string value
         let buttonText = await client.getStringValue(
             key: "button-text",
             defaultValue: "Click Here"
         )
         button.setTitle(buttonText, for: .normal)
-        
+
         // Get number value
         let maxItems = await client.getIntegerValue(
             key: "max-items",
             defaultValue: 10
         )
-        
+
         // Get object value
         let config = await client.getObjectValue(
             key: "ui-config",
@@ -204,9 +229,9 @@ func updateUserContext(userId: String, email: String?) {
             context.add(key: "email", value: Value.string(email))
         }
         context.add(key: "authenticated", value: Value.boolean(true))
-        
+
         await OpenFeatureAPI.shared.setEvaluationContext(evaluationContext: context)
-        
+
         // Feature flags will be re-evaluated automatically
     }
 }
@@ -219,16 +244,19 @@ After installation, build and run your iOS application to verify everything work
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure you await provider setup completion
    - Check that your SDK key is correctly set (mobile SDK key)
    - Verify the evaluation context has a targetingKey
 
 2. **Build errors:**
+
    - Clean build folder (Cmd+Shift+K)
    - Reset package caches if using SPM
    - Run `pod deintegrate` then `pod install` if using CocoaPods
 
 3. **Feature flags returning default values only:**
+
    - Confirm the provider has finished initializing
    - Check that your feature flags are configured in DevCycle dashboard
    - Verify the evaluation context is set correctly
@@ -243,10 +271,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement feature flag-based UI logic
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flag-based UI logic
 3. Set up proper error handling
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 

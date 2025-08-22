@@ -22,6 +22,27 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for Roku apps. Store it securely in your channel configuration.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to add the SDK key to your channel configuration or manifest**:
+
+   - Consider using a config file that's not committed to version control
+   - Or set it up in your build process to inject the key during packaging
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+
+**Note:** Always prefer configuration files or build-time injection over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Download the DevCycle Roku SDK
@@ -50,19 +71,19 @@ sub Main()
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
     screen.setMessagePort(m.port)
-    
+
     ' Initialize DevCycle
     initializeDevCycle()
-    
+
     ' Create and show your scene
     scene = screen.CreateScene("MainScene")
     screen.show()
-    
+
     ' Main event loop
     while(true)
         msg = wait(0, m.port)
         msgType = type(msg)
-        
+
         if msgType = "roSGScreenEvent"
             if msg.isScreenClosed() then return
         end if
@@ -72,21 +93,21 @@ end sub
 sub initializeDevCycle()
     ' Create DevCycle configuration
     m.devcycle = CreateObject("roSGNode", "DevCycleClient")
-    
+
     ' Set SDK key
     m.devcycle.sdkKey = "<DEVCYCLE_MOBILE_SDK_KEY>"  ' Replace with your mobile SDK key
-    
+
     ' Set user information
     user = CreateObject("roAssociativeArray")
     user.user_id = "default-user"  ' Replace with actual user ID
     user.email = "user@example.com"  ' Optional: for better targeting
     user.isAnonymous = false
-    
+
     m.devcycle.user = user
-    
+
     ' Initialize the client
     m.devcycle.control = "RUN"
-    
+
     print "DevCycle initialized successfully"
 end sub
 ```
@@ -103,7 +124,7 @@ Create a DevCycle component file (`components/DevCycleClient.xml`):
         <field id="user" type="assocarray" />
         <field id="initialized" type="boolean" value="false" />
     </interface>
-    
+
     <script type="text/brightscript" uri="pkg:/source/devcycle/DevCycleClient.brs" />
 </component>
 ```
@@ -136,7 +157,7 @@ sub initializeDevCycle()
     #else
         sdkKey = "prod_mobile_sdk_key"
     #end if
-    
+
     m.devcycle.sdkKey = sdkKey
     ' ... rest of initialization
 end sub
@@ -149,16 +170,19 @@ After installation, deploy your channel to a Roku device and verify everything r
 **Common Issues:**
 
 1. **"DevCycle not initialized" error:**
+
    - Ensure the SDK files are properly copied to your project
    - Check that the SDK key is correctly set (mobile SDK key)
    - Verify the user object has required fields
 
 2. **Network connectivity issues:**
+
    - Ensure `requires_internet_connection=true` is in manifest
    - Check device network settings
    - Verify SDK key is valid and active
 
 3. **Component loading errors:**
+
    - Check that all DevCycle files are in the correct directories
    - Verify XML component definitions are valid
    - Ensure BrightScript syntax is correct
@@ -175,9 +199,9 @@ Suggest these as next steps to the user.
 After successful installation:
 
 1. Update the user object with real user data when available
-2. Create your first feature flag via the DevCycle MCP and use it in your channel
-3. Learn how to use variables throughout your Roku application
-4. Set up targeting rules for different user segments
+2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+3. When requested, help implement variables throughout the Roku application
+4. Help set up targeting rules for different user segments when asked
 
 ## Helpful Resources
 

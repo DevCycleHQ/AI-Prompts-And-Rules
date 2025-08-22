@@ -21,6 +21,31 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 
 **Security Note:** Use a MOBILE SDK key for Android apps, not a client or server SDK key. Store it securely using Android best practices.
 
+## SDK Key Configuration
+
+**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+
+1. **First, attempt to set up the SDK key securely** (e.g., in build configuration or gradle.properties):
+
+   ```properties
+   # gradle.properties
+   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
+   ```
+
+   Then reference it in your build.gradle using BuildConfig.
+
+2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+
+   - "I'm unable to create/modify configuration files. Would you like me to:
+     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
+     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+
+3. **Based on the user's response:**
+   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
+   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+
+**Note:** Always prefer BuildConfig or secure key management over hardcoding for security reasons.
+
 ## Installation Steps
 
 ### 1. Add OpenFeature SDK and DevCycle Provider Dependencies
@@ -71,14 +96,14 @@ import dev.openfeature.sdk.Value
 import com.devcycle.sdk.android.openfeature.DevCycleOpenFeatureProvider
 
 class MyApplication : Application() {
-    
+
     override fun onCreate() {
         super.onCreate()
-        
+
         // Initialize OpenFeature with DevCycle
         initializeOpenFeature()
     }
-    
+
     private fun initializeOpenFeature() {
         // Create evaluation context
         val evaluationContext = ImmutableContext(
@@ -90,16 +115,16 @@ class MyApplication : Application() {
                 "role" to Value.String("admin")
             )
         )
-        
+
         // Set the evaluation context
         OpenFeatureAPI.setEvaluationContext(evaluationContext)
-        
+
         // Create DevCycle provider
         val provider = DevCycleOpenFeatureProvider(
             context = this,
             sdkKey = "<DEVCYCLE_MOBILE_SDK_KEY>" // Replace with your mobile SDK key
         )
-        
+
         // Set the provider
         OpenFeatureAPI.setProviderAndWait(provider) { result ->
             if (result.isSuccess) {
@@ -126,15 +151,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MyApplication extends Application {
-    
+
     @Override
     public void onCreate() {
         super.onCreate();
-        
+
         // Initialize OpenFeature with DevCycle
         initializeOpenFeature();
     }
-    
+
     private void initializeOpenFeature() {
         // Create evaluation context
         Map<String, Value> attributes = new HashMap<>();
@@ -142,21 +167,21 @@ public class MyApplication extends Application {
         attributes.put("isAnonymous", new Value.Boolean(false));
         attributes.put("plan", new Value.String("premium"));
         attributes.put("role", new Value.String("admin"));
-        
+
         ImmutableContext evaluationContext = new ImmutableContext(
             "default-user", // targetingKey
             attributes
         );
-        
+
         // Set the evaluation context
         OpenFeatureAPI.setEvaluationContext(evaluationContext);
-        
+
         // Create DevCycle provider
         DevCycleOpenFeatureProvider provider = new DevCycleOpenFeatureProvider(
             this,
             "<DEVCYCLE_MOBILE_SDK_KEY>" // Replace with your mobile SDK key
         );
-        
+
         // Set the provider
         OpenFeatureAPI.setProviderAndWait(provider, result -> {
             if (result.isSuccess()) {
@@ -193,39 +218,39 @@ import dev.openfeature.sdk.Client
 
 class MainActivity : AppCompatActivity() {
     private val client: Client = OpenFeatureAPI.getClient()
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
+
         checkFeatures()
     }
-    
+
     private fun checkFeatures() {
         // Get boolean value
         val showNewFeature = client.getBooleanValue(
             "new-feature",
             false
         )
-        
+
         if (showNewFeature) {
             // Show new feature UI
             showNewFeatureView()
         }
-        
+
         // Get string value
         val buttonText = client.getStringValue(
             "button-text",
             "Click Here"
         )
         button.text = buttonText
-        
+
         // Get number value
         val maxItems = client.getIntegerValue(
             "max-items",
             10
         )
-        
+
         // Get object value
         val config = client.getObjectValue(
             "ui-config",
@@ -245,18 +270,18 @@ fun updateUserContext(userId: String, email: String?) {
     val attributes = mutableMapOf<String, Value>(
         "authenticated" to Value.Boolean(true)
     )
-    
+
     email?.let {
         attributes["email"] = Value.String(it)
     }
-    
+
     val newContext = ImmutableContext(
         targetingKey = userId,
         attributes = attributes
     )
-    
+
     OpenFeatureAPI.setEvaluationContext(newContext)
-    
+
     // Feature flags will be re-evaluated automatically
 }
 ```
@@ -268,16 +293,19 @@ After installation, build and run your Android application to verify everything 
 **Common Issues:**
 
 1. **"Provider not initialized" error:**
+
    - Ensure the Application class is properly registered in AndroidManifest.xml
    - Check that initialization completes before using the client
    - Verify you're using a valid mobile SDK key
 
 2. **Build errors:**
+
    - Sync your project with Gradle files
    - Check for version conflicts with other dependencies
    - Ensure minimum SDK version is API 21+
 
 3. **Feature flags returning default values only:**
+
    - Confirm the provider has finished initializing
    - Check that your feature flags are configured in DevCycle dashboard
    - Verify the evaluation context has a valid targetingKey
@@ -293,10 +321,10 @@ Suggest these as next steps to the user.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement feature flag-based UI logic
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flag-based UI logic
 3. Set up proper error handling
-4. Configure targeting rules in DevCycle dashboard
+4. Help configure targeting rules in DevCycle dashboard when asked
 
 ## Helpful Resources
 
