@@ -1,162 +1,273 @@
 # DevCycle Angular SDK Installation Prompt
 
-You are helping to install and configure the DevCycle Angular SDK in an Angular application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle Angular SDK with OpenFeature. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the Angular version and configuration before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use the SDK for:**
+<context>
+You are helping to install and configure the DevCycle Angular SDK using the OpenFeature standard in an Angular application.
+</context>
 
-- React applications (use `@devcycle/react-client-sdk` instead)
-- Next.js applications (use `@devcycle/nextjs-sdk` instead)
-- Plain JavaScript/TypeScript web apps (use `@devcycle/js-client-sdk` instead)
-- Vue.js applications (use `@devcycle/js-client-sdk` instead)
-- Node.js backend services (use `@devcycle/nodejs-server-sdk`)
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags with OpenFeature.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
 
-If you detect that the user is trying to have you install the Angular SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+<restrictions>
+**Do not use this setup for:**
+- React applications (use React SDK instead)
+- Vue.js applications (use JavaScript SDK instead)
+- AngularJS (1.x) applications (use JavaScript SDK instead)
+- Server-side applications (use appropriate server SDK)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
 - [ ] Angular application (Angular 12+)
-- [ ] The most recent DevCycle Angular SDK version to install
+- [ ] The most recent DevCycle and OpenFeature SDK versions available
 
-**Security Note:** Use a CLIENT SDK key for Angular apps, not a server SDK key. Store it in environment variables where possible.
+**Security Note:** Use a CLIENT SDK key for Angular apps, not a server SDK key. Store it in Angular environment configuration files.
+</prerequisites>
+
+## SDK Key Configuration
+
+<decision_tree>
+
+### Setting Up Your SDK Key
+
+1. **First, check if you can modify Angular environment files:**
+
+   - Try: Edit `src/environments/environment.ts` and `src/environments/environment.prod.ts`
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file modification succeeds:**
+   <success_path>
+
+   ```typescript
+   // src/environments/environment.ts
+   export const environment = {
+     production: false,
+     devcycleClientKey: "your_client_sdk_key_here",
+   };
+   ```
+
+   - Verify the key is not committed to version control in production
+   - Ensure Angular can access the environment variable
+   - Test that `environment.devcycleClientKey` is accessible
+     </success_path>
+
+3. **If environment file modification fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before committing or deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle Angular SDK and OpenFeature SDK
+### Step 1: Install Required Packages
 
 ```bash
 # Using npm
-npm install --save @devcycle/openfeature-angular-provider @openfeature/angular-sdk
+npm install --save @openfeature/web-sdk @devcycle/openfeature-web-provider
 
 # Using yarn
-yarn add @devcycle/openfeature-angular-provider @openfeature/angular-sdk
+yarn add @openfeature/web-sdk @devcycle/openfeature-web-provider
 
 # Using pnpm
-pnpm add @devcycle/openfeature-angular-provider @openfeature/angular-sdk
+pnpm add @openfeature/web-sdk @devcycle/openfeature-web-provider
 ```
 
-### 2. Configure DevCycle in Your Root Module
+<verification_checkpoint>
+**Verify before continuing:**
 
-In your root module file (typically `app.module.ts`), import and configure the DevCycle provider:
+- [ ] Packages installed successfully (check package.json)
+- [ ] No peer dependency warnings
+- [ ] Node modules updated
+      </verification_checkpoint>
+
+### Step 2: Configure OpenFeature in App Module
+
+Create or update your `app.module.ts`:
 
 ```typescript
-import { NgModule } from '@angular/core'
-import { BrowserModule } from '@angular/platform-browser'
-import { OpenFeatureModule, OpenFeature } from '@openfeature/angular-sdk'
-import DevCycleAngularProvider from '@devcycle/openfeature-angular-provider'
-import { AppComponent } from './app.component'
+import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { OpenFeature } from "@openfeature/web-sdk";
+import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
+import { environment } from "../environments/environment";
 
-// Initialize the DevCycle provider
-const devCycleProvider = new DevCycleAngularProvider(
-  '<DEVCYCLE_CLIENT_SDK_KEY>' // Replace with your actual key or use environment.DEVCYCLE_CLIENT_SDK_KEY
-)
-
-// Set the user context - targetingKey or user_id is required
-OpenFeature.setContext({
-  targetingKey: 'default-user', // Required: unique user identifier
-  email: 'user@example.com', // Optional: for better targeting
-  name: 'User Name' // Optional: for better targeting
-})
+import { AppComponent } from "./app.component";
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-    OpenFeatureModule.forRoot({
-      provider: devCycleProvider
-    })
-  ],
+  declarations: [AppComponent],
+  imports: [BrowserModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
-```
+export class AppModule {
+  constructor() {
+    this.initializeOpenFeature();
+  }
 
-### 3. Set Up Environment Variables (Recommended)
+  private async initializeOpenFeature() {
+    const user = {
+      userId: "default-user", // Replace with actual user ID when available
+      email: "user@example.com", // Optional
+    };
 
-Create or update your environment files to store the SDK key:
-
-In `src/environments/environment.ts`:
-
-```typescript
-export const environment = {
-  production: false,
-  DEVCYCLE_CLIENT_SDK_KEY: 'your_development_client_sdk_key_here'
+    const provider = new DevCycleProvider(environment.devcycleClientKey, user);
+    await OpenFeature.setProviderAndWait(provider);
+  }
 }
 ```
 
-In `src/environments/environment.prod.ts`:
+<verification_checkpoint>
+**Verify before continuing:**
 
-```typescript
-export const environment = {
-  production: true,
-  DEVCYCLE_CLIENT_SDK_KEY: 'your_production_client_sdk_key_here'
-}
+- [ ] OpenFeature is properly configured
+- [ ] SDK key is properly referenced
+- [ ] User object includes required fields
+- [ ] Application compiles without errors
+      </verification_checkpoint>
+
+### Step 3: Test Your Application
+
+```bash
+# Start your Angular development server
+ng serve
 ```
 
-Then update your module to use the environment variable:
+<verification_checkpoint>
+**Verify before continuing:**
 
-```typescript
-import { environment } from '../environments/environment'
+- [ ] Application builds successfully
+- [ ] No DevCycle-related runtime errors
+- [ ] Browser console shows successful initialization
+- [ ] Application runs normally
+      </verification_checkpoint>
 
-const devCycleProvider = new DevCycleAngularProvider(
-  environment.DEVCYCLE_CLIENT_SDK_KEY
-)
-```
+## 🎉 Installation Complete!
 
-After installation, run your Angular application and verify everything runs with no errors.
+**STOP HERE** - The DevCycle Angular installation is now complete.
 
+**DO NOT CREATE:**
+
+- Example components using feature flags
+- Sample service implementations
+- Demo feature flag code
+- Any services like `FeatureFlagService` or similar
+
+**Available OpenFeature methods for future reference only:**
+
+- `OpenFeature.getClient().getBooleanValue(key, defaultValue)`
+- `OpenFeature.getClient().getStringValue(key, defaultValue)`
+- `OpenFeature.getClient().getNumberValue(key, defaultValue)`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
+
+<success_criteria>
+
+## Installation Success Criteria
+
+Installation is complete when ALL of the following are true:
+
+- ✅ OpenFeature and DevCycle packages are installed in package.json
+- ✅ SDK key is configured (via environment OR temporary hardcode with TODO)
+- ✅ OpenFeature provider is initialized in app module
+- ✅ Application builds and runs without errors
+- ✅ Browser console shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
+
+<examples>
+## Common Installation Scenarios
+
+<example scenario="angular_cli">
+**Scenario:** Angular CLI project, npm, full file access
+**Actions taken:**
+1. ✅ Updated environment.ts with client SDK key
+2. ✅ Installed OpenFeature and DevCycle packages
+3. ✅ Configured provider in app.module.ts
+4. ✅ App builds and runs successfully
+**Result:** Installation successful
+</example>
+
+<example scenario="angular_standalone">
+**Scenario:** Angular standalone components, yarn
+**Actions taken:**
+1. ✅ Updated environment files with SDK key
+2. ✅ Installed packages with yarn
+3. ✅ Configured OpenFeature in main.ts
+4. ✅ Angular dev server starts successfully
+**Result:** Installation successful with standalone components
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="openfeature_not_initialized">
+<symptom>"OpenFeature provider not set" or client methods fail</symptom>
+<diagnosis>
+1. Check: Is setProviderAndWait called correctly?
+2. Check: Is the SDK key valid?
+3. Check: Does the user object have required fields?
+</diagnosis>
+<solution>
+- Ensure setProviderAndWait is called in app module constructor
+- Verify client SDK key (starts with dvc_client_)
+- User must have userId or be marked as anonymous
+</solution>
+</error>
 
-1. **"DevCycle is not initialized" error:**
-   - Ensure OpenFeatureModule.forRoot() is in your root module imports
-   - Check that your SDK key is correctly set
-   - Verify you're using a CLIENT SDK key, not a server key
-
-2. **"Missing targetingKey" error:**
-   - Ensure you call `OpenFeature.setContext()` with either `targetingKey` or `user_id`
-   - The context must be set before the provider is initialized
-
-3. **TypeScript errors:**
-   - The SDK includes TypeScript definitions
-   - Ensure you're importing from the correct packages
-
-4. **Module import errors:**
-   - Make sure both packages are installed: `@devcycle/openfeature-angular-provider` and `@openfeature/angular-sdk`
-   - Import OpenFeatureModule.forRoot() only in your root module
+<error type="environment_variables">
+<symptom>Environment variable not found or undefined</symptom>
+<diagnosis>
+1. Check: Is environment.ts properly configured?
+2. Check: Is the import path correct?
+3. Check: Is the dev server restarted?
+</diagnosis>
+<solution>
+- Verify environment files are in src/environments/
+- Check import: `import { environment } from '../environments/environment'`
+- Restart ng serve after environment changes
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
-
+<next_steps>
 After successful installation:
 
-1. Update the user context with real user data when users log in
-2. Create your first feature flag via the DevCycle MCP and use it in your components
-3. Learn how to use feature flags in your Angular components
-4. Set up targeting rules for different user segments
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using OpenFeature methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when users log in
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
-- [Angular SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/angular/)
-- [OpenFeature Angular SDK](https://openfeature.dev/docs/reference/technologies/client/web/angular)
+- [OpenFeature Angular Documentation](https://openfeature.dev/docs/reference/technologies/web/angular/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues
+- [OpenFeature Specification](https://openfeature.dev/specification/)

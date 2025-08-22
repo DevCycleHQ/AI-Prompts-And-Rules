@@ -1,223 +1,262 @@
 # DevCycle Android SDK Installation Prompt
 
-You are helping to install and configure the DevCycle Android SDK in an Android application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle Android SDK. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the project configuration and build system before proceeding
+- Adaptive: Provide alternatives for different build configurations
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**IMPORTANT: First detect the project configuration:**
+<context>
+You are helping to install and configure the DevCycle Android SDK in an Android application.
+</context>
 
-- Check if the project uses Kotlin or Java
-- Identify the build system: Gradle (most common) or Maven
-- Check the minimum Android SDK version (requires API 21+)
-- Use the appropriate code examples based on the detected language
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
 
-**Do not use the SDK for:**
-
-- React Native apps (use `@devcycle/react-native-client-sdk` instead)
-- Flutter apps (use the Flutter SDK instead)
+<restrictions>
+**Do not use this setup for:**
+- React Native apps (use React Native SDK instead)
+- Flutter apps (use Flutter SDK instead)
 - Web applications (use JavaScript/React/Angular SDKs instead)
 - iOS applications (use iOS SDK instead)
 
-If you detect that the user is trying to have you install the Android SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
 
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] Android project with minimum API level 21 (Android 5.0)
-- [ ] Gradle or Maven build system
-- [ ] The most recent DevCycle Android SDK version to install
+- [ ] Gradle build system configured
+- [ ] The most recent DevCycle Android SDK version available
 
-**Security Note:** Use a MOBILE SDK key for Android apps, not a client or server SDK key. Store it securely using Android best practices.
+**Security Note:** Use a MOBILE SDK key for Android apps. Mobile keys are designed for client-side mobile environments.
+</prerequisites>
+
+## SDK Key Configuration
+
+<decision_tree>
+
+### Setting Up Your SDK Key
+
+1. **First, check if you can modify build configuration files:**
+
+   - Try: Edit `app/build.gradle` or `local.properties`
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If build configuration modification succeeds:**
+   <success_path>
+
+   ```gradle
+   // app/build.gradle
+   android {
+     defaultConfig {
+       buildConfigField "String", "DEVCYCLE_MOBILE_SDK_KEY", "\"your_mobile_sdk_key_here\""
+     }
+   }
+   ```
+
+   - Verify the key is not committed to version control
+   - Ensure BuildConfig can access the variable
+   - Test that `BuildConfig.DEVCYCLE_MOBILE_SDK_KEY` is accessible
+     </success_path>
+
+3. **If build configuration modification fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before committing or deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Add DevCycle SDK Dependency
+### Step 1: Add DevCycle Android SDK Dependency
 
-#### For Gradle (build.gradle or build.gradle.kts)
+Add to your `app/build.gradle`:
 
-**In your module-level build.gradle file:**
-
-```groovy
+```gradle
 dependencies {
-    implementation 'com.devcycle:android-client-sdk:2.+'
+    implementation 'com.devcycle:android-client-sdk:+'
 }
 ```
 
-**For Kotlin DSL (build.gradle.kts):**
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Dependency added successfully (check build.gradle)
+- [ ] Gradle sync completed without errors
+- [ ] No dependency conflicts
+      </verification_checkpoint>
+
+### Step 2: Initialize DevCycle Client
+
+Create or update your Application class or MainActivity:
 
 ```kotlin
-dependencies {
-    implementation("com.devcycle:android-client-sdk:2.+")
-}
-```
-
-#### For Maven (pom.xml)
-
-```xml
-<dependency>
-    <groupId>com.devcycle</groupId>
-    <artifactId>android-client-sdk</artifactId>
-    <version>2.0.0</version>
-</dependency>
-```
-
-### 2. Add Required Permissions
-
-In your `AndroidManifest.xml`, add the Internet permission:
-
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-```
-
-### 3. Initialize DevCycle in Your Application
-
-Create or update your Application class:
-
-#### For Kotlin Projects
-
-**Application.kt:**
-
-```kotlin
-import android.app.Application
-import com.devcycle.sdk.android.api.DVCClient
+// Kotlin
+import com.devcycle.sdk.android.DVCClient
 import com.devcycle.sdk.android.model.DVCUser
 
 class MyApplication : Application() {
-    
     companion object {
         lateinit var dvcClient: DVCClient
     }
-    
+
     override fun onCreate() {
         super.onCreate()
-        
-        // Create user object
+
         val user = DVCUser.builder()
-            .withUserId("default-user")  // Replace with actual user ID
+            .userId("default-user") // Replace with actual user ID when available
+            .email("user@example.com") // Optional
             .build()
-        
-        // Initialize DevCycle client
+
         dvcClient = DVCClient.builder()
-            .withContext(this)
-            .withUser(user)
-            .withSDKKey("<DEVCYCLE_MOBILE_SDK_KEY>")  // Replace with your mobile SDK key
-            .build { error ->
-                if (error != null) {
-                    // Handle initialization error
-                    println("DevCycle initialization error: $error")
-                } else {
-                    // Successfully initialized
-                    println("DevCycle initialized successfully")
-                }
-            }
+            .sdkKey(BuildConfig.DEVCYCLE_MOBILE_SDK_KEY) // Use build config variable
+            .user(user)
+            .build(this)
     }
 }
 ```
 
-#### For Java Projects
+<verification_checkpoint>
+**Verify before continuing:**
 
-**MyApplication.java:**
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
+- [ ] User object includes required fields
+- [ ] Application builds without errors
+      </verification_checkpoint>
 
-```java
-import android.app.Application;
-import com.devcycle.sdk.android.api.DVCClient;
-import com.devcycle.sdk.android.model.DVCUser;
-import com.devcycle.sdk.android.api.DVCCallback;
+### Step 3: Test Your Application
 
-public class MyApplication extends Application {
-    
-    public static DVCClient dvcClient;
-    
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        
-        // Create user object
-        DVCUser user = DVCUser.builder()
-            .withUserId("default-user")  // Replace with actual user ID
-            .build();
-        
-        // Initialize DevCycle client
-        dvcClient = DVCClient.builder()
-            .withContext(this)
-            .withUser(user)
-            .withSDKKey("<DEVCYCLE_MOBILE_SDK_KEY>")  // Replace with your mobile SDK key
-            .build(new DVCCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    // Successfully initialized
-                    System.out.println("DevCycle initialized successfully");
-                }
-                
-                @Override
-                public void onError(Throwable error) {
-                    // Handle initialization error
-                    System.out.println("DevCycle initialization error: " + error);
-                }
-            });
-    }
-}
+```bash
+# Build and run your Android application
+./gradlew assembleDebug
+# or run from Android Studio
 ```
 
-### 4. Register Your Application Class
+<verification_checkpoint>
+**Verify before continuing:**
 
-In your `AndroidManifest.xml`, register your custom Application class:
+- [ ] Application builds successfully
+- [ ] No DevCycle-related runtime errors
+- [ ] Logcat shows successful initialization
+- [ ] Application runs normally on device/emulator
+      </verification_checkpoint>
 
-```xml
-<application
-    android:name=".MyApplication"
-    android:icon="@mipmap/ic_launcher"
-    android:label="@string/app_name"
-    android:theme="@style/AppTheme">
-    <!-- Your activities and other components -->
-</application>
-```
+## 🎉 Installation Complete!
 
-### 5. Store Your SDK Key Securely
+**STOP HERE** - The DevCycle Android installation is now complete.
 
-Instead of hardcoding the SDK key, consider using:
+**DO NOT CREATE:**
 
-- BuildConfig fields
-- Android resource files
-- Secure key management solutions
-- Environment-specific build configurations
+- Example activities using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any classes like `FeatureActivity` or similar
 
-After installation, build and run your application to verify everything works with no errors.
+**Available methods for future reference only:**
 
+- `dvcClient.variableValue(key, defaultValue)`
+- `dvcClient.variable(key, defaultValue)`
+- `dvcClient.allVariables()`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
+
+<success_criteria>
+
+## Installation Success Criteria
+
+Installation is complete when ALL of the following are true:
+
+- ✅ SDK dependency is added to build.gradle
+- ✅ SDK key is configured (via BuildConfig OR temporary hardcode with TODO)
+- ✅ DevCycle client is initialized
+- ✅ Application builds and runs without errors
+- ✅ Logcat shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
+
+<examples>
+## Common Installation Scenarios
+
+<example scenario="kotlin_project">
+**Scenario:** Kotlin Android project, Gradle, full file access
+**Actions taken:**
+1. ✅ Added BuildConfig field with mobile SDK key
+2. ✅ Added DevCycle dependency to build.gradle
+3. ✅ Initialized client in Application class
+4. ✅ App builds and runs successfully
+**Result:** Installation successful
+</example>
+
+<example scenario="java_project">
+**Scenario:** Java Android project, Android Studio
+**Actions taken:**
+1. ✅ Added BuildConfig field with SDK key
+2. ✅ Added dependency via Android Studio
+3. ✅ Configured client in Java Application class
+4. ✅ App compiles and runs successfully
+**Result:** Installation successful with Java
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="sdk_not_initialized">
+<symptom>"DevCycle client not initialized" or client methods fail</symptom>
+<diagnosis>
+1. Check: Is DVCClient.builder() called correctly?
+2. Check: Is the SDK key valid?
+3. Check: Does the user object have required fields?
+</diagnosis>
+<solution>
+- Verify mobile SDK key (starts with dvc_mobile_)
+- Ensure client is built in Application onCreate
+- User must have userId or be marked as anonymous
+</solution>
+</error>
 
-1. **"DVCClient is null" error:**
-   - Ensure the Application class is properly registered in AndroidManifest.xml
-   - Check that initialization completes before using the client
-   - Verify you're using a valid mobile SDK key
-
-2. **Build errors after adding dependency:**
-   - Sync your project with Gradle files
-   - Check for version conflicts with other dependencies
-   - Ensure minimum SDK version is API 21+
-
-3. **Network/Internet issues:**
-   - Verify Internet permission is added to AndroidManifest.xml
-   - Check network connectivity on device/emulator
-   - Ensure SDK key is correct and active
-
-4. **ProGuard/R8 issues:**
-   - If using code obfuscation, add DevCycle rules to your ProGuard configuration
-   - The SDK includes consumer ProGuard rules that should be applied automatically
+<error type="build_errors">
+<symptom>Build fails or dependency resolution errors</symptom>
+<diagnosis>
+1. Check: Is the dependency version compatible?
+2. Check: Are there conflicting dependencies?
+3. Check: Is Gradle sync completed?
+</diagnosis>
+<solution>
+- Use latest version: com.devcycle:android-client-sdk:+
+- Resolve conflicts in build.gradle
+- Clean and rebuild: ./gradlew clean build
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
-
+<next_steps>
 After successful installation:
 
-1. Update the user object with real user data when available
-2. Create your first feature flag via the DevCycle MCP and use it in your app
-3. Learn how to use variables throughout your Android application
-4. Set up targeting rules for different user segments
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using DevCycle methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when users log in
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
@@ -226,13 +265,3 @@ After successful installation:
 - [Android SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/android/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Android SDK GitHub Repository](https://github.com/DevCycleHQ/android-client-sdk)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues
