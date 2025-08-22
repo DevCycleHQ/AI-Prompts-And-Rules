@@ -1,51 +1,92 @@
 # DevCycle React OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for React applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for React. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a React web application using the OpenFeature SDK.
+</context>
 
-- Next.js applications (use Next.js SDK instead)
-- React Native apps (use React Native SDK instead)
-- Non-React JavaScript applications (use `javascript-openfeature.md` instead)
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
+- Next.js applications (use Next.js-specific configuration)
+- React Native mobile apps (use React Native OpenFeature setup)
 - Server-side React rendering without browser context
+- Non-React JavaScript applications
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
-- [ ] React 16.8+ installed (hooks support required)
+- [ ] React 16.8+ installed in the project
+- [ ] Understanding that OpenFeature provides a vendor-agnostic API
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
-**Security Note:** Use a CLIENT SDK key for React apps, not a server SDK key. Store it in environment variables like `REACT_APP_DEVCYCLE_CLIENT_SDK_KEY`.
+**Security Note:** Use a CLIENT SDK key for React apps. Client keys are safe to expose in browser environments.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create an environment file** (.env or .env.local) in the project root:
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` or `.env.local` file in project root
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file creation succeeds:**
+   <success_path>
 
    ```bash
    # .env or .env.local
    REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
    ```
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+   - Verify the file is in .gitignore
+   - Ensure Create React App can read the variable
+   - Test that `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` is accessible
+     </success_path>
 
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
-
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
-
-**Note:** Always prefer environment variables over hardcoding for security reasons.
+3. **If environment file creation fails:**
+   <fallback_path>
+   Ask the user: "I'm unable to create/modify environment files. Please choose:
+   **Option A: Temporary hardcoding for testing**
+   - I will add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - You MUST replace this before committing or deploying
+     **Option B: Manual setup**
+   - I will provide you with the SDK key value
+   - I will give you step-by-step instructions for setting it up
+   - You will configure the environment variable yourself"
+     Based on their response:
+   - Option A → Add key with `// TODO: Replace with environment variable before production`
+   - Option B → Provide key and detailed setup instructions
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle Provider
 
 ```bash
 # Using npm
@@ -58,9 +99,17 @@ yarn add @openfeature/react-sdk @devcycle/openfeature-web-provider
 pnpm add @openfeature/react-sdk @devcycle/openfeature-web-provider
 ```
 
-### 2. Set Up OpenFeature with DevCycle Provider
+<verification_checkpoint>
+**Verify before continuing:**
 
-In your main App component or entry point:
+- [ ] Both packages installed successfully
+- [ ] No peer dependency conflicts
+- [ ] package.json updated with both dependencies
+      </verification_checkpoint>
+
+### Step 2: Initialize OpenFeature with DevCycle Provider
+
+Create an initialization module (e.g., `openfeature-setup.js`):
 
 ```javascript
 import React from "react";
@@ -84,26 +133,21 @@ async function setupOpenFeature() {
   await OpenFeature.setProviderAndWait(devCycleProvider);
 }
 
-// Call setup before rendering
-setupOpenFeature();
-
-function App() {
-  return (
-    <OpenFeatureProvider>
-      <div className="App">
-        <h1>My React App with OpenFeature</h1>
-        {/* Your app components */}
-      </div>
-    </OpenFeatureProvider>
-  );
-}
-
-export default App;
+export { setupOpenFeature };
 ```
 
-### 3. Alternative: Initialize in useEffect
+<verification_checkpoint>
+**Verify before continuing:**
 
-For more control over initialization timing:
+- [ ] Initialization module created
+- [ ] SDK key properly referenced
+- [ ] User context structure is correct
+- [ ] No import errors
+      </verification_checkpoint>
+
+### Step 3: Integrate with Your React App
+
+Update your main App component:
 
 ```javascript
 import React, { useEffect, useState } from "react";
@@ -128,11 +172,11 @@ function App() {
       setIsReady(true);
     };
 
-    initializeFeatureFlags().catch(console.error);
+    initializeFeatureFlags();
   }, []);
 
   if (!isReady) {
-    return <div>Loading...</div>;
+    return <div>Loading feature flags...</div>;
   }
 
   return (
@@ -145,7 +189,18 @@ function App() {
 export default App;
 ```
 
-### 4. Using Feature Flags with OpenFeature Hooks
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] OpenFeatureProvider wraps the app
+- [ ] Initialization happens before rendering
+- [ ] Loading state is handled
+- [ ] Application compiles without errors
+      </verification_checkpoint>
+
+### Step 4: Example Hook Usage (Reference Only)
+
+Here's how to use OpenFeature hooks (don't implement unless requested):
 
 ```javascript
 import React from "react";
@@ -172,127 +227,138 @@ function FeatureComponent() {
     fontSize: 14,
   });
 
-  return (
-    <div style={{ fontSize: uiConfig.fontSize }}>
-      {showNewFeature ? (
-        <div>
-          <h2>New Feature!</h2>
-          <button>{buttonText}</button>
-          <p>Showing max {maxItems} items</p>
-        </div>
-      ) : (
-        <div>
-          <h2>Standard Feature</h2>
-        </div>
-      )}
-    </div>
-  );
+  return <div>{/* Component implementation */}</div>;
 }
 ```
 
-### 5. Updating User Context
+<success_criteria>
 
-```javascript
-import { useContext } from "react";
-import { OpenFeature } from "@openfeature/react-sdk";
+## Installation Success Criteria
 
-function UserProfile() {
-  const handleLogin = async (userId, userEmail) => {
-    // Update context when user logs in
-    await OpenFeature.setContext({
-      targetingKey: userId,
-      email: userEmail,
-      authenticated: true,
-      plan: "premium",
-      role: "admin",
-    });
+Installation is complete when ALL of the following are true:
 
-    // Feature flags will automatically re-evaluate
-  };
+- ✅ OpenFeature SDK and DevCycle provider packages installed
+- ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ OpenFeatureProvider wraps the application
+- ✅ Application runs without OpenFeature/DevCycle errors
+- ✅ Browser console shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-  const handleLogout = async () => {
-    // Set anonymous context on logout
-    await OpenFeature.setContext({
-      targetingKey: `anon-${Date.now()}`,
-      anonymous: true,
-    });
-  };
+<examples>
+## Common Installation Scenarios
 
-  return (
-    <div>
-      <button onClick={() => handleLogin("user123", "user@example.com")}>
-        Login
-      </button>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
-  );
-}
-```
+<example scenario="standard_openfeature">
+**Scenario:** React 18, npm, full file access
+**Actions taken:**
+1. ✅ Created .env.local with client SDK key
+2. ✅ Installed both OpenFeature and DevCycle packages
+3. ✅ Set up OpenFeature initialization
+4. ✅ Wrapped app with OpenFeatureProvider
+5. ✅ Verified provider ready state
+**Result:** Installation successful
+</example>
 
-### 6. Environment Configuration
+<example scenario="typescript_openfeature">
+**Scenario:** TypeScript React app, yarn
+**Actions taken:**
+1. ✅ Created .env with SDK key
+2. ✅ Installed packages with TypeScript support
+3. ✅ Added proper type imports
+4. ✅ Configured provider with type safety
+5. ✅ TypeScript compilation successful
+**Result:** Installation successful with full type support
+</example>
 
-Create environment files for different environments:
+<example scenario="migration_from_devcycle">
+**Scenario:** Existing DevCycle SDK, migrating to OpenFeature
+**Actions taken:**
+1. ℹ️ Detected existing @devcycle/react-client-sdk
+2. 🔄 Kept existing SDK key configuration
+3. ✅ Installed OpenFeature packages
+4. ✅ Created migration wrapper
+5. ✅ Gradual migration path established
+**Result:** Coexistence strategy implemented
+</example>
+</examples>
 
-```bash
-# .env.development
-REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_dev_client_sdk_key
-
-# .env.production
-REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_prod_client_sdk_key
-```
-
-After installation, run your React application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or hooks returning defaults only</symptom>
+<diagnosis>
+1. Check: Is OpenFeatureProvider wrapping your app?
+2. Check: Did you await setProviderAndWait()?
+3. Check: Is the context set with a valid targetingKey?
+</diagnosis>
+<solution>
+- Ensure OpenFeatureProvider is at the app root
+- Always await provider initialization
+- Context must have targetingKey or user_id
+- Add loading state while provider initializes
+</solution>
+</error>
 
-1. **"Provider not ready" error:**
+<error type="invalid_context">
+<symptom>"Missing targetingKey" or context errors</symptom>
+<diagnosis>
+1. Check: Does context have targetingKey field?
+2. Check: Is context set before provider?
+</diagnosis>
+<solution>
+- Context requires either targetingKey or user_id
+- Set context before initializing provider
+- Use OpenFeature.setContext() for updates
+</solution>
+</error>
 
-   - Ensure OpenFeatureProvider wraps your app
-   - Wait for provider initialization before rendering
-   - Check that your SDK key is correctly set (client SDK key)
+<error type="react_hooks">
+<symptom>React hooks errors or invalid hook calls</symptom>
+<diagnosis>
+1. Check: Are hooks called at component top level?
+2. Check: Is React version 16.8+?
+3. Check: Is OpenFeatureProvider present?
+</diagnosis>
+<solution>
+- Hooks must be called at top level of components
+- Ensure React version supports hooks
+- OpenFeatureProvider must wrap components using hooks
+</solution>
+</error>
 
-2. **Hooks returning default values only:**
-
-   - Confirm the provider has finished initializing
-   - Check that your feature flags are configured in DevCycle dashboard
-   - Verify the context has a valid `targetingKey`
-
-3. **React hooks errors:**
-
-   - Ensure hooks are called at the top level of components
-   - Check that React version is 16.8+
-   - Verify OpenFeatureProvider is in the component tree
-
-4. **TypeScript errors:**
-   - Both packages include TypeScript definitions
-   - May need to install @types/react if not present
+</troubleshooting>
 
 ## Next Steps
 
+<next_steps>
 Suggest these as next steps to the user.
 
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, you can help implement feature flag-based routing
+2. When requested, help implement feature flag-based routing
 3. Set up error boundaries for feature components if needed
 4. Help configure targeting rules in DevCycle dashboard when asked
 
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
+
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/sdk/client-side-sdks/react/react-openfeature/)
-- [OpenFeature React SDK](https://openfeature.dev/docs/reference/technologies/client/web/react)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [React OpenFeature SDK](https://openfeature.dev/docs/reference/technologies/client/web/react/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
+- [OpenFeature Specification](https://openfeature.dev/specification/)
 
 ## Support
 
 If you encounter issues:
 
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+1. Check the OpenFeature documentation
+2. Review the DevCycle provider documentation
+3. Review the troubleshooting section above
+4. Contact DevCycle support through the dashboard
+5. Check the OpenFeature community for help

@@ -1,38 +1,63 @@
 # DevCycle .NET SDK Installation Prompt
 
-You are helping to install and configure the DevCycle .NET SDK in a .NET server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle .NET SDK. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the .NET version and project type before proceeding
+- Adaptive: Provide alternatives for different .NET frameworks and versions
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**IMPORTANT: First detect the project configuration:**
+<context>
+You are helping to install and configure the DevCycle .NET SDK in a .NET server application.
+</context>
 
-- Check the .NET version (.NET Core 3.1+ or .NET 5+)
-- Identify the project type: ASP.NET Core, Console App, or other
-- Check the package manager: NuGet Package Manager, .NET CLI, or PackageReference
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
 
-**Do not use the SDK for:**
+<restrictions>
+**Do not use this SDK for:**
+- Client-side Blazor WebAssembly (use JavaScript SDK instead)
+- Unity games (check Unity-specific guidance)
+- Mobile apps using Xamarin/MAUI (use mobile SDKs)
 
-- Client-side Blazor WebAssembly (use appropriate client SDK approach)
-- Unity games (consider Unity-specific patterns)
-- Mobile applications (use iOS/Android SDKs instead)
+If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+</restrictions>
 
-If you detect that the user is trying to have you install the .NET SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
-
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] .NET Core 3.1+ or .NET 5+ installed
-- [ ] Visual Studio, VS Code, or .NET CLI available
-- [ ] The most recent DevCycle .NET SDK version to install
+- [ ] .NET 5.0+ or .NET Framework 4.6.2+ installed
+- [ ] NuGet package manager available
+- [ ] The most recent DevCycle .NET SDK version available
 
-**Security Note:** Use a SERVER SDK key for .NET backend applications. Never expose server keys to client-side code. Store keys in appsettings.json, environment variables, or Azure Key Vault.
+**Security Note:** Use a SERVER SDK key for .NET backend applications. Never expose server keys to client-side code. Store keys securely in appsettings.json, environment variables, or Azure Key Vault.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to add the SDK key to appsettings.json or appsettings.Development.json**:
+### Setting Up Your SDK Key
+
+1. **First, determine your configuration approach:**
+
+   - Check if you can modify appsettings.json
+   - Check if you can use environment variables
+   - Check if using Azure Key Vault or similar
+   - If all blocked → Go to fallback options
+
+2. **Recommended: appsettings.json approach**
+   <success_path>
+
+   In appsettings.json:
 
    ```json
    {
@@ -42,313 +67,323 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
    }
    ```
 
-   Or use environment variables or user secrets for development.
+   Or use environment variable reference:
 
-2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+   ```json
+   {
+     "DevCycle": {
+       "ServerSdkKey": "${DEVCYCLE_SERVER_SDK_KEY}"
+     }
+   }
+   ```
 
-   - "I'm unable to create/modify configuration files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+   For production, use appsettings.Production.json or environment variables.
 
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with configuration files
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up
+   </success_path>
 
-**Note:** Always prefer configuration files, user secrets, or Azure Key Vault over hardcoding for security reasons.
+3. **If configuration files cannot be modified:**
+   <fallback_path>
+   Ask the user: "I'm unable to modify configuration files. Please choose:
+
+   **Option A: Temporary hardcoding for testing**
+
+   - I will add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - You MUST replace this before deploying
+
+   **Option B: Manual setup**
+
+   - I will provide you with the SDK key value
+   - I will give you step-by-step configuration instructions
+   - You will configure the settings yourself"
+
+   Based on their response:
+
+   - Option A → Add key with `// TODO: Replace with configuration before production`
+   - Option B → Provide key and detailed configuration instructions
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle .NET SDK
+### Step 1: Install the DevCycle .NET SDK
 
-#### Using .NET CLI
-
-```bash
-dotnet add package DevCycle.SDK.Server.Local
-```
-
-#### Using Package Manager Console
+Using Package Manager Console:
 
 ```powershell
-Install-Package DevCycle.SDK.Server.Local
+Install-Package DevCycle.SDK.Server
 ```
 
-#### Using PackageReference
+Using .NET CLI:
 
-Add to your `.csproj` file:
+```bash
+dotnet add package DevCycle.SDK.Server
+```
+
+Using PackageReference in .csproj:
 
 ```xml
-<ItemGroup>
-  <PackageReference Include="DevCycle.SDK.Server.Local" Version="2.*" />
-</ItemGroup>
+<PackageReference Include="DevCycle.SDK.Server" Version="2.0.0" />
 ```
 
-### 2. Configure DevCycle in Your Application
+<verification_checkpoint>
+**Verify before continuing:**
 
-#### For ASP.NET Core Applications
+- [ ] Package installed successfully
+- [ ] No dependency conflicts
+- [ ] Package reference in project file
+- [ ] NuGet restore completed
+      </verification_checkpoint>
 
-In `Program.cs` (.NET 6+):
+### Step 2: Configure DevCycle Service
 
-```csharp
-using DevCycle.SDK.Server.Local.Api;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container
-builder.Services.AddControllers();
-
-// Configure DevCycle
-builder.Services.AddSingleton<IDevCycleClient>(serviceProvider =>
-{
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var sdkKey = configuration["DevCycle:ServerSdkKey"]
-        ?? Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY")
-        ?? throw new InvalidOperationException("DevCycle SDK key is not configured");
-
-    var client = new DevCycleLocalClient(sdkKey);
-    return client;
-});
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline
-app.UseRouting();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();
-```
-
-For older versions using `Startup.cs`:
+For ASP.NET Core applications, create a service configuration:
 
 ```csharp
-using DevCycle.SDK.Server.Local.Api;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using DevCycle.SDK.Server.Api;
+using DevCycle.SDK.Server.Cloud.Api;
+using DevCycle.SDK.Server.Common.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-public class Startup
+public static class ServiceExtensions
 {
-    public Startup(IConfiguration configuration)
+    public static IServiceCollection AddDevCycle(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
-        Configuration = configuration;
-    }
-
-    public IConfiguration Configuration { get; }
-
-    public void ConfigureServices(IServiceCollection services)
-    {
-        services.AddControllers();
-
-        // Configure DevCycle
         services.AddSingleton<IDevCycleClient>(serviceProvider =>
         {
-            var sdkKey = Configuration["DevCycle:ServerSdkKey"]
-                ?? Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY");
+            var sdkKey = configuration["DevCycle:ServerSdkKey"];
 
             if (string.IsNullOrEmpty(sdkKey))
+            {
+                // TODO: Replace with configuration before production
+                sdkKey = "<DEVCYCLE_SERVER_SDK_KEY>";
+            }
+
+            if (sdkKey == "<DEVCYCLE_SERVER_SDK_KEY>")
             {
                 throw new InvalidOperationException("DevCycle SDK key is not configured");
             }
 
-            return new DevCycleLocalClient(sdkKey);
-        });
-    }
-
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        if (env.IsDevelopment())
-        {
-            app.UseDeveloperExceptionPage();
-        }
-
-        app.UseRouting();
-        app.UseAuthorization();
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-        });
-    }
-}
-```
-
-### 3. Application Configuration
-
-Add to `appsettings.json`:
-
-```json
-{
-  "DevCycle": {
-    "ServerSdkKey": "your_server_sdk_key_here"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information"
-    }
-  }
-}
-```
-
-For production, use `appsettings.Production.json` or environment variables:
-
-```json
-{
-  "DevCycle": {
-    "ServerSdkKey": "${DEVCYCLE_SERVER_SDK_KEY}"
-  }
-}
-```
-
-### 4. Using DevCycle in Your Application
-
-Create a feature service:
-
-```csharp
-using DevCycle.SDK.Server.Common.Model;
-using DevCycle.SDK.Server.Local.Api;
-
-public interface IFeatureService
-{
-    Task<bool> IsFeatureEnabledAsync(string featureKey, string userId, string email = null);
-}
-
-public class FeatureService : IFeatureService
-{
-    private readonly IDevCycleClient _devCycleClient;
-    private readonly ILogger<FeatureService> _logger;
-
-    public FeatureService(IDevCycleClient devCycleClient, ILogger<FeatureService> logger)
-    {
-        _devCycleClient = devCycleClient;
-        _logger = logger;
-    }
-
-    public async Task<bool> IsFeatureEnabledAsync(string featureKey, string userId, string email = null)
-    {
-        try
-        {
-            var user = new DevCycleUser(userId)
+            var options = new DevCycleCloudOptions
             {
-                Email = email,
-                CustomData = new Dictionary<string, object>
-                {
-                    { "plan", "premium" },
-                    { "role", "admin" }
-                }
+                EnableCloudBucketing = false,
+                EnableEdgeDB = false,
+                EventFlushIntervalMs = 10000,
+                ConfigPollingIntervalMs = 10000,
+                RequestTimeoutMs = 10000
             };
 
-            var variable = await _devCycleClient.VariableAsync(user, featureKey, false);
-            return variable.Value;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking feature {FeatureKey} for user {UserId}", featureKey, userId);
-            return false; // Return default value on error
-        }
+            var client = new DevCycleCloudClient(sdkKey, options);
+            Console.WriteLine("DevCycle initialized successfully");
+
+            return client;
+        });
+
+        return services;
     }
 }
 ```
 
-Register the service:
+In Program.cs or Startup.cs:
 
 ```csharp
-builder.Services.AddScoped<IFeatureService, FeatureService>();
+// For .NET 6+ minimal APIs
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDevCycle(builder.Configuration);
+
+var app = builder.Build();
+
+// For older versions in Startup.cs
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddDevCycle(Configuration);
+    // Other services...
+}
 ```
 
-Example controller:
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Service extension created
+- [ ] SDK key configuration implemented
+- [ ] Service registered in DI container
+- [ ] No compilation errors
+      </verification_checkpoint>
+
+### Step 3: Use DevCycle in Controllers
+
+Example controller usage (reference only):
 
 ```csharp
+using DevCycle.SDK.Server.Api;
+using DevCycle.SDK.Server.Common.Model;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class FeaturesController : ControllerBase
+public class FeatureController : ControllerBase
 {
-    private readonly IFeatureService _featureService;
+    private readonly IDevCycleClient _devcycleClient;
 
-    public FeaturesController(IFeatureService featureService)
+    public FeatureController(IDevCycleClient devcycleClient)
     {
-        _featureService = featureService;
+        _devcycleClient = devcycleClient;
     }
 
-    [HttpGet("check/{featureKey}")]
-    public async Task<IActionResult> CheckFeature(string featureKey)
+    [HttpGet("check")]
+    public IActionResult CheckFeature(string userId)
     {
-        var userId = User.Identity?.Name ?? "anonymous";
-        var email = User.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
+        var user = new DevCycleUser(userId)
+        {
+            Email = "user@example.com",
+            CustomData = new Dictionary<string, object>
+            {
+                { "plan", "premium" },
+                { "role", "admin" }
+            }
+        };
 
-        var isEnabled = await _featureService.IsFeatureEnabledAsync(featureKey, userId, email);
+        // This is just an example - don't implement unless requested
+        var isEnabled = _devcycleClient.VariableValue(user, "feature-key", false);
 
         return Ok(new { featureEnabled = isEnabled });
     }
 }
 ```
 
-### 5. Clean Shutdown
+<success_criteria>
 
-Ensure proper cleanup on application shutdown:
+## Installation Success Criteria
 
-```csharp
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        var host = CreateHostBuilder(args).Build();
+Installation is complete when ALL of the following are true:
 
-        var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
-        lifetime.ApplicationStopping.Register(() =>
-        {
-            var devCycleClient = host.Services.GetService<IDevCycleClient>();
-            devCycleClient?.Dispose();
-        });
+- ✅ SDK NuGet package installed
+- ✅ SDK key configured (appsettings OR temporary with TODO)
+- ✅ DevCycle service registered in DI container
+- ✅ Application builds without errors
+- ✅ Console shows "DevCycle initialized successfully"
+- ✅ Application starts without DevCycle errors
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-        host.Run();
-    }
-}
-```
+<examples>
+## Common Installation Scenarios
 
-After installation, build and run your .NET application to verify everything works with no errors.
+<example scenario="aspnet_core_6">
+**Scenario:** ASP.NET Core 6, minimal APIs
+**Actions taken:**
+1. ✅ Added SDK via dotnet CLI
+2. ✅ Configured in appsettings.json
+3. ✅ Created service extension
+4. ✅ Registered in Program.cs
+5. ✅ Injected into endpoints
+**Result:** Installation successful with minimal APIs
+</example>
 
+<example scenario="net_framework_mvc">
+**Scenario:** .NET Framework 4.8, MVC 5
+**Actions taken:**
+1. ✅ Installed via NuGet Package Manager
+2. ✅ Used web.config for configuration
+3. ✅ Created singleton in Global.asax.cs
+4. ✅ Accessed via static property
+5. ✅ Tested in controllers
+**Result:** Installation successful in legacy app
+</example>
+
+<example scenario="azure_functions">
+**Scenario:** Azure Functions, .NET 6 isolated
+**Actions taken:**
+1. ✅ Added SDK package
+2. ✅ Used Azure App Configuration
+3. ✅ Configured in Program.cs
+4. ✅ Injected into function classes
+5. ✅ Tested locally and in Azure
+**Result:** Installation successful in serverless
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="initialization">
+<symptom>"DevCycle SDK key is not configured" error</symptom>
+<diagnosis>
+1. Check: Is appsettings.json configured?
+2. Check: Is the configuration being loaded?
+3. Check: Is the SDK key valid?
+</diagnosis>
+<solution>
+- Verify server SDK key (starts with dvc_server_)
+- Check IConfiguration is reading settings
+- Ensure appsettings.json is copied to output
+- Check environment-specific settings files
+</solution>
+</error>
 
-1. **"DevCycle client not initialized" error:**
+<error type="dependency_injection">
+<symptom>Unable to resolve IDevCycleClient</symptom>
+<diagnosis>
+1. Check: Is AddDevCycle() called?
+2. Check: Is service lifetime correct?
+3. Check: Is DI container configured?
+</diagnosis>
+<solution>
+- Ensure AddDevCycle() is called in startup
+- Use Singleton lifetime for client
+- Check service registration order
+- Verify constructor injection syntax
+</solution>
+</error>
 
-   - Ensure the client is registered in dependency injection
-   - Check that your SDK key is correctly set (server SDK key)
-   - Verify configuration is loaded properly
+<error type="nuget">
+<symptom>NuGet package installation failures</symptom>
+<diagnosis>
+1. Check: Is .NET version compatible?
+2. Check: Are there package conflicts?
+3. Check: Is NuGet source accessible?
+</diagnosis>
+<solution>
+- Minimum .NET 5.0 or Framework 4.6.2
+- Clear NuGet cache: dotnet nuget locals all --clear
+- Check NuGet.config for sources
+- Update NuGet package manager
+</solution>
+</error>
 
-2. **NuGet package installation errors:**
-
-   - Clear NuGet cache: `dotnet nuget locals all --clear`
-   - Update NuGet package sources
-   - Check .NET version compatibility
-
-3. **Configuration not found:**
-
-   - Ensure appsettings.json is copied to output directory
-   - Check environment-specific configuration files
-   - Verify environment variables are set
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall/proxy settings allow outbound HTTPS
+<error type="performance">
+<symptom>Slow response times or timeouts</symptom>
+<diagnosis>
+1. Check: Is client being recreated?
+2. Check: Are timeout values appropriate?
+3. Check: Is local bucketing enabled?
+</diagnosis>
+<solution>
+- Ensure client is singleton
+- Increase RequestTimeoutMs if needed
+- Enable EdgeDB for local evaluation
+- Check network latency to DevCycle
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
+<next_steps>
 Suggest these as next steps to the user.
 
 After successful installation:
 
 1. Set up user identification logic for your application
-
 2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-
-3. Implement proper error handling and logging if needed
-
+3. Implement proper error handling for feature flag evaluations if needed
 4. Help set up targeting rules for different user segments when requested
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
@@ -364,9 +399,7 @@ After successful installation:
 If you encounter issues:
 
 1. Check the official documentation
-
 2. Review the troubleshooting section above
-
-3. Contact DevCycle support through the dashboard
-
-4. Check the GitHub repository for known issues
+3. Check application logs and Event Viewer
+4. Contact DevCycle support through the dashboard
+5. Check the GitHub repository for known issues

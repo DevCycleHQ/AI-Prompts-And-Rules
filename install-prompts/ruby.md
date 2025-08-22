@@ -1,63 +1,117 @@
 # DevCycle Ruby SDK Installation Prompt
 
-You are helping to install and configure the DevCycle Ruby SDK in a Ruby server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle Ruby SDK. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the Ruby version and framework before proceeding
+- Adaptive: Provide alternatives for different Ruby frameworks
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**IMPORTANT: First detect the project configuration:**
+<context>
+You are helping to install and configure the DevCycle Ruby SDK in a Ruby server application.
+</context>
 
-- Check if it's a Rails application or plain Ruby
-- Identify the Ruby version (requires Ruby 2.7+)
-- Check for Gemfile and bundler usage
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
 
-**Do not use the SDK for:**
-
+<restrictions>
+**Do not use this SDK for:**
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
-- Mobile applications (use iOS/Android SDKs instead)
+- Mobile applications (use mobile SDKs instead)
 
-If you detect that the user is trying to have you install the Ruby SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+</restrictions>
 
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] Ruby 2.7+ installed
-- [ ] Bundler gem installed
-- [ ] The most recent DevCycle Ruby SDK version to install
+- [ ] Bundler or RubyGems package manager
+- [ ] The most recent DevCycle Ruby SDK version available
 
-**Security Note:** Use a SERVER SDK key for Ruby backend applications. Never expose server keys to client-side code. Store keys in environment variables or Rails credentials.
+**Security Note:** Use a SERVER SDK key for Ruby backend applications. Never expose server keys to client-side code. Store keys securely in environment variables or Rails credentials.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create an environment file** (.env) in the project root or use Rails credentials:
+### Setting Up Your SDK Key
+
+1. **First, determine your configuration approach:**
+
+   - Check if you can use environment variables
+   - Check if using Rails credentials
+   - Check if using dotenv gem
+   - If all blocked → Go to fallback options
+
+2. **Recommended: Environment variable approach**
+   <success_path>
+
+   Set in .env file (with dotenv gem):
 
    ```bash
-   # .env
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   Or for Rails applications, use encrypted credentials.
+   Or set system environment variable:
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+   ```bash
+   export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
 
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+   For Rails, use credentials:
 
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+   ```bash
+   rails credentials:edit
+   ```
 
-**Note:** Always prefer environment variables or Rails credentials over hardcoding for security reasons.
+   Add:
+
+   ```yaml
+   devcycle:
+     server_sdk_key: your_server_sdk_key_here
+   ```
+
+   </success_path>
+
+3. **If environment configuration is blocked:**
+   <fallback_path>
+   Ask the user: "I'm unable to set environment variables. Please choose:
+
+   **Option A: Temporary hardcoding for testing**
+
+   - I will add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - You MUST replace this before deploying
+
+   **Option B: Manual setup**
+
+   - I will provide you with the SDK key value
+   - I will give you step-by-step environment setup instructions
+   - You will configure the environment yourself"
+
+   Based on their response:
+
+   - Option A → Add key with `# TODO: Replace with environment variable before production`
+   - Option B → Provide key and detailed environment setup instructions
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle Ruby SDK
+### Step 1: Install the DevCycle Ruby SDK
 
-Add to your `Gemfile`:
+Add to your Gemfile:
 
 ```ruby
 gem 'devcycle-ruby-server-sdk'
@@ -75,243 +129,262 @@ Or install directly:
 gem install devcycle-ruby-server-sdk
 ```
 
-### 2. Create DevCycle Configuration
+<verification_checkpoint>
+**Verify before continuing:**
 
-Create a DevCycle initialization file (e.g., `config/initializers/devcycle.rb` for Rails):
+- [ ] Gem installed successfully
+- [ ] Gemfile.lock updated (if using Bundler)
+- [ ] No dependency conflicts
+- [ ] Gem available in console
+      </verification_checkpoint>
+
+### Step 2: Create DevCycle Configuration
+
+For Rails applications, create an initializer (`config/initializers/devcycle.rb`):
 
 ```ruby
-require 'devcycle'
+require 'devcycle-ruby-server-sdk'
 
 module DevCycleConfig
   class << self
-    attr_reader :client
+    attr_accessor :client
 
-    def initialize_client
-      sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY'] || '<DEVCYCLE_SERVER_SDK_KEY>'
+    def initialize!
+      sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY'] ||
+                Rails.application.credentials.dig(:devcycle, :server_sdk_key)
 
       if sdk_key.nil? || sdk_key.empty?
+        # TODO: Replace with environment variable before production
+        sdk_key = '<DEVCYCLE_SERVER_SDK_KEY>'
+      end
+
+      if sdk_key == '<DEVCYCLE_SERVER_SDK_KEY>'
         raise 'DevCycle SDK key is not configured'
       end
 
-      @client = DevCycle::Client.new(sdk_key)
-      Rails.logger.info('DevCycle initialized successfully') if defined?(Rails)
-      @client
-    rescue => e
-      Rails.logger.error("Failed to initialize DevCycle: #{e.message}") if defined?(Rails)
-      raise
-    end
+      options = DevCycle::Options.new(
+        enable_cloud_bucketing: false,
+        enable_edge_db: false,
+        event_flush_interval_ms: 10000,
+        config_polling_interval_ms: 10000
+      )
 
-    def client
-      @client ||= initialize_client
-    end
-
-    def shutdown
-      @client&.close
-      @client = nil
+      begin
+        self.client = DevCycle::Client.new(sdk_key, options)
+        Rails.logger.info 'DevCycle initialized successfully'
+      rescue => e
+        Rails.logger.error "DevCycle initialization failed: #{e.message}"
+        raise
+      end
     end
   end
 end
 
 # Initialize on Rails startup
-if defined?(Rails)
-  Rails.application.config.after_initialize do
-    DevCycleConfig.client
-  end
-
-  # Clean up on shutdown
-  at_exit do
-    DevCycleConfig.shutdown
-  end
-end
+DevCycleConfig.initialize! if defined?(Rails)
 ```
 
-### 3. Framework-Specific Integration
-
-#### For Rails Applications
-
-Create an initializer (`config/initializers/devcycle.rb`):
+For Sinatra or plain Ruby applications:
 
 ```ruby
-require 'devcycle'
+require 'devcycle-ruby-server-sdk'
+require 'singleton'
 
-Rails.application.config.devcycle = DevCycle::Client.new(
-  Rails.application.credentials.devcycle[:server_sdk_key] ||
-  ENV['DEVCYCLE_SERVER_SDK_KEY']
-)
+class DevCycleManager
+  include Singleton
 
-# Optional: Create a helper module
-module DevCycleHelper
-  def devcycle_client
-    Rails.application.config.devcycle
-  end
+  attr_reader :client
 
-  def feature_enabled?(key, user_id, default = false)
-    user = DevCycle::User.new(
-      user_id: user_id,
-      email: current_user&.email,
-      custom_data: {
-        plan: current_user&.plan,
-        role: current_user&.role
-      }
+  def initialize
+    sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY']
+
+    if sdk_key.nil? || sdk_key.empty?
+      # TODO: Replace with environment variable before production
+      sdk_key = '<DEVCYCLE_SERVER_SDK_KEY>'
+    end
+
+    if sdk_key == '<DEVCYCLE_SERVER_SDK_KEY>'
+      raise 'DevCycle SDK key is not configured'
+    end
+
+    options = DevCycle::Options.new(
+      enable_cloud_bucketing: false,
+      enable_edge_db: false
     )
 
-    devcycle_client.variable_value(user, key, default)
+    @client = DevCycle::Client.new(sdk_key, options)
+    puts 'DevCycle initialized successfully'
   rescue => e
-    Rails.logger.error "DevCycle error: #{e.message}"
-    default
+    puts "DevCycle initialization failed: #{e.message}"
+    raise
   end
 end
 
-# Include in ApplicationController
-class ApplicationController < ActionController::Base
-  include DevCycleHelper
-end
+# Initialize
+devcycle = DevCycleManager.instance
 ```
 
-#### For Sinatra Applications
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Configuration file created
+- [ ] SDK key handling implemented
+- [ ] Client initialization code added
+- [ ] No syntax errors
+      </verification_checkpoint>
+
+### Step 3: Example Usage (Reference Only)
+
+Here's how to use DevCycle in your application (don't implement unless requested):
 
 ```ruby
-require 'sinatra'
-require 'devcycle'
-
-class MyApp < Sinatra::Base
-  configure do
-    set :devcycle, DevCycle::Client.new(ENV['DEVCYCLE_SERVER_SDK_KEY'])
-  end
-
-  helpers do
-    def devcycle_client
-      settings.devcycle
-    end
-
-    def feature_enabled?(key, user_id, default = false)
-      user = DevCycle::User.new(user_id: user_id)
-      devcycle_client.variable_value(user, key, default)
-    end
-  end
-
-  get '/' do
-    'Sinatra app with DevCycle!'
-  end
-end
-```
-
-### 4. Using DevCycle in Your Application
-
-Example service class:
-
-```ruby
-class FeatureService
-  def initialize(devcycle_client = DevCycleConfig.client)
-    @devcycle_client = devcycle_client
-  end
-
-  def feature_enabled_for_user?(feature_key, user_id, email = nil)
+# In a Rails controller
+class FeatureController < ApplicationController
+  def index
     user = DevCycle::User.new(
-      user_id: user_id,
-      email: email,
+      user_id: current_user&.id || 'anonymous',
+      email: current_user&.email,
       custom_data: {
         plan: 'premium',
         role: 'admin'
       }
     )
 
-    @devcycle_client.variable_value(user, feature_key, false)
-  rescue => e
-    Rails.logger.error "Error checking feature #{feature_key}: #{e.message}"
-    false
-  end
-end
-```
+    # Check feature flag value
+    feature_enabled = DevCycleConfig.client.variable_value(
+      user,
+      'feature-key',
+      false # default value
+    )
 
-Example in a Rails controller:
-
-```ruby
-class FeaturesController < ApplicationController
-  def check
-    user_id = current_user&.id || 'anonymous'
-
-    feature_enabled = feature_enabled?('new-feature', user_id)
-
-    render json: { feature_enabled: feature_enabled }
-  end
-
-  def show
-    @feature_service = FeatureService.new
-
-    if @feature_service.feature_enabled_for_user?('premium-feature', current_user.id)
-      render :premium_view
+    if feature_enabled
+      render json: { message: 'New feature enabled!' }
     else
-      render :standard_view
+      render json: { message: 'Standard feature' }
     end
   end
 end
 ```
 
-### 5. Environment Configuration
+<success_criteria>
 
-Create environment configuration:
+## Installation Success Criteria
 
-#### Using dotenv for Rails/Ruby
+Installation is complete when ALL of the following are true:
 
-Add to `Gemfile`:
+- ✅ SDK gem installed successfully
+- ✅ SDK key configured (env var OR temporary with TODO)
+- ✅ DevCycle configuration/initializer created
+- ✅ Client initializes without errors
+- ✅ Application starts without DevCycle errors
+- ✅ Log shows "DevCycle initialized successfully"
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-```ruby
-gem 'dotenv-rails', groups: [:development, :test]
-```
+<examples>
+## Common Installation Scenarios
 
-Create `.env` file:
+<example scenario="rails_7_api">
+**Scenario:** Rails 7 API, Ruby 3.1
+**Actions taken:**
+1. ✅ Added gem to Gemfile
+2. ✅ Used Rails credentials for SDK key
+3. ✅ Created initializer
+4. ✅ Accessed client in controllers
+5. ✅ Verified on Rails startup
+**Result:** Installation successful with Rails
+</example>
 
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-RAILS_ENV=development
-```
+<example scenario="sinatra_microservice">
+**Scenario:** Sinatra microservice, Ruby 2.7
+**Actions taken:**
+1. ✅ Installed gem directly
+2. ✅ Used dotenv for configuration
+3. ✅ Created singleton manager
+4. ✅ Initialized in app.rb
+5. ✅ Used in route handlers
+**Result:** Installation successful with Sinatra
+</example>
 
-#### Using Rails Credentials
+<example scenario="sidekiq_workers">
+**Scenario:** Background jobs with Sidekiq
+**Actions taken:**
+1. ✅ Added gem to Gemfile
+2. ✅ Configured in Rails initializer
+3. ✅ Ensured thread-safe access
+4. ✅ Used in worker classes
+5. ✅ Tested with concurrent jobs
+**Result:** Installation successful with background jobs
+</example>
+</examples>
 
-```bash
-rails credentials:edit
-```
-
-Add:
-
-```yaml
-devcycle:
-  server_sdk_key: your_server_sdk_key_here
-```
-
-After installation, run your Ruby application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="initialization">
+<symptom>"DevCycle SDK key is not configured" error</symptom>
+<diagnosis>
+1. Check: Is environment variable set?
+2. Check: Are Rails credentials configured?
+3. Check: Is the SDK key valid?
+</diagnosis>
+<solution>
+- Verify server SDK key (starts with dvc_server_)
+- Check ENV['DEVCYCLE_SERVER_SDK_KEY']
+- For Rails: rails credentials:show
+- Ensure .env is loaded if using dotenv
+</solution>
+</error>
 
-1. **"DevCycle client not initialized" error:**
+<error type="gem_installation">
+<symptom>Gem installation failures</symptom>
+<diagnosis>
+1. Check: Is Ruby version 2.7+?
+2. Check: Is Bundler up to date?
+3. Check: Are there gem conflicts?
+</diagnosis>
+<solution>
+- Check Ruby version: ruby -v
+- Update Bundler: gem update bundler
+- Clear cache: bundle clean --force
+- Try: bundle update devcycle-ruby-server-sdk
+</solution>
+</error>
 
-   - Ensure the client is properly initialized on application startup
-   - Check that your SDK key is correctly set (server SDK key)
-   - Verify Rails initializers are loaded if using Rails
+<error type="rails_loading">
+<symptom>Initializer not loading in Rails</symptom>
+<diagnosis>
+1. Check: Is file in config/initializers?
+2. Check: Is Rails environment correct?
+3. Check: Are there syntax errors?
+</diagnosis>
+<solution>
+- Ensure file ends with .rb
+- Check Rails.env is as expected
+- Run: rails console to test
+- Check rails server output for errors
+</solution>
+</error>
 
-2. **Gem installation errors:**
-
-   - Run `bundle update` to update dependencies
-   - Check Ruby version compatibility (2.7+)
-   - Clear bundler cache: `bundle clean --force`
-
-3. **Environment variable not found:**
-
-   - Ensure `.env` file is in the project root
-   - Check that dotenv-rails is properly configured
-   - Verify Rails credentials are decrypted correctly
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall/proxy settings allow outbound HTTPS
+<error type="thread_safety">
+<symptom>Errors in multi-threaded environment</symptom>
+<diagnosis>
+1. Check: Is client being shared safely?
+2. Check: Are there race conditions?
+3. Check: Is connection pooling needed?
+</diagnosis>
+<solution>
+- Use singleton pattern for client
+- Don't recreate client per request
+- Client is thread-safe by design
+- Check for concurrent modifications
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
+<next_steps>
 Suggest these as next steps to the user.
 
 After successful installation:
@@ -320,6 +393,9 @@ After successful installation:
 2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
 3. Implement proper error handling for feature flag evaluations if needed
 4. Help set up targeting rules for different user segments when requested
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
@@ -336,5 +412,6 @@ If you encounter issues:
 
 1. Check the official documentation
 2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues
+3. Check Rails/Ruby logs
+4. Contact DevCycle support through the dashboard
+5. Check the GitHub repository for known issues

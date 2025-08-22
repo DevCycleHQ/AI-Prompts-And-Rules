@@ -1,53 +1,91 @@
 # DevCycle React SDK Installation Prompt
 
-You are helping to install and configure the DevCycle React SDK in a React web application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle React SDK. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding  
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use the SDK for:**
+<context>
+You are helping to install and configure the DevCycle React SDK in a React web application.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this SDK for:**
 - Next.js applications (use `@devcycle/nextjs-sdk` instead)
 - React Native mobile apps (use `@devcycle/react-native-client-sdk`)
 - Server-side React rendering without browser context
 - Node.js backend services (use `@devcycle/nodejs-server-sdk`)
 
-If you detect that the user is trying to have you install the React SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+If you detect that the user is trying to install the React SDK in an incompatible application, stop immediately and advise which SDK they should use instead.
+</restrictions>
 
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
-- [ ] React 16.8+ installed in your project
-- [ ] The most recent DevCycle React SDK version to install
+- [ ] React 16.8+ installed in the project
+- [ ] The most recent DevCycle React SDK version available
 
-**Security Note:** Use a CLIENT SDK key for React apps, not a server SDK key. Store it in environment variables like `REACT_APP_DEVCYCLE_CLIENT_SDK_KEY`.
+**Security Note:** Use a CLIENT SDK key for React apps, not a server SDK key. Client keys are safe to expose in browser environments.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create an environment file** (.env or .env.local) in the project root:
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` or `.env.local` file in project root
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file creation succeeds:**
+   <success_path>
 
    ```bash
    # .env or .env.local
    REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
    ```
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+   - Verify the file is in .gitignore
+   - Ensure dotenv is configured (Create React App includes this by default)
+   - Test that `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` is accessible
+     </success_path>
 
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
-
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
-
-**Note:** Always prefer environment variables over hardcoding for security reasons.
+3. **If environment file creation fails:**
+   <fallback_path>
+   Ask the user: "I'm unable to create/modify environment files. Please choose:
+   **Option A: Temporary hardcoding for testing**
+   - I will add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - You MUST replace this before committing or deploying
+   **Option B: Manual setup**
+   - I will provide you with the SDK key value
+   - I will give you step-by-step instructions for setting it up
+   - You will configure the environment variable yourself"
+   Based on their response:
+   - Option A → Add key with `// TODO: Replace with environment variable before production`
+   - Option B → Provide key and detailed setup instructions
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle React SDK
+### Step 1: Install the DevCycle React SDK
 
 ```bash
 # Using npm
@@ -60,9 +98,17 @@ yarn add @devcycle/react-client-sdk
 pnpm add @devcycle/react-client-sdk
 ```
 
-### 2. Wrap Your App with DevCycle Provider
+<verification_checkpoint>
+**Verify before continuing:**
 
-Add the DevCycle provider to your root App component. This should be done as early as possible in your application initialization:
+- [ ] Package installed successfully (check package.json)
+- [ ] No peer dependency warnings
+- [ ] Node modules updated
+      </verification_checkpoint>
+
+### Step 2: Configure DevCycle Provider
+
+Add the DevCycle provider to your root App component:
 
 ```javascript
 import React from "react";
@@ -82,28 +128,132 @@ export default withDevCycleProvider({
   user: {
     user_id: "example-user", // Required: unique identifier
     email: "user@example.com", // Optional: for better targeting
-    isAnonymous: false, // Recommended to be explicit on whether or not to use an Anonymous ID
+    isAnonymous: false, // Recommended: be explicit about anonymous users
   },
 })(App);
 ```
 
-After installation, verify everything runs with no errors.
+<verification_checkpoint>
+**Verify before continuing:**
 
+- [ ] Provider wraps the root App component
+- [ ] SDK key is properly referenced (via env or temporary)
+- [ ] User object includes at minimum a user_id
+- [ ] Application compiles without errors
+      </verification_checkpoint>
+
+### Step 3: Verify Installation
+
+Run your application and check for successful initialization:
+
+```bash
+npm start
+# or
+yarn start
+```
+
+Check the browser console for:
+
+- No DevCycle-related errors
+- Successful initialization message (if in development mode)
+- Network requests to DevCycle API succeeding
+
+<success_criteria>
+
+## Installation Success Criteria
+
+Installation is complete when ALL of the following are true:
+
+- ✅ SDK package is installed in package.json
+- ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
+- ✅ DevCycle provider wraps the application root
+- ✅ Application runs without DevCycle-related errors
+- ✅ Browser console shows no DevCycle errors
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
+
+<examples>
+## Common Installation Scenarios
+
+<example scenario="standard_installation">
+**Scenario:** User has full file system access, React 18, npm
+**Actions taken:**
+1. ✅ Created .env.local with SDK key
+2. ✅ Installed @devcycle/react-client-sdk via npm
+3. ✅ Wrapped App component with provider
+4. ✅ Verified no console errors
+**Result:** Installation successful
+</example>
+
+<example scenario="restricted_environment">
+**Scenario:** User cannot create env files, React 17, yarn
+**Actions taken:**
+1. ❌ Cannot create .env file - permission denied
+2. 🔄 Asked user for preference
+3. ✅ User chose Option A (temporary hardcoding)
+4. ✅ Added SDK key with TODO comment
+5. ✅ Installed package via yarn
+**Result:** Installation successful with temporary configuration
+</example>
+
+<example scenario="wrong_sdk_detection">
+**Scenario:** User trying to install in Next.js app
+**Actions taken:**
+1. 🛑 Detected Next.js framework (found next.config.js)
+2. ℹ️ Informed user about incorrect SDK
+3. ➡️ Redirected to @devcycle/nextjs-sdk
+**Result:** Prevented incorrect installation
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="initialization">
+<symptom>"DevCycle is not initialized" error in console</symptom>
+<diagnosis>
+1. Check: Is the provider wrapping your entire app?
+2. Check: Is the SDK key correctly set?
+3. Check: Are you using a CLIENT SDK key (not server)?
+</diagnosis>
+<solution>
+- If provider missing → Ensure withDevCycleProvider wraps App export
+- If key missing → Verify environment variable name matches exactly
+- If wrong key type → Get client SDK key from DevCycle dashboard
+</solution>
+</error>
 
-1. **"DevCycle is not initialized" error:**
+<error type="typescript">
+<symptom>TypeScript compilation errors</symptom>
+<diagnosis>
+1. Check: Are TypeScript definitions installed?
+2. Check: Is TypeScript version compatible?
+</diagnosis>
+<solution>
+- The SDK includes TypeScript definitions automatically
+- Ensure TypeScript version is 4.0+
+- Try removing node_modules and reinstalling
+</solution>
+</error>
 
-   - Ensure the provider wraps your entire app
-   - Check that your SDK key is correctly set in environment variables
-   - Verify you're using a CLIENT SDK key, not a server key
-
-2. **TypeScript errors:**
-   - The SDK includes TypeScript definitions
+<error type="environment">
+<symptom>Environment variable not found</symptom>
+<diagnosis>
+1. Check: Is the variable name prefixed with REACT_APP_?
+2. Check: Did you restart the development server?
+3. Check: Is .env file in the project root?
+</diagnosis>
+<solution>
+- Variable must start with REACT_APP_ in Create React App
+- Restart dev server after adding environment variables
+- Ensure .env file is in same directory as package.json
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
+<next_steps>
 Suggest these as next steps to the user.
 
 After successful installation:
@@ -111,6 +261,9 @@ After successful installation:
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
 2. When requested, help set up targeting rules for different user segments
 3. Implement proper error boundaries around feature-flagged components if needed
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 

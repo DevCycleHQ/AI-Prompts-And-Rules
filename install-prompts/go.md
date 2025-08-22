@@ -1,60 +1,120 @@
 # DevCycle Go SDK Installation Prompt
 
-You are helping to install and configure the DevCycle Go SDK in a Go server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle Go SDK. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the Go environment and module system before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use the SDK for:**
+<context>
+You are helping to install and configure the DevCycle Go SDK in a Go server application.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this SDK for:**
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
 - Mobile applications (use iOS/Android SDKs instead)
 
-If you detect that the user is trying to have you install the Go SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+</restrictions>
 
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] Go 1.16+ installed
+- [ ] Go 1.19+ installed
 - [ ] Go modules enabled in your project
-- [ ] The most recent DevCycle Go SDK version to install
+- [ ] The most recent DevCycle Go SDK version available
 
-**Security Note:** Use a SERVER SDK key for Go backend applications. Never expose server keys to client-side code. Store keys in environment variables.
+**Security Note:** Use a SERVER SDK key for Go backend applications. Never expose server keys to client-side code. Store keys securely in environment variables.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to set up the SDK key using environment variables**:
+### Setting Up Your SDK Key
+
+1. **First, determine your configuration approach:**
+
+   - Check if you can set environment variables
+   - Check if you're using a configuration file
+   - If both blocked → Go to fallback options
+
+2. **Recommended: Environment variable approach**
+   <success_path>
+   Set environment variable:
 
    ```bash
    export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   Or add it to a .env file and load it using a package like godotenv.
+   Or add to .env file with godotenv:
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
 
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+   Load with godotenv:
 
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
+   ```go
+   import "github.com/joho/godotenv"
 
-**Note:** Always prefer environment variables over hardcoding for security reasons.
+   func init() {
+       godotenv.Load()
+   }
+   ```
+
+   </success_path>
+
+3. **If environment configuration is blocked:**
+   <fallback_path>
+   Ask the user: "I'm unable to set environment variables. Please choose:
+   **Option A: Temporary hardcoding for testing**
+   - I will add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - You MUST replace this before deploying
+   **Option B: Manual setup**
+   - I will provide you with the SDK key value
+   - I will give you step-by-step environment setup instructions
+   - You will configure the environment yourself"
+   Based on their response:
+   - Option A → Add key with `// TODO: Replace with environment variable before production`
+   - Option B → Provide key and detailed environment setup instructions
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle Go SDK
+### Step 1: Install the DevCycle Go SDK
 
 ```bash
 go get github.com/devcyclehq/go-server-sdk/v2
 ```
 
-### 2. Initialize DevCycle in Your Application
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Module downloaded successfully
+- [ ] go.mod updated with dependency
+- [ ] No version conflicts
+- [ ] Run `go mod tidy` to clean up
+      </verification_checkpoint>
+
+### Step 2: Create DevCycle Configuration
 
 Create a DevCycle configuration file (e.g., `devcycle/client.go`):
 
@@ -74,29 +134,35 @@ import (
 var (
     client *devcycle.Client
     once   sync.Once
-    mu     sync.RWMutex
 )
 
-// InitializeDevCycle initializes the DevCycle client
-func InitializeDevCycle() error {
+// Initialize initializes the DevCycle client
+func Initialize() error {
     var initErr error
 
     once.Do(func() {
         sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
         if sdkKey == "" {
-            sdkKey = "<DEVCYCLE_SERVER_SDK_KEY>" // Replace with your server SDK key
+            // TODO: Replace with environment variable before production
+            sdkKey = "<DEVCYCLE_SERVER_SDK_KEY>"
         }
 
-        // Create client configuration
-        config := devcycle.ClientConfig{
-            SDKKey:              sdkKey,
-            EnableCloudBucketing: false,
-            EnableEdgeDB:        false,
+        if sdkKey == "" || sdkKey == "<DEVCYCLE_SERVER_SDK_KEY>" {
+            initErr = fmt.Errorf("DevCycle SDK key is not configured")
+            return
         }
 
-        // Initialize the client
+        // Create client with options
+        options := devcycle.Options{
+            EnableEdgeDB:                 false,
+            EnableCloudBucketing:         false,
+            EventFlushIntervalMS:         10000,
+            ConfigPollingIntervalMS:      10000,
+            RequestTimeout:               10 * time.Second,
+        }
+
         var err error
-        client, err = devcycle.NewClient(config)
+        client, err = devcycle.NewClient(sdkKey, &options)
         if err != nil {
             initErr = fmt.Errorf("failed to initialize DevCycle: %w", err)
             return
@@ -110,20 +176,14 @@ func InitializeDevCycle() error {
 
 // GetClient returns the initialized DevCycle client
 func GetClient() (*devcycle.Client, error) {
-    mu.RLock()
-    defer mu.RUnlock()
-
     if client == nil {
         return nil, fmt.Errorf("DevCycle client not initialized")
     }
     return client, nil
 }
 
-// Close cleanly shuts down the DevCycle client
+// Close closes the DevCycle client
 func Close() error {
-    mu.Lock()
-    defer mu.Unlock()
-
     if client != nil {
         return client.Close()
     }
@@ -131,7 +191,16 @@ func Close() error {
 }
 ```
 
-### 3. Initialize DevCycle on Application Startup
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Configuration package created
+- [ ] Import paths correct
+- [ ] No compilation errors
+- [ ] SDK key handling implemented
+      </verification_checkpoint>
+
+### Step 3: Initialize in Your Application
 
 In your main application file:
 
@@ -141,46 +210,24 @@ package main
 import (
     "log"
     "net/http"
-    "os"
-    "os/signal"
-    "syscall"
 
-    "your-module/devcycle"
+    "yourapp/devcycle"
+    // other imports
 )
 
 func main() {
     // Initialize DevCycle
-    if err := devcycle.InitializeDevCycle(); err != nil {
-        log.Fatal("Failed to initialize DevCycle:", err)
+    if err := devcycle.Initialize(); err != nil {
+        log.Fatalf("Failed to initialize DevCycle: %v", err)
     }
+    defer devcycle.Close()
 
-    // Ensure clean shutdown
-    defer func() {
-        if err := devcycle.Close(); err != nil {
-            log.Printf("Error closing DevCycle client: %v", err)
-        }
-    }()
-
-    // Set up your HTTP server
+    // Set up your HTTP server or application
     http.HandleFunc("/", homeHandler)
-    http.HandleFunc("/api/feature", featureHandler)
-
-    // Start server
-    server := &http.Server{Addr: ":8080"}
-
-    // Handle graceful shutdown
-    go func() {
-        sigChan := make(chan os.Signal, 1)
-        signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-        <-sigChan
-
-        log.Println("Shutting down server...")
-        server.Close()
-    }()
 
     log.Println("Server starting on :8080")
-    if err := server.ListenAndServe(); err != http.ErrServerClosed {
-        log.Fatal("Server failed:", err)
+    if err := http.ListenAndServe(":8080", nil); err != nil {
+        log.Fatal(err)
     }
 }
 
@@ -189,31 +236,39 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### 4. Using DevCycle in Your Handlers
+<verification_checkpoint>
+**Verify before continuing:**
 
-Example of using DevCycle to check feature flags:
+- [ ] DevCycle initializes on startup
+- [ ] Defer close is set up
+- [ ] Application compiles
+- [ ] No initialization errors
+      </verification_checkpoint>
+
+### Step 4: Example Usage (Reference Only)
+
+Here's how to use DevCycle in your handlers (don't implement unless requested):
 
 ```go
-package main
+package handlers
 
 import (
-    "encoding/json"
     "net/http"
 
     devcycle "github.com/devcyclehq/go-server-sdk/v2"
-    "your-module/devcycle"
+    "yourapp/devcycle"
 )
 
-func featureHandler(w http.ResponseWriter, r *http.Request) {
+func FeatureHandler(w http.ResponseWriter, r *http.Request) {
     client, err := devcycle.GetClient()
     if err != nil {
-        http.Error(w, "DevCycle not available", http.StatusInternalServerError)
+        http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
         return
     }
 
-    // Create user from request context (example)
+    // Define user for this request
     user := devcycle.User{
-        UserId: "user-123", // Get from auth context
+        UserId: "user-123", // Get from session/auth
         Email:  "user@example.com",
         CustomData: map[string]interface{}{
             "plan": "premium",
@@ -221,87 +276,143 @@ func featureHandler(w http.ResponseWriter, r *http.Request) {
         },
     }
 
-    // Check feature flag value
-    featureEnabled, err := client.VariableValue(
-        user,
-        "feature-key",
-        false, // default value
-    )
+    // Check feature flag
+    isEnabled, err := client.VariableValue(r.Context(), user, "feature-key", false)
     if err != nil {
-        http.Error(w, "Error checking feature", http.StatusInternalServerError)
-        return
+        log.Printf("Error getting feature flag: %v", err)
+        isEnabled = false // Use default
     }
 
-    response := map[string]interface{}{
-        "featureEnabled": featureEnabled,
+    if isEnabled.(bool) {
+        // Feature is enabled
+        w.Write([]byte("New feature enabled!"))
+    } else {
+        // Feature is disabled
+        w.Write([]byte("Standard feature"))
     }
-
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
 }
 ```
 
-### 5. Environment Configuration
+<success_criteria>
 
-Create a `.env` file for local development:
+## Installation Success Criteria
 
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-GO_ENV=development
-```
+Installation is complete when ALL of the following are true:
 
-Load environment variables using a package like godotenv:
+- ✅ SDK module installed via go get
+- ✅ go.mod updated with dependency
+- ✅ SDK key configured (env var OR temporary with TODO)
+- ✅ DevCycle client initialization code created
+- ✅ Client initializes on application startup
+- ✅ Application builds and runs without errors
+- ✅ Console shows "DevCycle initialized successfully"
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-```bash
-go get github.com/joho/godotenv
-```
+<examples>
+## Common Installation Scenarios
 
-```go
-package main
+<example scenario="gin_framework">
+**Scenario:** Gin web framework, Go 1.20, modules
+**Actions taken:**
+1. ✅ Set SDK key as environment variable
+2. ✅ Installed SDK with go get
+3. ✅ Created client singleton
+4. ✅ Initialized in main()
+5. ✅ Created middleware for user context
+**Result:** Installation successful with Gin
+</example>
 
-import (
-    "log"
-    _ "github.com/joho/godotenv/autoload"
-)
+<example scenario="microservice_docker">
+**Scenario:** Microservice in Docker, Go 1.19
+**Actions taken:**
+1. ✅ Added SDK to go.mod
+2. ✅ Set SDK key in Dockerfile ENV
+3. ✅ Created initialization package
+4. ✅ Added graceful shutdown
+5. ✅ Tested in container
+**Result:** Installation successful in Docker
+</example>
 
-func main() {
-    // Environment variables are now loaded
-    // ... rest of your application
-}
-```
+<example scenario="lambda_function">
+**Scenario:** AWS Lambda function
+**Actions taken:**
+1. ✅ Added SDK dependency
+2. ✅ Set SDK key in Lambda environment
+3. ✅ Initialized client in init()
+4. ✅ Reused client across invocations
+5. ✅ Tested cold/warm starts
+**Result:** Installation optimized for Lambda
+</example>
+</examples>
 
-After installation, run your Go application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="initialization">
+<symptom>"DevCycle client not initialized" error</symptom>
+<diagnosis>
+1. Check: Is Initialize() called before using client?
+2. Check: Is the SDK key valid?
+3. Check: Are there initialization errors?
+</diagnosis>
+<solution>
+- Call Initialize() in main() before serving
+- Verify server SDK key (starts with dvc_server_)
+- Check error returned from Initialize()
+- Ensure environment variable is set
+</solution>
+</error>
 
-1. **"DevCycle client not initialized" error:**
+<error type="module">
+<symptom>Module download or import errors</symptom>
+<diagnosis>
+1. Check: Is Go 1.19+ installed?
+2. Check: Are modules enabled?
+3. Check: Is there proxy access?
+</diagnosis>
+<solution>
+- Check Go version: `go version`
+- Ensure go.mod exists in project root
+- Run `go mod tidy` to resolve dependencies
+- Check GOPROXY settings if behind firewall
+</solution>
+</error>
 
-   - Ensure `InitializeDevCycle()` is called on application startup
-   - Check that your SDK key is correctly set (server SDK key)
-   - Verify environment variables are loaded
+<error type="context">
+<symptom>Context deadline exceeded errors</symptom>
+<diagnosis>
+1. Check: Is RequestTimeout configured?
+2. Check: Is network connectivity working?
+3. Check: Are you passing context correctly?
+</diagnosis>
+<solution>
+- Increase RequestTimeout in Options
+- Verify network access to DevCycle API
+- Pass request context to VariableValue()
+- Check for proxy/firewall issues
+</solution>
+</error>
 
-2. **Import errors:**
-
-   - Run `go mod tidy` to ensure dependencies are downloaded
-   - Check Go version compatibility (1.16+)
-   - Verify the import path is correct
-
-3. **Environment variable not found:**
-
-   - Ensure `.env` file is in the project root
-   - Check that godotenv is properly configured
-   - Verify the SDK key environment variable name matches
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall/proxy settings allow outbound HTTPS
+<error type="performance">
+<symptom>High latency or slow responses</symptom>
+<diagnosis>
+1. Check: Is local bucketing enabled?
+2. Check: Is the client reused?
+3. Check: Are there network issues?
+</diagnosis>
+<solution>
+- Enable EdgeDB for local bucketing
+- Ensure client is initialized once and reused
+- Don't create new clients per request
+- Check network latency to DevCycle
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
+<next_steps>
 Suggest these as next steps to the user.
 
 After successful installation:
@@ -311,13 +422,16 @@ After successful installation:
 3. Implement proper error handling for feature flag evaluations if needed
 4. Help set up targeting rules for different user segments when requested
 
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
+
 ## Helpful Resources
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
 - [Go SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/go/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [Go SDK GitHub Repository](https://github.com/DevCycleHQ/go-server-sdk)
+- [Go SDK GitHub Repository](https://github.com/devcyclehq/go-server-sdk)
 - [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
 
 ## Support
@@ -326,5 +440,6 @@ If you encounter issues:
 
 1. Check the official documentation
 2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues
+3. Use Go debugging tools
+4. Contact DevCycle support through the dashboard
+5. Check the GitHub repository for known issues

@@ -342,11 +342,10 @@ After installation, run your Python application and verify everything works with
    - Check Python version compatibility (3.8+)
    - Verify virtual environment is activated if using one
 
-3. **Feature flags returning default values only:**
+3. **Client returning default values only:**
 
    - Confirm the provider is initialized before use
    - Check that evaluation context has targeting_key
-   - Verify feature flags are configured in DevCycle dashboard
 
 4. **Connection/Network errors:**
    - Check network connectivity

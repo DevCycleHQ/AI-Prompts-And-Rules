@@ -450,11 +450,10 @@ After installation, run your NestJS application and verify everything works with
    - Check that OpenFeatureModule is marked as @Global() if needed
    - Verify service imports and exports
 
-3. **Feature flags returning default values only:**
+3. **Service returning default values only:**
 
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
-   - Verify feature flags are configured in DevCycle dashboard
 
 4. **Connection/Network errors:**
    - Check network connectivity

@@ -184,11 +184,10 @@ After installation, run your application and verify everything works with no err
    - Check that your SDK key is correctly set (client SDK key)
    - Verify the context has a valid `targetingKey`
 
-2. **Feature flags returning default values only:**
+2. **Hooks returning default values only:**
 
    - Confirm the provider has finished initializing
-   - Check that your feature flags are properly configured in DevCycle dashboard
-   - Verify the user context is set correctly
+   - Verify the user context is set correctly with targetingKey
 
 3. **TypeScript errors:**
 

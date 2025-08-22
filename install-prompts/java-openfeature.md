@@ -314,11 +314,10 @@ After installation, build and run your Java application to verify everything wor
    - Check for version conflicts between OpenFeature and DevCycle
    - Ensure repository access for all artifacts
 
-3. **Feature flags returning default values only:**
+3. **Client returning default values only:**
 
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
-   - Verify feature flags are configured in DevCycle dashboard
 
 4. **Connection/Network errors:**
    - Check network connectivity

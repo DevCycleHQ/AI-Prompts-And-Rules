@@ -353,11 +353,10 @@ After installation, run your PHP application and verify everything works with no
    - Check PHP version compatibility (7.4+)
    - Clear Composer cache: `composer clear-cache`
 
-3. **Feature flags returning default values only:**
+3. **Client returning default values only:**
 
    - Confirm the provider is initialized before use
    - Check that evaluation context has targetingKey
-   - Verify feature flags are configured in DevCycle dashboard
 
 4. **Connection/Network errors:**
    - Check network connectivity

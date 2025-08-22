@@ -304,10 +304,9 @@ After installation, build and run your Android application to verify everything 
    - Check for version conflicts with other dependencies
    - Ensure minimum SDK version is API 21+
 
-3. **Feature flags returning default values only:**
+3. **Client returning default values only:**
 
    - Confirm the provider has finished initializing
-   - Check that your feature flags are configured in DevCycle dashboard
    - Verify the evaluation context has a valid targetingKey
 
 4. **Network/Internet issues:**

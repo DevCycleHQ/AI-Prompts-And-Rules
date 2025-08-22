@@ -255,11 +255,10 @@ After installation, build and run your iOS application to verify everything work
    - Reset package caches if using SPM
    - Run `pod deintegrate` then `pod install` if using CocoaPods
 
-3. **Feature flags returning default values only:**
+3. **Client returning default values only:**
 
    - Confirm the provider has finished initializing
-   - Check that your feature flags are configured in DevCycle dashboard
-   - Verify the evaluation context is set correctly
+   - Verify the evaluation context is set correctly with targetingKey
 
 4. **Swift concurrency issues:**
    - Ensure you're using async/await properly

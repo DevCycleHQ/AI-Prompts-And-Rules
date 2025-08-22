@@ -365,11 +365,10 @@ After installation, run your Ruby application and verify everything works with n
    - Check Ruby version compatibility (2.7+)
    - Clear bundler cache: `bundle clean --force`
 
-3. **Feature flags returning default values only:**
+3. **Client returning default values only:**
 
    - Confirm the provider is initialized before use
    - Check that evaluation context has targeting_key
-   - Verify feature flags are configured in DevCycle dashboard
 
 4. **Connection/Network errors:**
    - Check network connectivity

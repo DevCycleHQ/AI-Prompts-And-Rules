@@ -1,94 +1,134 @@
 # DevCycle iOS SDK Installation Prompt
 
-You are helping to install and configure the DevCycle iOS SDK in an iOS application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle iOS SDK. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the project configuration and dependency manager before proceeding
+- Adaptive: Provide alternatives for different dependency management approaches
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**IMPORTANT: First detect which language and package manager the project uses:**
+<context>
+You are helping to install and configure the DevCycle iOS SDK in an iOS application.
+</context>
 
-- Check if the project uses Swift or Objective-C
-- Identify the package manager: Swift Package Manager (Package.swift or Xcode packages), CocoaPods (Podfile), or Carthage (Cartfile)
-- Use the appropriate code examples based on the detected language
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
 
-**Do not use the SDK for:**
+<detection_phase>
+**IMPORTANT: First detect the project configuration:**
 
+- Check for Swift vs Objective-C (prioritize Swift examples)
+- Identify dependency manager: Swift Package Manager (SPM), CocoaPods, or Carthage
+- Check minimum iOS version (requires iOS 12.0+)
+- Detect if using SwiftUI or UIKit
+  </detection_phase>
+
+<restrictions>
+**Do not use this SDK for:**
 - React Native apps (use `@devcycle/react-native-client-sdk` instead)
-- Flutter apps (use the Flutter SDK instead)
-- Web applications (use JavaScript/React/Angular SDKs instead)
-- Server-side Swift applications (use server SDK instead)
+- Flutter apps (use Flutter SDK instead)
+- Web applications (use JavaScript SDKs instead)
+- macOS/tvOS/watchOS apps (check compatibility first)
 
-If you detect that the user is trying to have you install the iOS SDK in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+</restrictions>
 
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
 - [ ] iOS 12.0+ / macOS 10.13+ / tvOS 12.0+ / watchOS 7.0+
-- [ ] Xcode project with Swift or Objective-C
-- [ ] The most recent DevCycle iOS SDK version to install
+- [ ] Xcode 13+ installed
+- [ ] Swift 5.3+ or Objective-C project
+- [ ] The most recent DevCycle iOS SDK version available
 
 **Security Note:** Use a MOBILE SDK key for iOS apps, not a client or server SDK key. Store it securely and avoid committing it to version control.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to set up the SDK key securely** (e.g., in a configuration file or using xcconfig):
+### Setting Up Your SDK Key
 
-   ```swift
-   // In a Config.xcconfig file or environment configuration
+1. **First, determine the best storage method:**
+
+   - Check if you can use xcconfig files
+   - Check if you can use Info.plist
+   - If both blocked → Go to fallback options
+
+2. **Recommended: xcconfig approach**
+   <success_path>
+   Create Config.xcconfig:
+
+   ```
    DEVCYCLE_MOBILE_SDK_KEY = your_mobile_sdk_key_here
    ```
 
-   Then reference it in your code using build settings.
+   Reference in Info.plist:
 
-2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+   ```xml
+   <key>DEVCYCLE_SDK_KEY</key>
+   <string>$(DEVCYCLE_MOBILE_SDK_KEY)</string>
+   ```
 
-   - "I'm unable to create/modify configuration files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+   Access in code:
 
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
+   ```swift
+   let sdkKey = Bundle.main.object(forInfoDictionaryKey: "DEVCYCLE_SDK_KEY") as? String
+   ```
 
-**Note:** Always prefer configuration files or environment variables over hardcoding for security reasons.
+   </success_path>
+
+3. **If configuration files cannot be modified:**
+   <fallback_path>
+   Ask the user: "I'm unable to modify configuration files. Please choose:
+   **Option A: Temporary hardcoding for testing**
+   - I will add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - You MUST replace this before archiving for App Store
+   **Option B: Manual setup**
+   - I will provide you with the SDK key value
+   - I will give you detailed xcconfig setup instructions
+   - You will configure the build settings yourself"
+   Based on their response:
+   - Option A → Add key with `// TODO: Move to xcconfig before production`
+   - Option B → Provide key and detailed Xcode configuration instructions
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle iOS SDK
+### Step 1: Add DevCycle SDK Dependency
 
-Choose the installation method based on the detected package manager:
+#### Option A: Swift Package Manager (Recommended)
 
-#### Swift Package Manager (Recommended)
+1. In Xcode, select File → Add Packages
+2. Enter the repository URL: `https://github.com/DevCycleHQ/ios-client-sdk`
+3. Select version rule: Up to Next Major Version
+4. Add to your app target
 
-**In Package.swift:**
+<verification_checkpoint>
+**SPM Verification:**
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/DevCycleHQ/ios-client-sdk.git", .upToNextMajor(from: "1.19.0"))
-],
-targets: [
-    .target(
-        name: "YOUR_TARGET",
-        dependencies: ["DevCycle"]
-    )
-]
-```
+- [ ] Package appears in Project Navigator
+- [ ] No resolution errors
+- [ ] Target membership is correct
+      </verification_checkpoint>
 
-**Or via Xcode:**
+#### Option B: CocoaPods
 
-1. File > Add Package Dependencies
-2. Enter: `https://github.com/DevCycleHQ/ios-client-sdk.git`
-3. Choose version rule: Up to Next Major Version
-4. Add to your target
-
-#### CocoaPods
-
-Add to your `Podfile`:
+Add to your Podfile:
 
 ```ruby
-pod 'DevCycle'
+pod 'DevCycle', '~> 2.0'
 ```
 
 Then run:
@@ -97,143 +137,246 @@ Then run:
 pod install
 ```
 
-#### Carthage
+<verification_checkpoint>
+**CocoaPods Verification:**
 
-Add to your `Cartfile`:
+- [ ] Pod installation successful
+- [ ] .xcworkspace file created/updated
+- [ ] No pod conflicts
+      </verification_checkpoint>
 
-```text
-github "DevCycleHQ/ios-client-sdk"
-```
+### Step 2: Initialize DevCycle
 
-Then run:
+#### Swift Implementation
 
-```bash
-carthage update --platform iOS --use-xcframeworks
-```
-
-Drag the built `.xcframework` from `Carthage/Build` into your Xcode project's "Frameworks and Libraries" section.
-
-### 2. Initialize DevCycle in Your App
-
-Add the initialization code to your AppDelegate:
-
-#### For Swift Projects
-
-In `AppDelegate.swift`:
+In your AppDelegate or App struct:
 
 ```swift
-import UIKit
 import DevCycle
 
-@main
+// For UIKit apps (AppDelegate.swift)
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    var devcycleClient: DevCycleClient?
+    var devcycleClient: DVCClient?
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication,
+                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+
+        // Get SDK key from configuration
+        guard let sdkKey = Bundle.main.object(forInfoDictionaryKey: "DEVCYCLE_SDK_KEY") as? String else {
+            print("DevCycle SDK key not found")
+            return true
+        }
 
         // Create user object
-        let user = try? DevCycleUser.builder()
-            .userId("default-user")  // Replace with actual user ID
-            .build()
+        let user = DVCUser(userId: "default-user") // Replace with actual user ID when available
 
-        // Initialize DevCycle client
-        guard let user = user else { return true }
-
-        self.devcycleClient = try? DevCycleClient.builder()
-            .sdkKey("<DEVCYCLE_MOBILE_SDK_KEY>")  // Replace with your mobile SDK key
+        // Initialize DevCycle
+        self.devcycleClient = try? DVCClient.builder()
+            .sdkKey(sdkKey)
             .user(user)
-            .build(onInitialized: { error in
+            .build { error in
                 if let error = error {
                     print("DevCycle initialization error: \(error)")
                 } else {
                     print("DevCycle initialized successfully")
                 }
-            })
+            }
 
         return true
     }
 }
-```
 
-#### For Objective-C Projects
+// For SwiftUI apps (App.swift)
+import SwiftUI
+import DevCycle
 
-In `AppDelegate.m`:
+@main
+struct MyApp: App {
+    @StateObject private var devCycle = DevCycleManager()
 
-```objc
-#import "AppDelegate.h"
-@import DevCycle;
-
-@interface AppDelegate ()
-@property (nonatomic, strong) DevCycleClient *devcycleClient;
-@end
-
-@implementation AppDelegate
-
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-
-    // Create user object
-    DevCycleUser *user = [DevCycleUser initializeWithUserId:@"default-user"];
-
-    // Initialize DevCycle client
-    self.devcycleClient = [DevCycleClient initialize:@"<DEVCYCLE_MOBILE_SDK_KEY>"
-                                                 user:user
-                                              options:nil
-                                        onInitialized:^(NSError * _Nullable error) {
-        if (error) {
-            NSLog(@"DevCycle initialization error: %@", error);
-        } else {
-            NSLog(@"DevCycle initialized successfully");
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(devCycle)
+                .onAppear {
+                    devCycle.initialize()
+                }
         }
-    }];
-
-    return YES;
+    }
 }
 
-@end
+class DevCycleManager: ObservableObject {
+    var client: DVCClient?
+
+    func initialize() {
+        guard let sdkKey = Bundle.main.object(forInfoDictionaryKey: "DEVCYCLE_SDK_KEY") as? String else {
+            print("DevCycle SDK key not found")
+            return
+        }
+
+        let user = DVCUser(userId: "default-user")
+
+        self.client = try? DVCClient.builder()
+            .sdkKey(sdkKey)
+            .user(user)
+            .build { error in
+                if let error = error {
+                    print("DevCycle initialization error: \(error)")
+                } else {
+                    print("DevCycle initialized successfully")
+                }
+            }
+    }
+}
 ```
 
-### 3. Make DevCycle Client Accessible
+<verification_checkpoint>
+**Initialization Verification:**
 
-For Swift, you can pass the client instance through dependency injection or make it accessible via a singleton pattern. For Objective-C, you can access it through the AppDelegate.
+- [ ] SDK key loaded from configuration
+- [ ] User object created correctly
+- [ ] Client initialization called
+- [ ] No compilation errors
+      </verification_checkpoint>
 
-### 4. Store Your SDK Key Securely
+### Step 3: Build and Test
 
-Instead of hardcoding the SDK key, consider using:
+```bash
+# Build for simulator
+xcodebuild -scheme YourScheme -destination 'platform=iOS Simulator,name=iPhone 14'
 
-- Xcode configuration files (.xcconfig)
-- Environment variables
-- Secure key management solutions
+# Or build in Xcode with Cmd+B
+```
 
-After installation, build and run your application to verify everything works with no errors.
+<verification_checkpoint>
+**Final Verification:**
 
+- [ ] App builds without errors
+- [ ] No DevCycle-related warnings
+- [ ] Console shows "DevCycle initialized successfully"
+- [ ] App runs on simulator/device
+      </verification_checkpoint>
+
+<success_criteria>
+
+## Installation Success Criteria
+
+Installation is complete when ALL of the following are true:
+
+- ✅ SDK dependency added via SPM or CocoaPods
+- ✅ SDK key configured (xcconfig OR temporary with TODO)
+- ✅ DevCycle client initialized in app lifecycle
+- ✅ User object created with userId
+- ✅ App builds without errors
+- ✅ Console shows "DevCycle initialized successfully"
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
+
+<examples>
+## Common Installation Scenarios
+
+<example scenario="swiftui_spm">
+**Scenario:** SwiftUI app, SPM, Swift 5.7
+**Actions taken:**
+1. ✅ Added SDK via Swift Package Manager
+2. ✅ Created xcconfig with SDK key
+3. ✅ Created DevCycleManager ObservableObject
+4. ✅ Initialized in App.onAppear
+5. ✅ Tested on iOS 16 simulator
+**Result:** Installation successful
+</example>
+
+<example scenario="uikit_cocoapods">
+**Scenario:** UIKit app, CocoaPods, Objective-C compatibility needed
+**Actions taken:**
+1. ✅ Added pod to Podfile
+2. ✅ Ran pod install
+3. ✅ Added SDK key to Info.plist
+4. ✅ Initialized in AppDelegate
+5. ✅ Created bridging header for mixed code
+**Result:** Installation successful with Obj-C support
+</example>
+
+<example scenario="m1_mac_issues">
+**Scenario:** M1 Mac, CocoaPods architecture issues
+**Actions taken:**
+1. ⚠️ Pod install failed on ARM64
+2. 🔄 Switched to Rosetta: arch -x86_64 pod install
+3. ✅ Excluded arm64 for simulator builds
+4. ✅ Updated Podfile with platform settings
+5. ✅ Build successful
+**Result:** Resolved architecture compatibility
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="nil_client">
+<symptom>DVCClient is nil or initialization fails silently</symptom>
+<diagnosis>
+1. Check: Is the SDK key valid?
+2. Check: Is the user object properly created?
+3. Check: Are there try? statements swallowing errors?
+</diagnosis>
+<solution>
+- Verify mobile SDK key (starts with dvc_mobile_)
+- Ensure user has userId set
+- Use do-try-catch to see actual errors
+- Check initialization callback for errors
+</solution>
+</error>
 
-1. **"DevCycle client is nil" error:**
+<error type="spm_resolution">
+<symptom>Package resolution failed in Xcode</symptom>
+<diagnosis>
+1. Check: Is the repository URL correct?
+2. Check: Is there network access to GitHub?
+3. Check: Are there version conflicts?
+</diagnosis>
+<solution>
+- URL: https://github.com/DevCycleHQ/ios-client-sdk
+- Try File → Packages → Reset Package Caches
+- Check Xcode → Preferences → Accounts for GitHub access
+- Use specific version instead of range
+</solution>
+</error>
 
-   - Ensure the SDK key is correctly set (mobile SDK key, not client/server)
-   - Check that the user object has a valid `userId` or `isAnonymous: true`
-   - Verify initialization completes before using the client
+<error type="cocoapods_install">
+<symptom>Pod installation fails</symptom>
+<diagnosis>
+1. Check: Is CocoaPods up to date?
+2. Check: Are there conflicting pods?
+3. Check: Is the platform version correct?
+</diagnosis>
+<solution>
+- Update CocoaPods: `sudo gem install cocoapods`
+- Run `pod repo update`
+- Check Podfile platform: `platform :ios, '12.0'`
+- Try `pod deintegrate && pod install`
+</solution>
+</error>
 
-2. **Build errors after installation:**
-
-   - Clean build folder (Cmd+Shift+K)
-   - For SPM: Reset package caches in Xcode
-   - For CocoaPods: Run `pod deintegrate` then `pod install`
-   - For Carthage: Delete Carthage folder and rebuild
-
-3. **Package conflicts:**
-
-   - If you have naming conflicts, use the alternative URL: `https://github.com/DevCycleHQ/devcycle-ios-client-sdk.git`
-
-4. **Platform compatibility issues:**
-   - Verify minimum iOS version is 12.0+
-   - Check that deployment target matches requirements
+<error type="archive_build">
+<symptom>Archive build fails but debug works</symptom>
+<diagnosis>
+1. Check: Are there hardcoded keys?
+2. Check: Is the SDK embedded correctly?
+3. Check: Are there bitcode issues?
+</diagnosis>
+<solution>
+- Remove any hardcoded keys for production
+- Check Framework embedding settings
+- Disable bitcode if needed (deprecated in Xcode 14)
+- Verify provisioning profiles
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
+<next_steps>
 Suggest these as next steps to the user.
 
 After successful installation:
@@ -243,13 +386,16 @@ After successful installation:
 3. When requested, help implement variables throughout the iOS application
 4. Help set up targeting rules for different user segments when asked
 
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
+
 ## Helpful Resources
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
 - [iOS SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/ios/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [iOS SDK Example App](https://github.com/DevCycleHQ/ios-client-sdk/tree/main/Example)
+- [iOS SDK GitHub Repository](https://github.com/DevCycleHQ/ios-client-sdk)
 - [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
 
 ## Support
@@ -258,5 +404,6 @@ If you encounter issues:
 
 1. Check the official documentation
 2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues
+3. Check Xcode console and build logs
+4. Contact DevCycle support through the dashboard
+5. Check the GitHub repository for known issues

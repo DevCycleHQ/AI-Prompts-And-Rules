@@ -274,11 +274,10 @@ After installation, run your Node.js application and verify everything works wit
    - Check that DevCycle client initializes successfully
    - Verify your SDK key is correct (server SDK key)
 
-2. **Feature flags returning default values only:**
+2. **Client returning default values only:**
 
    - Confirm the provider is initialized before use
    - Check that evaluation context has `targetingKey`
-   - Verify feature flags are configured in DevCycle dashboard
 
 3. **TypeScript compilation errors:**
 
