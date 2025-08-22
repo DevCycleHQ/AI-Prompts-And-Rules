@@ -19,19 +19,19 @@ Follow this complete guide to successfully integrate DevCycle feature flags for 
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
-- Regular React applications (use `@devcycle/react-client-sdk` instead)
-- Pure Node.js applications (use `@devcycle/nodejs-server-sdk` instead)
+**Do not use this setup for:**
+- Regular React applications (use React SDK instead)
+- Pure Node.js applications (use Node.js SDK instead)
 - Static site generators without Next.js
 - Next.js versions below 14.1
 
-If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
@@ -63,30 +63,23 @@ Before proceeding, verify you have:
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   Note: NEXT*PUBLIC* prefix makes the variable available to the browser.
-   The server key without prefix is only available server-side.
-   </success_path>
+   - Verify the file is in .gitignore
+   - Ensure Next.js can read both variables
+   - Test that environment variables are accessible
+     </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
-   Ask the user: "I'm unable to create/modify environment files. Please choose:
-   **Option A: Temporary hardcoding for testing**
-   - I will add the SDK keys directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK keys directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before deploying
-   **Option B: Manual setup**
-   - I will provide you with both SDK keys
-   - I will give you step-by-step environment setup instructions
-   - You will configure the environment variables yourself"
-   Based on their response:
-   - Option A → Add keys with `// TODO: Replace with environment variables before production`
-   - Option B → Provide keys and detailed setup instructions
+   - Provide the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
 ## Installation Steps
 
-### Step 1: Install the DevCycle Next.js SDK
+### Step 1: Install DevCycle Next.js SDK
 
 ```bash
 # Using npm
@@ -102,66 +95,37 @@ pnpm add @devcycle/nextjs-sdk
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Package installed successfully
-- [ ] No peer dependency conflicts
-- [ ] Next.js version is 14.1+
-- [ ] React version is 18.2+
+- [ ] Package installed successfully (check package.json)
+- [ ] No peer dependency warnings
+- [ ] Node modules updated
       </verification_checkpoint>
 
-### Step 2: Create DevCycle Configuration
+### Step 2: Configure DevCycle Provider
 
-Create `lib/devcycle.ts` (or `.js`):
+Create or update your `app/layout.tsx` (App Router) or `pages/_app.tsx` (Pages Router):
 
-```typescript
-import { setupDevCycle } from "@devcycle/nextjs-sdk/server";
-
-const getUserIdentity = async () => {
-  // Return a user object for DevCycle
-  // You can customize this later to fetch real user data
-  return {
-    user_id: "default-user",
-    isAnonymous: false,
-  };
-};
-
-export const { getVariableValue, getClientContext } = setupDevCycle({
-  serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? "",
-  clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? "",
-  userGetter: getUserIdentity,
-  options: {},
-});
-```
-
-<verification_checkpoint>
-**Verify before continuing:**
-
-- [ ] Configuration file created
-- [ ] Both SDK keys referenced
-- [ ] User getter function defined
-- [ ] Exports are correct
-      </verification_checkpoint>
-
-### Step 3: Configure for App Router
-
-#### For App Router (app directory)
-
-Update your root layout (`app/layout.tsx`):
+**App Router (app/layout.tsx):**
 
 ```typescript
 import { DevCycleClientsideProvider } from "@devcycle/nextjs-sdk";
-import { getClientContext } from "@/lib/devcycle";
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const clientContext = await getClientContext();
-
   return (
     <html lang="en">
       <body>
-        <DevCycleClientsideProvider context={clientContext}>
+        <DevCycleClientsideProvider
+          config={{
+            sdkKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY!,
+            user: {
+              user_id: "default-user", // Replace with actual user ID when available
+              isAnonymous: false,
+            },
+          }}
+        >
           {children}
         </DevCycleClientsideProvider>
       </body>
@@ -170,77 +134,52 @@ export default async function RootLayout({
 }
 ```
 
-#### For Pages Router (pages directory)
+<verification_checkpoint>
+**Verify before continuing:**
 
-Update `pages/_app.tsx`:
+- [ ] DevCycle provider wraps the application
+- [ ] SDK keys are properly referenced
+- [ ] User object includes required fields
+- [ ] Application compiles without errors
+      </verification_checkpoint>
 
-```typescript
-import React from "react";
-import type { AppProps } from "next/app";
-import { appWithDevCycle } from "@devcycle/nextjs-sdk/pages";
+### Step 3: Test Your Application
 
-function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
-}
-
-export default appWithDevCycle(MyApp);
-```
-
-And in pages using SSR:
-
-```typescript
-import { GetServerSideProps } from "next";
-import { getServerSideDevCycle } from "@devcycle/nextjs-sdk/pages";
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const user = {
-    user_id: "default-user",
-    isAnonymous: false,
-  };
-
-  const devcycleData = await getServerSideDevCycle({
-    serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? "",
-    clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? "",
-    user,
-    context,
-  });
-
-  return {
-    props: {
-      ...devcycleData,
-    },
-  };
-};
+```bash
+# Start your Next.js development server
+npm run dev
+# or
+yarn dev
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Provider configured in layout/app
-- [ ] Context properly passed
-- [ ] TypeScript types are correct (if using TS)
-- [ ] No compilation errors
+- [ ] Application builds successfully
+- [ ] No DevCycle-related runtime errors
+- [ ] Browser console shows successful initialization
+- [ ] Application runs normally
       </verification_checkpoint>
 
-### Step 4: Build and Test
+## 🎉 Installation Complete!
 
-```bash
-# Development
-npm run dev
+**STOP HERE** - The DevCycle Next.js installation is now complete.
 
-# Production build
-npm run build
-npm start
-```
+**DO NOT CREATE:**
 
-<verification_checkpoint>
-**Final Verification:**
+- Example pages using feature flags
+- Sample hook implementations
+- Demo feature flag code
+- Any components like `FeaturePage` or similar
 
-- [ ] Development server starts without errors
-- [ ] No DevCycle-related console errors
-- [ ] Production build completes successfully
-- [ ] Both SSR and CSR working correctly
-      </verification_checkpoint>
+**Available hooks for future reference only:**
+
+- `useVariableValue(key, defaultValue)`
+- `useVariable(key)`
+- `useDVCClient()`
+- Server-side: `getVariableValue()`, `getVariable()`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -248,110 +187,66 @@ npm start
 
 Installation is complete when ALL of the following are true:
 
-- ✅ SDK package installed and compatible with Next.js 14.1+
-- ✅ Both SDK keys configured (client and server)
-- ✅ DevCycle configuration module created
-- ✅ Provider configured for App Router or Pages Router
-- ✅ Application builds without errors
-- ✅ Both server-side and client-side rendering work
-- ✅ No DevCycle errors in console or server logs
+- ✅ SDK package is installed in package.json
+- ✅ Both SDK keys are configured (via env file OR temporary hardcode with TODO)
+- ✅ DevCycle provider wraps the application
+- ✅ Application builds and runs without errors
+- ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="app_router_typescript">
-**Scenario:** App Router, TypeScript, Next.js 14.2
+<example scenario="app_router">
+**Scenario:** Next.js App Router, npm, full file access
 **Actions taken:**
-1. ✅ Created .env.local with both keys
-2. ✅ Installed SDK package
-3. ✅ Created lib/devcycle.ts configuration
-4. ✅ Updated root layout with provider
-5. ✅ Tested SSR and CSR features
-**Result:** Installation successful with App Router
+1. ✅ Created .env.local with both SDK keys
+2. ✅ Installed DevCycle Next.js SDK
+3. ✅ Configured provider in app/layout.tsx
+4. ✅ App builds and runs successfully
+**Result:** Installation successful
 </example>
 
-<example scenario="pages_router_migration">
-**Scenario:** Pages Router, migrating from older SDK
+<example scenario="pages_router">
+**Scenario:** Next.js Pages Router, yarn
 **Actions taken:**
-1. ✅ Uninstalled old SDK version
-2. ✅ Installed new SDK
-3. ✅ Updated _app.tsx with appWithDevCycle
-4. ✅ Added getServerSideDevCycle to pages
-5. ✅ Verified backward compatibility
-**Result:** Migration successful
-</example>
-
-<example scenario="vercel_deployment">
-**Scenario:** Deploying to Vercel
-**Actions taken:**
-1. ✅ Set environment variables in Vercel dashboard
-2. ✅ Configured for Edge Runtime where needed
-3. ✅ Tested preview deployments
-4. ✅ Verified production build
-5. ✅ Checked both ISR and SSR pages
-**Result:** Deployment successful on Vercel
+1. ✅ Created .env.local with SDK keys
+2. ✅ Installed SDK with yarn
+3. ✅ Configured provider in pages/_app.tsx
+4. ✅ Next.js dev server starts successfully
+**Result:** Installation successful with Pages Router
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"DevCycle is not initialized" error</symptom>
+<error type="sdk_not_initialized">
+<symptom>"DevCycle is not initialized" or hooks return undefined</symptom>
 <diagnosis>
-1. Check: Is DevCycleClientsideProvider wrapping the app?
-2. Check: Are both SDK keys set correctly?
-3. Check: Is getClientContext() being awaited?
+1. Check: Is DevCycleClientsideProvider wrapping your app?
+2. Check: Are the SDK keys valid?
+3. Check: Does the user object have required fields?
 </diagnosis>
 <solution>
-- Ensure provider wraps children in layout
+- Ensure provider is at the app root (layout.tsx or _app.tsx)
 - Verify both client and server SDK keys
-- Client key needs NEXT_PUBLIC_ prefix
-- Make layout function async if using await
+- User must have user_id or isAnonymous: true
 </solution>
 </error>
 
-<error type="typescript_async">
-<symptom>TypeScript errors with async components</symptom>
+<error type="environment_variables">
+<symptom>Environment variables not found or undefined</symptom>
 <diagnosis>
-1. Check: Is TypeScript version 5.1.3+?
-2. Check: Are @types/react up to date?
-3. Check: Is moduleResolution set correctly?
+1. Check: Is .env.local file in project root?
+2. Check: Do client vars start with NEXT_PUBLIC_?
+3. Check: Is the dev server restarted?
 </diagnosis>
 <solution>
-- Update TypeScript: `npm install typescript@latest`
-- Update types: `npm install @types/react@latest`
-- In tsconfig.json set: `"moduleResolution": "bundler"`
-</solution>
-</error>
-
-<error type="hydration">
-<symptom>Hydration mismatch errors</symptom>
-<diagnosis>
-1. Check: Are server and client contexts matching?
-2. Check: Is user data consistent?
-3. Check: Are there race conditions?
-</diagnosis>
-<solution>
-- Ensure getUserIdentity returns consistent data
-- Use the same user data for SSR and CSR
-- Avoid random values in user properties
-- Check for conditional rendering issues
-</solution>
-</error>
-
-<error type="realtime_updates">
-<symptom>Realtime updates not working (Next.js < 14.1)</symptom>
-<diagnosis>
-1. Check: Is Next.js version 14.1+?
-2. Check: Are realtime updates enabled?
-</diagnosis>
-<solution>
-- Upgrade to Next.js 14.1 or higher
-- Or disable realtime updates in options
-- Check WebSocket connectivity if enabled
+- Place .env.local in same directory as package.json
+- Client vars must start with NEXT_PUBLIC_
+- Restart dev server after adding env vars
 </solution>
 </error>
 </troubleshooting>
@@ -359,14 +254,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
-1. Customize the `getUserIdentity` function to fetch real user data
-2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-3. When requested, help implement variables in both server and client components
-4. Help set up targeting rules for different user segments when asked
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using Next.js hooks
+3. Set up server-side rendering with feature flags when asked
+4. Help with user identification logic when users log in
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -377,15 +270,4 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [DevCycle Documentation](https://docs.devcycle.com/)
 - [Next.js SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Check Next.js build output for errors
-4. Contact DevCycle support through the dashboard
-5. Check the GitHub repository for known issues
+- [Next.js SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)

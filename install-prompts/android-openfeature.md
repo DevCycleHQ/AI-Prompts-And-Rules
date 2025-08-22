@@ -1,17 +1,36 @@
 # DevCycle Android OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for Android applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for Android. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in an Android application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - React Native apps (use React Native SDK instead)
 - Flutter apps (use Flutter SDK instead)
 - Web applications (use JavaScript/React SDKs instead)
-- iOS applications (use iOS SDK instead)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
@@ -20,324 +39,231 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a MOBILE SDK key for Android apps, not a client or server SDK key. Store it securely using Android best practices.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to set up the SDK key securely** (e.g., in build configuration or gradle.properties):
+### Setting Up Your SDK Key
 
-   ```properties
-   # gradle.properties
-   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
+1. **First, check if you can create/modify configuration files:**
+
+   - Try: Add to build.gradle or create config class
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If configuration succeeds:**
+   <success_path>
+
+   In `app/build.gradle`:
+
+   ```gradle
+   android {
+       defaultConfig {
+           buildConfigField "String", "DEVCYCLE_MOBILE_SDK_KEY", "\"your_mobile_sdk_key_here\""
+       }
+   }
    ```
 
-   Then reference it in your build.gradle using BuildConfig.
+   Or create a config class:
 
-2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+   ```kotlin
+   object DevCycleConfig {
+       const val SDK_KEY = "your_mobile_sdk_key_here"
+   }
+   ```
 
-   - "I'm unable to create/modify configuration files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
+   - Test that the key is accessible in your application
+     </success_path>
 
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with secure configuration
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up securely
-
-**Note:** Always prefer BuildConfig or secure key management over hardcoding for security reasons.
+3. **If configuration fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before building for production
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Add OpenFeature SDK and DevCycle Provider Dependencies
+### Step 1: Add OpenFeature SDK and DevCycle Provider Dependencies
 
-#### For Gradle (build.gradle or build.gradle.kts)
+In your `app/build.gradle`:
 
-**In your module-level build.gradle file:**
-
-```groovy
+```gradle
 dependencies {
-    implementation 'dev.openfeature:android-sdk:0.2.0'
-    implementation 'com.devcycle:android-client-sdk:2.+'
-    implementation 'com.devcycle:android-client-sdk-openfeature:2.+'
+    implementation 'dev.openfeature:android-sdk:0.2.2'
+    implementation 'com.devcycle:openfeature-android-provider:1.0.0'
 }
 ```
 
-**For Kotlin DSL (build.gradle.kts):**
+### Step 2: Initialize OpenFeature with DevCycle Provider
+
+In your Application class or main Activity:
 
 ```kotlin
-dependencies {
-    implementation("dev.openfeature:android-sdk:0.2.0")
-    implementation("com.devcycle:android-client-sdk:2.+")
-    implementation("com.devcycle:android-client-sdk-openfeature:2.+")
-}
-```
-
-### 2. Add Required Permissions
-
-In your `AndroidManifest.xml`:
-
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-```
-
-### 3. Initialize OpenFeature with DevCycle Provider
-
-Create or update your Application class:
-
-#### For Kotlin Projects
-
-**Application.kt:**
-
-```kotlin
-import android.app.Application
 import dev.openfeature.sdk.OpenFeatureAPI
-import dev.openfeature.sdk.ImmutableContext
-import dev.openfeature.sdk.Value
-import com.devcycle.sdk.android.openfeature.DevCycleOpenFeatureProvider
+import com.devcycle.openfeature.DevCycleProvider
+import dev.openfeature.sdk.EvaluationContext
 
 class MyApplication : Application() {
-
     override fun onCreate() {
         super.onCreate()
-
-        // Initialize OpenFeature with DevCycle
-        initializeOpenFeature()
+        initializeFeatureFlags()
     }
 
-    private fun initializeOpenFeature() {
-        // Create evaluation context
-        val evaluationContext = ImmutableContext(
-            targetingKey = "default-user", // Required: unique user identifier
-            attributes = mapOf(
-                "email" to Value.String("user@example.com"),
-                "isAnonymous" to Value.Boolean(false),
-                "plan" to Value.String("premium"),
-                "role" to Value.String("admin")
-            )
-        )
+    private fun initializeFeatureFlags() {
+        val sdkKey = BuildConfig.DEVCYCLE_MOBILE_SDK_KEY
+        // Or: val sdkKey = "your_mobile_sdk_key_here" // TODO: Replace before production
 
-        // Set the evaluation context
-        OpenFeatureAPI.setEvaluationContext(evaluationContext)
-
-        // Create DevCycle provider
-        val provider = DevCycleOpenFeatureProvider(
-            context = this,
-            sdkKey = "<DEVCYCLE_MOBILE_SDK_KEY>" // Replace with your mobile SDK key
-        )
-
-        // Set the provider
-        OpenFeatureAPI.setProviderAndWait(provider) { result ->
-            if (result.isSuccess) {
-                println("OpenFeature with DevCycle initialized successfully")
-            } else {
-                println("Failed to initialize: ${result.exceptionOrNull()}")
-            }
+        if (sdkKey.isEmpty() || sdkKey == "your_mobile_sdk_key_here") {
+            throw IllegalStateException("DevCycle SDK key is not configured")
         }
-    }
-}
-```
-
-#### For Java Projects
-
-**MyApplication.java:**
-
-```java
-import android.app.Application;
-import dev.openfeature.sdk.OpenFeatureAPI;
-import dev.openfeature.sdk.ImmutableContext;
-import dev.openfeature.sdk.Value;
-import com.devcycle.sdk.android.openfeature.DevCycleOpenFeatureProvider;
-import java.util.HashMap;
-import java.util.Map;
-
-public class MyApplication extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        // Initialize OpenFeature with DevCycle
-        initializeOpenFeature();
-    }
-
-    private void initializeOpenFeature() {
-        // Create evaluation context
-        Map<String, Value> attributes = new HashMap<>();
-        attributes.put("email", new Value.String("user@example.com"));
-        attributes.put("isAnonymous", new Value.Boolean(false));
-        attributes.put("plan", new Value.String("premium"));
-        attributes.put("role", new Value.String("admin"));
-
-        ImmutableContext evaluationContext = new ImmutableContext(
-            "default-user", // targetingKey
-            attributes
-        );
-
-        // Set the evaluation context
-        OpenFeatureAPI.setEvaluationContext(evaluationContext);
 
         // Create DevCycle provider
-        DevCycleOpenFeatureProvider provider = new DevCycleOpenFeatureProvider(
-            this,
-            "<DEVCYCLE_MOBILE_SDK_KEY>" // Replace with your mobile SDK key
-        );
+        val provider = DevCycleProvider(sdkKey)
 
-        // Set the provider
-        OpenFeatureAPI.setProviderAndWait(provider, result -> {
-            if (result.isSuccess()) {
-                System.out.println("OpenFeature with DevCycle initialized successfully");
-            } else {
-                System.out.println("Failed to initialize: " + result.getException());
-            }
-        });
+        // Set default evaluation context
+        val context = EvaluationContext.builder()
+            .targetingKey("default-user")
+            .add("email", "user@example.com")
+            .add("anonymous", false)
+            .build()
+
+        OpenFeatureAPI.getInstance().setEvaluationContext(context)
+        OpenFeatureAPI.getInstance().setProviderAndWait(provider)
+
+        println("OpenFeature with DevCycle initialized successfully")
     }
 }
 ```
 
-### 4. Register Your Application Class
-
-In your `AndroidManifest.xml`:
-
-```xml
-<application
-    android:name=".MyApplication"
-    android:icon="@mipmap/ic_launcher"
-    android:label="@string/app_name"
-    android:theme="@style/AppTheme">
-    <!-- Your activities and other components -->
-</application>
-```
-
-### 5. Using Feature Flags in Your App
-
-#### Kotlin Example
+### Step 3: Use in Your Activities/Fragments
 
 ```kotlin
 import dev.openfeature.sdk.OpenFeatureAPI
-import dev.openfeature.sdk.Client
 
 class MainActivity : AppCompatActivity() {
-    private val client: Client = OpenFeatureAPI.getClient()
+    private val client = OpenFeatureAPI.getInstance().client
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        checkFeatures()
-    }
+        // Example context for current user
+        val userContext = EvaluationContext.builder()
+            .targetingKey("user-123")
+            .add("email", "user@example.com")
+            .add("plan", "premium")
+            .build()
 
-    private fun checkFeatures() {
-        // Get boolean value
-        val showNewFeature = client.getBooleanValue(
-            "new-feature",
-            false
-        )
-
-        if (showNewFeature) {
-            // Show new feature UI
-            showNewFeatureView()
-        }
-
-        // Get string value
-        val buttonText = client.getStringValue(
-            "button-text",
-            "Click Here"
-        )
-        button.text = buttonText
-
-        // Get number value
-        val maxItems = client.getIntegerValue(
-            "max-items",
-            10
-        )
-
-        // Get object value
-        val config = client.getObjectValue(
-            "ui-config",
-            Value.Structure(mapOf(
-                "theme" to Value.String("light"),
-                "fontSize" to Value.Integer(14)
-            ))
-        )
+        // Ready to use OpenFeature hooks when requested
     }
 }
 ```
 
-### 6. Updating User Context
+<verification_checkpoint>
+**Verify before continuing:**
 
-```kotlin
-fun updateUserContext(userId: String, email: String?) {
-    val attributes = mutableMapOf<String, Value>(
-        "authenticated" to Value.Boolean(true)
-    )
+- [ ] Dependencies added to build.gradle
+- [ ] DevCycle provider initialized in Application class
+- [ ] App builds and runs without errors
+- [ ] Log shows successful initialization
+      </verification_checkpoint>
 
-    email?.let {
-        attributes["email"] = Value.String(it)
-    }
+<success_criteria>
 
-    val newContext = ImmutableContext(
-        targetingKey = userId,
-        attributes = attributes
-    )
+## Installation Success Criteria
 
-    OpenFeatureAPI.setEvaluationContext(newContext)
+Installation is complete when ALL of the following are true:
 
-    // Feature flags will be re-evaluated automatically
-}
-```
+- ✅ OpenFeature SDK and DevCycle provider dependencies added
+- ✅ SDK key is configured (via BuildConfig OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Application builds and runs without errors
+- ✅ Log shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-After installation, build and run your Android application to verify everything works with no errors.
+<examples>
+## Common Installation Scenarios
 
+<example scenario="kotlin_standard">
+**Scenario:** Kotlin app, Android Studio, Gradle
+**Actions taken:**
+1. ✅ Added SDK key to build.gradle buildConfigField
+2. ✅ Installed dependencies via Gradle
+3. ✅ Initialized in Application class
+4. ✅ Set up evaluation context
+5. ✅ App builds and runs successfully
+**Result:** Installation successful
+</example>
+
+<example scenario="java_legacy">
+**Scenario:** Java project, older Android version
+**Actions taken:**
+1. ✅ Created config class for SDK key
+2. ✅ Added dependencies manually
+3. ✅ Initialized in onCreate
+4. ✅ Used Java syntax throughout
+5. ✅ Compatible with older Android APIs
+**Result:** Installation successful with Java
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or client returning default values only</symptom>
+<diagnosis>
+1. Check: Is setProviderAndWait() called before client usage?
+2. Check: Is the SDK key valid?
+3. Check: Is targetingKey provided in context?
+</diagnosis>
+<solution>
+- Call setProviderAndWait() in Application.onCreate()
+- Verify mobile SDK key (starts with dvc_mobile_)
+- Always include targetingKey in EvaluationContext
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-
-   - Ensure the Application class is properly registered in AndroidManifest.xml
-   - Check that initialization completes before using the client
-   - Verify you're using a valid mobile SDK key
-
-2. **Build errors:**
-
-   - Sync your project with Gradle files
-   - Check for version conflicts with other dependencies
-   - Ensure minimum SDK version is API 21+
-
-3. **Client returning default values only:**
-
-   - Confirm the provider has finished initializing
-   - Verify the evaluation context has a valid targetingKey
-
-4. **Network/Internet issues:**
-   - Verify Internet permission is added to AndroidManifest.xml
-   - Check network connectivity on device/emulator
-   - Ensure SDK key is correct and active
+<error type="build_errors">
+<symptom>Gradle build failures or dependency issues</symptom>
+<diagnosis>
+1. Check: Is minSdkVersion 21+?
+2. Check: Are dependency versions compatible?
+3. Check: Is repository accessible?
+</diagnosis>
+<solution>
+- Ensure minSdkVersion is 21 or higher
+- Check for version conflicts in dependencies
+- Add Maven Central repository if needed
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, help implement feature flag-based UI logic
-3. Set up proper error handling
+2. When requested, help implement feature flag usage in activities and fragments
+3. Set up proper error handling for feature flag evaluations
 4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [OpenFeature Android SDK](https://github.com/open-feature/android-sdk)
-- [DevCycle Android SDK](https://docs.devcycle.com/sdk/client-side-sdks/android/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature Android SDK](https://openfeature.dev/docs/reference/technologies/client/android/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)

@@ -19,19 +19,19 @@ Follow this complete guide to successfully integrate DevCycle feature flags.
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
+**Do not use this setup for:**
 - Native iOS apps (use iOS SDK instead)
 - Native Android apps (use Android SDK instead)
 - React Native apps (use React Native SDK instead)
 - Web-only applications (use JavaScript SDK instead)
 
-If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
@@ -49,67 +49,40 @@ Before proceeding, verify you have:
 
 ### Setting Up Your SDK Key
 
-1. **First, determine your configuration approach:**
+1. **First, check if you can modify configuration files:**
 
-   - Check if you can create configuration files
-   - Check if you're using dart-define or environment variables
-   - If both blocked → Go to fallback options
+   - Try: Create `assets/config.json` or modify environment configuration
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
 
-2. **Recommended: Configuration file approach**
+2. **If configuration file creation succeeds:**
    <success_path>
 
-   Create `lib/config/app_config.dart`:
-
-   ```dart
-   class AppConfig {
-     static const String devcycleMobileSdkKey = String.fromEnvironment(
-       'DEVCYCLE_MOBILE_SDK_KEY',
-       defaultValue: '',
-     );
+   ```json
+   // assets/config.json
+   {
+     "devcycle_mobile_sdk_key": "your_mobile_sdk_key_here"
    }
    ```
 
-   Run with dart-define:
-
-   ```bash
-   flutter run --dart-define=DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
-   ```
-
-   Or create a `.env` file with flutter_dotenv:
-
-   ```bash
-   # .env
-   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
-   ```
-
-   Add to pubspec.yaml:
+   Update `pubspec.yaml`:
 
    ```yaml
-   flutter_dotenv: ^5.0.2
+   flutter:
+     assets:
+       - assets/config.json
    ```
 
-   </success_path>
+   - Verify the key is not committed to version control
+   - Ensure Flutter can access the configuration
+     </success_path>
 
-3. **If configuration files cannot be created:**
+3. **If configuration file creation fails:**
    <fallback_path>
-   Ask the user: "I'm unable to create configuration files. Please choose:
-
-   **Option A: Temporary hardcoding for testing**
-
-   - I will add the SDK key directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before building for production
-
-   **Option B: Manual setup**
-
-   - I will provide you with the SDK key value
-   - I will give you step-by-step configuration instructions
-   - You will configure the environment yourself"
-
-   Based on their response:
-
-   - Option A → Add key with `// TODO: Replace with environment configuration before production`
-   - Option B → Provide key and detailed Flutter configuration instructions
+   - Provide the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
@@ -117,11 +90,13 @@ Before proceeding, verify you have:
 
 ### Step 1: Add DevCycle Flutter SDK Dependency
 
-Update your `pubspec.yaml`:
+Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  devcycle_flutter_client_sdk: ^1.0.0
+  flutter:
+    sdk: flutter
+  devcycle_flutter_client_sdk: ^2.1.0
 ```
 
 Then run:
@@ -133,128 +108,48 @@ flutter pub get
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Package added to pubspec.yaml
-- [ ] flutter pub get successful
+- [ ] Dependency added to pubspec.yaml
+- [ ] flutter pub get completed successfully
 - [ ] No dependency conflicts
-- [ ] Package resolved in pubspec.lock
       </verification_checkpoint>
 
-### Step 2: Platform-Specific Setup
+### Step 2: Initialize DevCycle Client
 
-#### iOS Setup
-
-Minimum iOS version requirement in `ios/Podfile`:
-
-```ruby
-platform :ios, '11.0'
-```
-
-Run pod install:
-
-```bash
-cd ios && pod install
-```
-
-<verification_checkpoint>
-**iOS Verification:**
-
-- [ ] Podfile platform version updated
-- [ ] Pods installed successfully
-- [ ] No CocoaPods errors
-      </verification_checkpoint>
-
-#### Android Setup
-
-Minimum SDK version in `android/app/build.gradle`:
-
-```gradle
-android {
-    defaultConfig {
-        minSdkVersion 21
-    }
-}
-```
-
-### Step 3: Initialize DevCycle in Your App
-
-Update your main app file:
+Create or update your main app widget:
 
 ```dart
 import 'package:flutter/material.dart';
 import 'package:devcycle_flutter_client_sdk/devcycle_flutter_client_sdk.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // If using dotenv
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables if using dotenv
-  await dotenv.load(fileName: ".env");
+  // Initialize DevCycle
+  final user = DVCUserBuilder()
+      .userId('default-user') // Replace with actual user ID when available
+      .email('user@example.com') // Optional
+      .build();
 
-  runApp(MyApp());
+  final client = DVCClientBuilder()
+      .sdkKey('your_mobile_sdk_key_here') // Use configuration
+      .user(user)
+      .build();
+
+  await client.initialize();
+
+  runApp(MyApp(client: client));
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
+class MyApp extends StatelessWidget {
+  final DVCClient client;
 
-class _MyAppState extends State<MyApp> {
-  late DVCClient _devcycleClient;
-  bool _isInitialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeDevCycle();
-  }
-
-  Future<void> _initializeDevCycle() async {
-    try {
-      // Get SDK key from environment or configuration
-      final sdkKey = dotenv.env['DEVCYCLE_MOBILE_SDK_KEY'] ??
-                     ''; // Or hardcoded with TODO if in fallback mode
-
-      if (sdkKey.isEmpty) {
-        print('DevCycle SDK key not configured');
-        return;
-      }
-
-      // Create user object
-      final user = DVCUser(
-        userId: 'default-user', // Replace with actual user ID when available
-        email: 'user@example.com',
-        isAnonymous: false,
-      );
-
-      // Build and initialize client
-      final builder = DVCClientBuilder()
-        .sdkKey(sdkKey)
-        .user(user);
-
-      _devcycleClient = await builder.build();
-
-      setState(() {
-        _isInitialized = true;
-      });
-
-      print('DevCycle initialized successfully');
-    } catch (e) {
-      print('DevCycle initialization error: $e');
-    }
-  }
+  const MyApp({Key? key, required this.client}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter App',
-      home: Scaffold(
-        appBar: AppBar(title: Text('DevCycle Flutter')),
-        body: Center(
-          child: Text(_isInitialized
-            ? 'DevCycle Initialized!'
-            : 'Initializing DevCycle...'),
-        ),
-      ),
+      title: 'Your App',
+      home: MyHomePage(),
     );
   }
 }
@@ -263,33 +158,52 @@ class _MyAppState extends State<MyApp> {
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] DevCycle client initialization code added
-- [ ] User object created with required fields
-- [ ] SDK key properly referenced
-- [ ] No compilation errors
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
+- [ ] User object includes required fields
+- [ ] Application compiles without errors
       </verification_checkpoint>
 
-### Step 4: Build and Test
+### Step 3: Test Your Application
 
 ```bash
-# iOS
+# For iOS
 flutter run -d ios
 
-# Android
+# For Android
 flutter run -d android
 
-# All devices
-flutter run
+# For Web (if supported)
+flutter run -d web
 ```
 
 <verification_checkpoint>
-**Final Verification:**
+**Verify before continuing:**
 
-- [ ] App builds for target platforms
+- [ ] Application builds successfully
 - [ ] No DevCycle-related runtime errors
-- [ ] Console shows "DevCycle initialized successfully"
-- [ ] App runs on emulator/device
+- [ ] Console/logs show successful initialization
+- [ ] Application runs normally on target platforms
       </verification_checkpoint>
+
+## 🎉 Installation Complete!
+
+**STOP HERE** - The DevCycle Flutter installation is now complete.
+
+**DO NOT CREATE:**
+
+- Example screens using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any widgets like `FeatureWidget` or similar
+
+**Available methods for future reference only:**
+
+- `client.variableValue(key, defaultValue)`
+- `client.variable(key, defaultValue)`
+- `client.allVariables()`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -297,113 +211,66 @@ flutter run
 
 Installation is complete when ALL of the following are true:
 
-- ✅ SDK package added to pubspec.yaml
-- ✅ SDK key configured (via env/dart-define OR temporary with TODO)
-- ✅ Platform-specific requirements met (iOS 11+, Android 21+)
-- ✅ DevCycle client initialized in app
-- ✅ User object created with userId
-- ✅ App builds and runs without errors
-- ✅ Console shows "DevCycle initialized successfully"
+- ✅ SDK dependency is added to pubspec.yaml
+- ✅ SDK key is configured (via assets file OR temporary hardcode with TODO)
+- ✅ DevCycle client is initialized
+- ✅ Application builds and runs without errors
+- ✅ Console/logs show successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="standard_both_platforms">
-**Scenario:** Flutter 3.0, both iOS and Android, flutter_dotenv
+<example scenario="mobile_app">
+**Scenario:** Flutter mobile app, iOS and Android targets, full file access
 **Actions taken:**
-1. ✅ Created .env with mobile SDK key
-2. ✅ Added SDK and dotenv to pubspec.yaml
-3. ✅ Updated platform minimum versions
-4. ✅ Initialized client in main app
-5. ✅ Tested on both platforms
-**Result:** Installation successful for both platforms
+1. ✅ Created assets/config.json with mobile SDK key
+2. ✅ Added DevCycle dependency to pubspec.yaml
+3. ✅ Initialized client in main.dart
+4. ✅ App builds and runs on both platforms
+**Result:** Installation successful
 </example>
 
-<example scenario="ios_only_m1">
-**Scenario:** iOS only development, M1 Mac
+<example scenario="web_app">
+**Scenario:** Flutter web application
 **Actions taken:**
-1. ✅ Used dart-define for SDK key
-2. ✅ Updated iOS platform to 11.0
-3. ✅ Ran pod install with arch -x86_64
-4. ✅ Configured client initialization
-5. ✅ Built for iOS simulator
-**Result:** Installation successful for iOS
-</example>
-
-<example scenario="web_platform_detected">
-**Scenario:** Flutter web platform included
-**Actions taken:**
-1. ⚠️ Detected web platform target
-2. ℹ️ Warned about mobile SDK limitations
-3. ➡️ Suggested conditional initialization
-4. ✅ Implemented platform checks
-5. ✅ Mobile platforms working
-**Result:** Installation successful with platform detection
+1. ✅ Added SDK key to configuration
+2. ✅ Installed DevCycle Flutter SDK
+3. ✅ Configured client for web platform
+4. ✅ Flutter web app runs successfully
+**Result:** Installation successful with web support
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"Failed to initialize DevCycle" error</symptom>
+<error type="sdk_not_initialized">
+<symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is the SDK key valid?
-2. Check: Is the user object properly formatted?
-3. Check: Are async operations awaited?
+1. Check: Is DVCClient initialized correctly?
+2. Check: Is the SDK key valid?
+3. Check: Does the user object have required fields?
 </diagnosis>
 <solution>
 - Verify mobile SDK key (starts with dvc_mobile_)
-- Ensure user has userId or isAnonymous: true
-- Await the builder.build() call
-- Check for try-catch error details
+- Ensure client.initialize() is awaited
+- User must have userId or be marked as anonymous
 </solution>
 </error>
 
-<error type="platform_version">
-<symptom>Build failures due to platform versions</symptom>
+<error type="platform_errors">
+<symptom>Build fails on specific platforms</symptom>
 <diagnosis>
-1. Check: iOS minimum version 11.0+?
-2. Check: Android minSdkVersion 21+?
-3. Check: Flutter version compatibility?
+1. Check: Are platform-specific dependencies resolved?
+2. Check: Is minimum platform version met?
+3. Check: Are permissions configured?
 </diagnosis>
 <solution>
-- Update ios/Podfile platform version
-- Update android/app/build.gradle minSdkVersion
-- Run flutter clean && flutter pub get
-- Ensure Flutter 2.0+ is installed
-</solution>
-</error>
-
-<error type="pod_install">
-<symptom>iOS pod installation failures</symptom>
-<diagnosis>
-1. Check: Is CocoaPods installed?
-2. Check: Are there pod conflicts?
-3. Check: M1 Mac architecture issues?
-</diagnosis>
-<solution>
-- Install CocoaPods: sudo gem install cocoapods
-- Run cd ios && pod deintegrate && pod install
-- For M1: arch -x86_64 pod install
-- Delete Pods folder and try again
-</solution>
-</error>
-
-<error type="hot_reload">
-<symptom>DevCycle not updating with hot reload</symptom>
-<diagnosis>
-1. Check: Is client initialized in initState?
-2. Check: Is state management correct?
-3. Check: Are variables cached?
-</diagnosis>
-<solution>
-- Client initialization happens once
-- Hot restart (R) instead of hot reload (r)
-- Variables update on next evaluation
-- Consider using setState for UI updates
+- Run: flutter clean && flutter pub get
+- Check iOS 11+ and Android API 21+ requirements
+- Verify platform-specific configurations
 </solution>
 </error>
 </troubleshooting>
@@ -411,14 +278,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
-1. Update the user object with real user data when available
-2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-3. When requested, help implement feature flags using Flutter widgets
-4. Help set up targeting rules for different user segments when asked
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using Flutter methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when users log in
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -430,14 +295,3 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [Flutter SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/flutter/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Flutter SDK GitHub Repository](https://github.com/DevCycleHQ/flutter-client-sdk)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Check Flutter debug console
-4. Contact DevCycle support through the dashboard
-5. Check the GitHub repository for known issues

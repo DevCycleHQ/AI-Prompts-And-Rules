@@ -19,18 +19,18 @@ Follow this complete guide to successfully integrate DevCycle feature flags.
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
+**Do not use this setup for:**
 - Android applications (use Android SDK instead)
 - Client-side applications (use appropriate client SDKs instead)
 - Kotlin-only projects (consider Kotlin-specific patterns)
 
-If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -47,57 +47,37 @@ Before proceeding, verify you have:
 
 ### Setting Up Your SDK Key
 
-1. **First, determine your configuration approach:**
+1. **First, check if you can create/modify configuration files:**
 
-   - Check if you can use environment variables
-   - Check if you're using application.properties/yaml
-   - If both blocked → Go to fallback options
+   - Try: Create `.env` file or modify `application.properties`
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
 
-2. **Recommended: Environment variable approach**
+2. **If configuration file modification succeeds:**
    <success_path>
 
-   Set environment variable:
+   ```properties
+   # application.properties (Spring Boot)
+   devcycle.server.sdk.key=your_server_sdk_key_here
+   ```
+
+   Or:
 
    ```bash
-   export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   Or in application.properties:
+   - Verify the key is not committed to version control
+   - Ensure your app can read the configuration
+     </success_path>
 
-   ```properties
-   devcycle.sdk.key=${DEVCYCLE_SERVER_SDK_KEY}
-   ```
-
-   Or in application.yaml:
-
-   ```yaml
-   devcycle:
-     sdk:
-       key: ${DEVCYCLE_SERVER_SDK_KEY}
-   ```
-
-   </success_path>
-
-3. **If environment configuration is blocked:**
+3. **If configuration file modification fails:**
    <fallback_path>
-   Ask the user: "I'm unable to set environment variables. Please choose:
-
-   **Option A: Temporary hardcoding for testing**
-
-   - I will add the SDK key directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before deploying
-
-   **Option B: Manual setup**
-
-   - I will provide you with the SDK key value
-   - I will give you step-by-step environment setup instructions
-   - You will configure the environment yourself"
-
-   Based on their response:
-
-   - Option A → Add key with `// TODO: Replace with environment variable before production`
-   - Option B → Provide key and detailed environment setup instructions
+   - Provide the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
@@ -105,155 +85,49 @@ Before proceeding, verify you have:
 
 ### Step 1: Add DevCycle Java SDK Dependency
 
-#### Maven
-
-Add to your `pom.xml`:
+**For Maven (pom.xml):**
 
 ```xml
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>2.0.0</version>
+    <version>2.3.0</version>
 </dependency>
 ```
 
-#### Gradle
-
-Add to your `build.gradle`:
+**For Gradle (build.gradle):**
 
 ```gradle
-dependencies {
-    implementation 'com.devcycle:java-server-sdk:2.0.0'
-}
+implementation 'com.devcycle:java-server-sdk:2.3.0'
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Dependency added to build file
-- [ ] Build system refreshed/synced
+- [ ] Dependency added successfully
+- [ ] Build system synced (Maven/Gradle)
 - [ ] No dependency conflicts
-- [ ] SDK downloaded successfully
       </verification_checkpoint>
 
-### Step 2: Create DevCycle Configuration Class
+### Step 2: Initialize DevCycle Client
 
-Create a configuration class for Spring Boot applications:
-
-```java
-package com.yourapp.config;
-
-import com.devcycle.sdk.server.api.DVCClient;
-import com.devcycle.sdk.server.api.DVCCloudClient;
-import com.devcycle.sdk.server.model.DVCClientOptions;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import javax.annotation.PreDestroy;
-
-@Configuration
-public class DevCycleConfig {
-
-    private DVCClient devcycleClient;
-
-    @Value("${devcycle.sdk.key:#{null}}")
-    private String sdkKey;
-
-    @Bean
-    public DVCClient devcycleClient() {
-        if (sdkKey == null || sdkKey.isEmpty()) {
-            // TODO: Replace with environment variable before production
-            sdkKey = "<DEVCYCLE_SERVER_SDK_KEY>";
-        }
-
-        if (sdkKey.equals("<DEVCYCLE_SERVER_SDK_KEY>")) {
-            throw new IllegalStateException("DevCycle SDK key is not configured");
-        }
-
-        DVCClientOptions options = DVCClientOptions.builder()
-            .enableCloudBucketing(false)
-            .enableEdgeDB(false)
-            .eventFlushIntervalMS(10000)
-            .configPollingIntervalMS(10000)
-            .requestTimeoutMS(10000)
-            .build();
-
-        devcycleClient = new DVCCloudClient(sdkKey, options);
-        System.out.println("DevCycle initialized successfully");
-
-        return devcycleClient;
-    }
-
-    @PreDestroy
-    public void cleanup() {
-        if (devcycleClient != null) {
-            try {
-                devcycleClient.close();
-            } catch (Exception e) {
-                System.err.println("Error closing DevCycle client: " + e.getMessage());
-            }
-        }
-    }
-}
-```
-
-For non-Spring applications:
+Create or update your main application class:
 
 ```java
-package com.yourapp.devcycle;
-
 import com.devcycle.sdk.server.api.DVCClient;
-import com.devcycle.sdk.server.api.DVCCloudClient;
-import com.devcycle.sdk.server.model.DVCClientOptions;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 
-public class DevCycleManager {
-    private static DevCycleManager instance;
-    private DVCClient client;
+public class Application {
+    private static DVCClient dvcClient;
 
-    private DevCycleManager() {
-        initialize();
-    }
-
-    public static synchronized DevCycleManager getInstance() {
-        if (instance == null) {
-            instance = new DevCycleManager();
-        }
-        return instance;
-    }
-
-    private void initialize() {
+    public static void main(String[] args) {
+        // Initialize DevCycle
         String sdkKey = System.getenv("DEVCYCLE_SERVER_SDK_KEY");
+        dvcClient = new DVCClient(sdkKey);
 
-        if (sdkKey == null || sdkKey.isEmpty()) {
-            // TODO: Replace with environment variable before production
-            sdkKey = "<DEVCYCLE_SERVER_SDK_KEY>";
-        }
-
-        if (sdkKey.equals("<DEVCYCLE_SERVER_SDK_KEY>")) {
-            throw new IllegalStateException("DevCycle SDK key is not configured");
-        }
-
-        DVCClientOptions options = DVCClientOptions.builder()
-            .enableCloudBucketing(false)
-            .enableEdgeDB(false)
-            .build();
-
-        client = new DVCCloudClient(sdkKey, options);
-        System.out.println("DevCycle initialized successfully");
-    }
-
-    public DVCClient getClient() {
-        return client;
-    }
-
-    public void close() {
-        if (client != null) {
-            try {
-                client.close();
-            } catch (Exception e) {
-                System.err.println("Error closing DevCycle client: " + e.getMessage());
-            }
-        }
+        // Example usage (for reference only - do not implement yet)
+        // DevCycleUser user = DevCycleUser.builder().userId("user123").build();
+        // Variable<Boolean> variable = dvcClient.variable(user, "feature-key", false);
     }
 }
 ```
@@ -261,51 +135,52 @@ public class DevCycleManager {
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Configuration class created
-- [ ] SDK key handling implemented
-- [ ] Client initialization code added
-- [ ] No compilation errors
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
+- [ ] No initialization errors
+- [ ] Application compiles without errors
       </verification_checkpoint>
 
-### Step 3: Example Usage (Reference Only)
+### Step 3: Test Your Application
 
-Here's how to use DevCycle in your application (don't implement unless requested):
+```bash
+# For Maven
+mvn compile exec:java
 
-```java
-import com.devcycle.sdk.server.api.DVCClient;
-import com.devcycle.sdk.server.model.DVCUser;
-import com.devcycle.sdk.server.model.Variable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+# For Gradle
+./gradlew run
 
-@RestController
-@RequestMapping("/api")
-public class FeatureController {
-
-    @Autowired
-    private DVCClient devcycleClient;
-
-    @GetMapping("/feature")
-    public String checkFeature(@RequestParam String userId) {
-        DVCUser user = DVCUser.builder()
-            .userId(userId)
-            .email("user@example.com")
-            .customData(Map.of(
-                "plan", "premium",
-                "role", "admin"
-            ))
-            .build();
-
-        Variable<Boolean> feature = devcycleClient.variable(user, "feature-key", false);
-
-        if (feature.getValue()) {
-            return "New feature enabled!";
-        } else {
-            return "Standard feature";
-        }
-    }
-}
+# Or run the compiled JAR
+java -jar your-app.jar
 ```
+
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Application builds successfully
+- [ ] No DevCycle-related errors
+- [ ] Console shows successful initialization
+- [ ] Application runs normally
+      </verification_checkpoint>
+
+## 🎉 Installation Complete!
+
+**STOP HERE** - The DevCycle Java installation is now complete.
+
+**DO NOT CREATE:**
+
+- Example servlet classes using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any classes like `FeatureController` or similar
+
+**Available methods for future reference only:**
+
+- `dvcClient.variable(user, key, defaultValue)`
+- `dvcClient.variableValue(user, key, defaultValue)`
+- `dvcClient.allVariables(user)`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -313,112 +188,66 @@ public class FeatureController {
 
 Installation is complete when ALL of the following are true:
 
-- ✅ SDK dependency added to build file (Maven/Gradle)
-- ✅ SDK key configured (env var OR temporary with TODO)
-- ✅ DevCycle client configuration class created
-- ✅ Client initializes successfully
-- ✅ Application compiles without errors
-- ✅ Console shows "DevCycle initialized successfully"
+- ✅ SDK dependency is added to pom.xml or build.gradle
+- ✅ SDK key is configured (via properties file OR temporary hardcode with TODO)
+- ✅ DevCycle client is initialized
+- ✅ Application builds and runs without errors
+- ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="spring_boot_maven">
-**Scenario:** Spring Boot 2.7, Maven, Java 11
+<example scenario="spring_boot">
+**Scenario:** Spring Boot project, Maven, full file access
 **Actions taken:**
-1. ✅ Added SDK dependency to pom.xml
-2. ✅ Set SDK key in application.properties
-3. ✅ Created @Configuration class
-4. ✅ Autowired client in controllers
-5. ✅ Verified initialization on startup
-**Result:** Installation successful with Spring Boot
+1. ✅ Added SDK key to application.properties
+2. ✅ Added DevCycle dependency to pom.xml
+3. ✅ Initialized client in main application class
+4. ✅ Spring Boot app starts successfully
+**Result:** Installation successful
 </example>
 
-<example scenario="microservice_gradle">
-**Scenario:** Microservice, Gradle, Java 17
+<example scenario="gradle_project">
+**Scenario:** Plain Java project, Gradle
 **Actions taken:**
-1. ✅ Added SDK to build.gradle
-2. ✅ Used environment variable for key
-3. ✅ Created singleton manager
-4. ✅ Added graceful shutdown hook
-5. ✅ Tested in Docker container
-**Result:** Installation successful in microservice
-</example>
-
-<example scenario="legacy_servlet">
-**Scenario:** Legacy servlet application, Java 8
-**Actions taken:**
-1. ✅ Downloaded JAR manually
-2. ✅ Added to classpath
-3. ✅ Initialized in ServletContextListener
-4. ✅ Stored client in ServletContext
-5. ✅ Accessed from servlets
-**Result:** Installation successful in legacy app
+1. ✅ Created .env with server SDK key
+2. ✅ Added dependency to build.gradle
+3. ✅ Configured client in main class
+4. ✅ Gradle build and run successful
+**Result:** Installation successful with Gradle
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"DevCycle client initialization failed" error</symptom>
+<error type="sdk_not_initialized">
+<symptom>"DVCClient not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is the SDK key valid?
-2. Check: Are all dependencies resolved?
-3. Check: Is there network connectivity?
+1. Check: Is DVCClient constructor called correctly?
+2. Check: Is the SDK key valid?
+3. Check: Are there network connectivity issues?
 </diagnosis>
 <solution>
 - Verify server SDK key (starts with dvc_server_)
-- Check Maven/Gradle dependency resolution
-- Ensure outbound HTTPS is allowed
-- Check for proxy configuration needs
+- Ensure DVCClient is instantiated before using methods
+- Check network connectivity to DevCycle services
 </solution>
 </error>
 
-<error type="dependency">
-<symptom>ClassNotFoundException or NoClassDefFoundError</symptom>
+<error type="dependency_errors">
+<symptom>Build fails or dependency resolution errors</symptom>
 <diagnosis>
-1. Check: Is the SDK dependency included?
-2. Check: Are transitive dependencies resolved?
-3. Check: Is the classpath correct?
+1. Check: Is the dependency version compatible?
+2. Check: Are there conflicting dependencies?
+3. Check: Is build system up to date?
 </diagnosis>
 <solution>
-- Run mvn dependency:tree or gradle dependencies
-- Ensure SDK version is compatible
-- Check for dependency conflicts
-- Clean and rebuild project
-</solution>
-</error>
-
-<error type="spring_injection">
-<symptom>Spring dependency injection failures</symptom>
-<diagnosis>
-1. Check: Is @Configuration annotation present?
-2. Check: Is @Bean annotation on method?
-3. Check: Is component scanning enabled?
-</diagnosis>
-<solution>
-- Ensure configuration class is in scanned package
-- Check @ComponentScan configuration
-- Verify @Autowired usage
-- Check Spring context initialization
-</solution>
-</error>
-
-<error type="performance">
-<symptom>High latency or timeout errors</symptom>
-<diagnosis>
-1. Check: Is local bucketing enabled?
-2. Check: Are timeout values appropriate?
-3. Check: Is the client reused?
-</diagnosis>
-<solution>
-- Enable EdgeDB for local evaluation
-- Increase requestTimeoutMS if needed
-- Ensure client is singleton/bean
-- Don't create new clients per request
+- Use latest version: com.devcycle:java-server-sdk:2.3.0
+- Resolve conflicts in pom.xml or build.gradle
+- Clean and rebuild: mvn clean compile or ./gradlew clean build
 </solution>
 </error>
 </troubleshooting>
@@ -426,14 +255,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
-1. Set up user identification logic for your application
-2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-3. Implement proper error handling for feature flag evaluations if needed
-4. Help set up targeting rules for different user segments when requested
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using DevCycle methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when needed
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -445,14 +272,3 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [Java SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/java/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Java SDK GitHub Repository](https://github.com/DevCycleHQ/java-server-sdk)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Check application logs and stack traces
-4. Contact DevCycle support through the dashboard
-5. Check the GitHub repository for known issues

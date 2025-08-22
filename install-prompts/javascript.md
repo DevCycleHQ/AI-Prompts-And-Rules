@@ -19,19 +19,19 @@ Follow this complete guide to successfully integrate DevCycle feature flags.
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
-- React applications (use `@devcycle/react-client-sdk` instead)
-- Angular applications (use Angular-specific SDK instead)
+**Do not use this setup for:**
+- React applications (use React SDK instead)
+- Angular applications (use Angular SDK instead)
 - Vue.js applications with framework integration needs
-- Server-side Node.js applications (use `@devcycle/nodejs-server-sdk` instead)
+- Server-side Node.js applications (use Node.js SDK instead)
 
-If you detect a framework-specific application, stop immediately and advise which SDK they should use instead.
+If you detect a framework-specific application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
@@ -47,62 +47,40 @@ Before proceeding, verify you have:
 
 ### Setting Up Your SDK Key
 
-1. **Determine your build setup:**
+1. **First, determine your build setup:**
 
-   - Using a bundler (Webpack, Rollup, Parcel, etc.) → npm approach
-   - Plain HTML/JavaScript → CDN approach
-   - Both options are valid, choose based on your setup
+   - Try: Check if you have a build system (webpack, vite, etc.) or using plain HTML
+   - If build system → Continue to step 2
+   - If plain HTML → Go to step 3 (CDN approach)
 
-2. **For bundler/build tool setup:**
+2. **If using a build system:**
    <success_path>
-   If you can create environment files:
 
-   ```bash
-   # .env
-   DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
-   ```
-
-   Configure your bundler to expose environment variables.
-
-   Example for Webpack:
+   Create environment variable or config file:
 
    ```javascript
-   const webpack = require("webpack");
-
-   module.exports = {
-     plugins: [
-       new webpack.DefinePlugin({
-         "process.env.DEVCYCLE_CLIENT_SDK_KEY": JSON.stringify(
-           process.env.DEVCYCLE_CLIENT_SDK_KEY
-         ),
-       }),
-     ],
-   };
+   // config.js
+   export const DEVCYCLE_CLIENT_SDK_KEY = "your_client_sdk_key_here";
    ```
 
-   </success_path>
+   - Verify the key is not committed to version control in production
+   - Ensure your bundler can access the configuration
+     </success_path>
 
-3. **If environment configuration is blocked or using CDN:**
+3. **If using plain HTML (CDN approach):**
    <fallback_path>
-   Ask the user: "How would you like to configure the SDK key?
-   **Option A: Configuration object (recommended)**
-   - I will create a separate config.js file
-   - Easier to manage across environments
-   **Option B: Inline with TODO**
-   - I will add the key directly in initialization code
-   - Must be replaced before production
-   **Option C: Manual setup**
-   - I will provide the SDK key
-   - You will configure it yourself"
-   Based on their response, implement the appropriate approach.
-   </fallback_path>
-   </decision_tree>
+   **Direct configuration in HTML**
+   - Add the SDK key directly in script with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before committing or deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### Option 1: NPM Module (For Bundled Applications)
+### Step 1: Install DevCycle JavaScript SDK
 
-#### Step 1A: Install via Package Manager
+**For npm/yarn projects:**
 
 ```bash
 # Using npm
@@ -110,98 +88,96 @@ npm install --save @devcycle/js-client-sdk
 
 # Using yarn
 yarn add @devcycle/js-client-sdk
+```
 
-# Using pnpm
-pnpm add @devcycle/js-client-sdk
+**For CDN (plain HTML):**
+
+```html
+<script src="https://unpkg.com/@devcycle/js-client-sdk"></script>
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Package installed successfully
+- [ ] Package installed successfully (npm) OR script tag added (CDN)
 - [ ] No dependency conflicts
-- [ ] Package appears in package.json
+- [ ] Build system updated (if applicable)
       </verification_checkpoint>
 
-#### Step 2A: Initialize in Your Application
+### Step 2: Initialize DevCycle Client
+
+**For npm/bundler projects:**
 
 ```javascript
 import { initializeDevCycle } from "@devcycle/js-client-sdk";
+import { DEVCYCLE_CLIENT_SDK_KEY } from "./config.js";
 
-// Define your user object
 const user = {
-  user_id: "example-user", // Required: unique identifier
-  email: "user@example.com", // Optional: for better targeting
-  isAnonymous: false, // Set to true for anonymous users
+  user_id: "default-user", // Replace with actual user ID when available
+  email: "user@example.com", // Optional
+  isAnonymous: false,
 };
 
-// Initialize the DevCycle client
-const devcycleClient = initializeDevCycle(
-  process.env.DEVCYCLE_CLIENT_SDK_KEY || "<DEVCYCLE_CLIENT_SDK_KEY>",
-  user
-);
-
-// Wait for initialization to complete
-devcycleClient
-  .onClientInitialized()
-  .then(() => {
-    console.log("DevCycle initialized successfully");
-    // Your application code here
-  })
-  .catch((error) => {
-    console.error("DevCycle initialization failed:", error);
-  });
+const dvcClient = initializeDevCycle(DEVCYCLE_CLIENT_SDK_KEY, user);
 ```
 
-### Option 2: CDN (For Plain HTML/JavaScript)
-
-#### Step 1B: Add Script Tag
-
-Add to your HTML `<head>` section:
+**For CDN/plain HTML:**
 
 ```html
-<script src="https://js.devcycle.com/devcycle.min.js"></script>
+<script>
+  const user = {
+    user_id: "default-user", // Replace with actual user ID when available
+    email: "user@example.com", // Optional
+    isAnonymous: false,
+  };
+
+  const dvcClient = DevCycle.initializeDevCycle(
+    "your_client_sdk_key_here",
+    user
+  );
+</script>
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Script tag added to HTML
-- [ ] Script loads without 404 errors
-- [ ] DevCycle global object available in console
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
+- [ ] User object includes required fields
+- [ ] No console errors
       </verification_checkpoint>
 
-#### Step 2B: Initialize After Script Loads
+### Step 3: Test Your Application
 
-```html
-<script>
-  // Wait for the script to load
-  window.addEventListener("DOMContentLoaded", function () {
-    // Define your user object
-    const user = {
-      user_id: "example-user", // Required: unique identifier
-      email: "user@example.com", // Optional: for better targeting
-      isAnonymous: false, // Set to true for anonymous users
-    };
+Load your application in a web browser and check the browser console:
 
-    // Initialize DevCycle (note the DevCycle. prefix when using CDN)
-    const devcycleClient = DevCycle.initializeDevCycle(
-      "<DEVCYCLE_CLIENT_SDK_KEY>", // Replace with your actual key
-      user
-    );
+<verification_checkpoint>
+**Verify before continuing:**
 
-    // Wait for initialization
-    devcycleClient.onClientInitialized((err) => {
-      if (err) {
-        console.error("DevCycle initialization failed:", err);
-        return;
-      }
-      console.log("DevCycle initialized successfully");
-      // Your application code here
-    });
-  });
-</script>
-```
+- [ ] Application loads successfully
+- [ ] No DevCycle-related errors in console
+- [ ] Console shows successful initialization
+- [ ] Application functions normally
+      </verification_checkpoint>
+
+## 🎉 Installation Complete!
+
+**STOP HERE** - The DevCycle JavaScript installation is now complete.
+
+**DO NOT CREATE:**
+
+- Example HTML elements using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any functions like `renderFeature()` or similar
+
+**Available methods for future reference only:**
+
+- `dvcClient.variableValue(key, defaultValue)`
+- `dvcClient.variable(key, defaultValue)`
+- `dvcClient.allVariables()`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -209,112 +185,66 @@ Add to your HTML `<head>` section:
 
 Installation is complete when ALL of the following are true:
 
-- ✅ SDK is available (via npm package OR CDN script)
-- ✅ SDK key is configured (via env, config file, OR inline with TODO)
-- ✅ DevCycle client is initialized with user object
-- ✅ Initialization completes without errors
-- ✅ Console shows "DevCycle initialized successfully"
-- ✅ No network errors for DevCycle API calls
+- ✅ SDK is installed via npm OR CDN script tag is added
+- ✅ SDK key is configured (via config file OR direct in HTML with TODO)
+- ✅ DevCycle client is initialized
+- ✅ Application loads and runs without errors
+- ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="webpack_spa">
-**Scenario:** Single-page app with Webpack, npm
+<example scenario="webpack_project">
+**Scenario:** Webpack project, npm, full file access
 **Actions taken:**
-1. ✅ Created .env with client SDK key
-2. ✅ Configured Webpack to expose env var
-3. ✅ Installed SDK via npm
-4. ✅ Initialized in main.js
-5. ✅ Verified initialization success
-**Result:** Installation successful with bundler
+1. ✅ Created config.js with client SDK key
+2. ✅ Installed DevCycle JavaScript SDK via npm
+3. ✅ Initialized client in main.js
+4. ✅ App builds and loads successfully
+**Result:** Installation successful
 </example>
 
 <example scenario="plain_html">
-**Scenario:** Plain HTML website, no build tools
+**Scenario:** Plain HTML website, CDN
 **Actions taken:**
-1. ✅ Added CDN script to index.html
-2. ✅ Created config.js with SDK key
-3. ✅ Added initialization in script tag
-4. ✅ Tested in browser
-5. ✅ Confirmed DevCycle loads
+1. ✅ Added DevCycle script tag from CDN
+2. ✅ Configured client directly in HTML
+3. ✅ Verified initialization in browser
+4. ✅ Website loads successfully
 **Result:** Installation successful with CDN
-</example>
-
-<example scenario="legacy_jquery">
-**Scenario:** Legacy jQuery application
-**Actions taken:**
-1. ✅ Added CDN script before jQuery
-2. ✅ Wrapped initialization in $(document).ready()
-3. ✅ Used DevCycle global object
-4. ✅ Integrated with existing code
-5. ✅ No conflicts detected
-**Result:** Installation successful in legacy app
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"DevCycle is not initialized" or undefined errors</symptom>
+<error type="sdk_not_loaded">
+<symptom>"DevCycle is not defined" or initialization fails</symptom>
 <diagnosis>
-1. Check: Is the SDK loaded before initialization?
-2. Check: Is the SDK key valid?
-3. Check: Is the user object properly formatted?
+1. Check: Is the script tag loaded correctly (CDN)?
+2. Check: Is the import statement correct (npm)?
+3. Check: Is the SDK key valid?
 </diagnosis>
 <solution>
-- For CDN: Ensure script tag is in <head> and loads first
-- For npm: Check import statement is correct
+- Verify CDN script loads before your code runs
+- Check import path: '@devcycle/js-client-sdk'
 - Verify client SDK key (starts with dvc_client_)
-- User must have user_id or isAnonymous: true
 </solution>
 </error>
 
-<error type="cdn_loading">
-<symptom>CDN script not loading or 404 errors</symptom>
+<error type="cors_errors">
+<symptom>CORS or network errors in browser console</symptom>
 <diagnosis>
-1. Check: Is the CDN URL correct?
-2. Check: Are there CSP restrictions?
-3. Check: Is there a network proxy blocking it?
+1. Check: Is the application running on localhost or HTTPS?
+2. Check: Are there network restrictions?
+3. Check: Is the SDK key valid for your environment?
 </diagnosis>
 <solution>
-- Verify CDN URL: https://js.devcycle.com/devcycle.min.js
-- Check Content Security Policy headers
-- Try downloading and self-hosting the script
-- Check browser network tab for errors
-</solution>
-</error>
-
-<error type="bundler">
-<symptom>Module not found or build errors</symptom>
-<diagnosis>
-1. Check: Is the package installed?
-2. Check: Is the import path correct?
-3. Check: Are there bundler configuration issues?
-</diagnosis>
-<solution>
-- Verify package in node_modules
-- Use correct import: @devcycle/js-client-sdk
-- Check bundler config for module resolution
-- Try clearing build cache
-</solution>
-</error>
-
-<error type="api_calls">
-<symptom>Network errors or failed API calls</symptom>
-<diagnosis>
-1. Check: Is the SDK key valid?
-2. Check: Are there CORS issues?
-3. Check: Is there network connectivity?
-</diagnosis>
-<solution>
-- Verify SDK key in DevCycle dashboard
-- DevCycle handles CORS, check browser console
-- Check network tab for failed requests
-- Ensure HTTPS is used in production
+- Use HTTPS or localhost for development
+- Check firewall/network restrictions
+- Verify the SDK key is from the correct DevCycle environment
 </solution>
 </error>
 </troubleshooting>
@@ -322,13 +252,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, help set up targeting rules for different user segments
-3. Implement proper error handling around feature flag evaluations if needed
+2. When requested, help implement feature flags using DevCycle methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when users log in
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -340,14 +269,3 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [JavaScript SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/javascript/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [JavaScript SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Use browser DevTools to debug
-4. Contact DevCycle support through the dashboard
-5. Check the GitHub repository for known issues

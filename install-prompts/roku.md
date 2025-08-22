@@ -19,19 +19,19 @@ Follow this complete guide to successfully integrate DevCycle feature flags in a
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
+**Do not use this setup for:**
 - Web applications (use JavaScript SDK instead)
 - Mobile applications (use mobile SDKs instead)
 - Other smart TV platforms (use appropriate SDKs)
 - Server-side applications (use server SDKs instead)
 
-If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
@@ -48,16 +48,22 @@ Before proceeding, verify you have:
 
 ### Setting Up Your SDK Key
 
-1. **First, determine your configuration approach:**
+1. **First, check if you can modify channel configuration:**
 
-   - Check if you can modify manifest file
-   - Check if using a config file approach
-   - If both blocked → Go to fallback options
+   - Try: Edit `manifest` file or create configuration file
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
 
-2. **Recommended: Configuration file approach**
+2. **If configuration file modification succeeds:**
    <success_path>
 
-   Create `source/config.brs`:
+   Add to `manifest`:
+
+   ```
+   devcycle_mobile_sdk_key=your_mobile_sdk_key_here
+   ```
+
+   Or create `source/config.brs`:
 
    ```brightscript
    function getDevCycleConfig() as Object
@@ -67,35 +73,16 @@ Before proceeding, verify you have:
    end function
    ```
 
-   Or in manifest (less secure):
+   - Verify the key is not committed to public repositories
+   - Ensure your channel can access the configuration
+     </success_path>
 
-   ```
-   # manifest
-   devcycle_sdk_key=your_mobile_sdk_key_here
-   ```
-
-   </success_path>
-
-3. **If configuration files cannot be created:**
+3. **If configuration file modification fails:**
    <fallback_path>
-   Ask the user: "I'm unable to create configuration files. Please choose:
-
-   **Option A: Temporary hardcoding for testing**
-
-   - I will add the SDK key directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before publishing
-
-   **Option B: Manual setup**
-
-   - I will provide you with the SDK key value
-   - I will give you step-by-step configuration instructions
-   - You will configure the files yourself"
-
-   Based on their response:
-
-   - Option A → Add key with `' TODO: Replace with configuration before publishing`
-   - Option B → Provide key and detailed Roku configuration instructions
+   - Provide the user guidance that they MUST replace this before publishing
      </fallback_path>
      </decision_tree>
 
@@ -103,170 +90,87 @@ Before proceeding, verify you have:
 
 ### Step 1: Download and Add DevCycle Roku SDK
 
-1. Download the DevCycle Roku SDK from the GitHub repository
-2. Copy the SDK files to your channel's `source/` directory
-3. Ensure all DevCycle components are in the correct location
-
-Directory structure should look like:
-
-```
-your-roku-channel/
-├── source/
-│   ├── devcycle/
-│   │   ├── DevCycleClient.brs
-│   │   ├── DevCycleUser.brs
-│   │   └── DevCycleUtils.brs
-│   ├── main.brs
-│   └── config.brs
-├── components/
-└── manifest
-```
+1. Download the DevCycle Roku SDK files from GitHub
+2. Copy the SDK files to your `source/` directory:
+   - `devcycle.brs`
+   - `devcycle_http.brs`
+   - Any additional SDK files
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] SDK files copied to source directory
-- [ ] File structure matches expected layout
-- [ ] No missing SDK files
-- [ ] BrightScript files are readable
+- [ ] SDK files copied to source/ directory
+- [ ] Files are properly included in channel structure
+- [ ] No file naming conflicts
       </verification_checkpoint>
 
-### Step 2: Initialize DevCycle in Main Entry Point
+### Step 2: Initialize DevCycle Client
 
-Update your `source/main.brs`:
+Create or update your main scene or application file:
 
 ```brightscript
-sub Main(args as Dynamic)
-    ' Initialize screen and message port
-    screen = CreateObject("roSGScreen")
-    m.port = CreateObject("roMessagePort")
-    screen.setMessagePort(m.port)
-
+' In your main scene init function
+function init()
     ' Initialize DevCycle
-    initializeDevCycle()
+    m.devcycleConfig = {
+        sdkKey: "your_mobile_sdk_key_here"
+        user: {
+            userId: "default-user"
+            email: "user@example.com"
+        }
+    }
 
-    ' Create and show your scene
-    scene = screen.CreateScene("MainScene")
-    screen.show()
+    m.devcycleClient = DevCycleInit(m.devcycleConfig)
 
-    ' Event loop
-    while(true)
-        msg = wait(0, m.port)
-        msgType = type(msg)
-
-        if msgType = "roSGScreenEvent"
-            if msg.isScreenClosed() then return
-        end if
-    end while
-end sub
-
-sub initializeDevCycle()
-    ' Get SDK key from configuration
-    config = getDevCycleConfig()
-    sdkKey = config.sdkKey
-
-    if sdkKey = invalid or sdkKey = ""
-        ' TODO: Replace with configuration before publishing
-        sdkKey = "<DEVCYCLE_MOBILE_SDK_KEY>"
-    end if
-
-    if sdkKey = "<DEVCYCLE_MOBILE_SDK_KEY>"
-        print "DevCycle SDK key is not configured"
-        return
-    end if
-
-    ' Create user object
-    user = CreateObject("roAssociativeArray")
-    user.user_id = "default-user" ' Replace with actual user ID when available
-    user.isAnonymous = false
-
-    ' Initialize DevCycle client
-    m.global.addFields({
-        devcycleClient: CreateObject("roSGNode", "DevCycleClient")
-    })
-
-    m.global.devcycleClient.sdkKey = sdkKey
-    m.global.devcycleClient.user = user
-    m.global.devcycleClient.control = "RUN"
-
-    print "DevCycle initialized successfully"
-end sub
+    ' Example usage (for reference only - do not implement yet)
+    ' variable = m.devcycleClient.variable("feature-key", false)
+end function
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Main.brs updated with initialization
-- [ ] SDK key configuration implemented
-- [ ] User object created
-- [ ] Global DevCycle client created
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
+- [ ] User object includes required fields
+- [ ] Channel compiles without errors
       </verification_checkpoint>
 
-### Step 3: Create DevCycle Component
-
-Create `components/DevCycleClient.xml`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<component name="DevCycleClient" extends="Task">
-    <interface>
-        <field id="sdkKey" type="string" />
-        <field id="user" type="assocarray" />
-        <field id="variables" type="assocarray" />
-    </interface>
-    <script type="text/brightscript" uri="pkg:/source/devcycle/DevCycleClient.brs" />
-</component>
-```
-
-And the corresponding BrightScript component:
-
-```brightscript
-sub init()
-    m.top.functionName = "initializeClient"
-end sub
-
-sub initializeClient()
-    sdkKey = m.top.sdkKey
-    user = m.top.user
-
-    if sdkKey <> invalid and user <> invalid
-        ' Initialize connection to DevCycle
-        ' This would contain the actual SDK initialization logic
-        m.top.variables = {}
-        print "DevCycle client initialized with key: " + Left(sdkKey, 10) + "..."
-    else
-        print "DevCycle initialization failed: missing SDK key or user"
-    end if
-end sub
-```
-
-<verification_checkpoint>
-**Verify before continuing:**
-
-- [ ] Component XML created
-- [ ] Component BrightScript implemented
-- [ ] Interface fields defined
-- [ ] Task extends properly
-      </verification_checkpoint>
-
-### Step 4: Test Your Channel
+### Step 3: Test Your Channel
 
 ```bash
-# Package your channel
-zip -r channel.zip manifest source components
-
 # Deploy to Roku device for testing
-# Use Roku developer mode to sideload
+curl -d '' 'http://[roku-ip]:8060/keypress/Home'
+# Upload and test channel via Roku Developer Portal
 ```
 
 <verification_checkpoint>
-**Final Verification:**
+**Verify before continuing:**
 
-- [ ] Channel packages without errors
-- [ ] Sideloads successfully to Roku device
+- [ ] Channel deploys successfully
 - [ ] No DevCycle-related runtime errors
-- [ ] Debug console shows "DevCycle initialized successfully"
+- [ ] Debug output shows successful initialization
+- [ ] Channel functions normally on Roku device
       </verification_checkpoint>
+
+## 🎉 Installation Complete!
+
+**STOP HERE** - The DevCycle Roku installation is now complete.
+
+**DO NOT CREATE:**
+
+- Example scenes using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any functions like `FeatureScene` or similar
+
+**Available functions for future reference only:**
+
+- `m.devcycleClient.variable(key, defaultValue)`
+- `m.devcycleClient.variableValue(key, defaultValue)`
+- `m.devcycleClient.allVariables()`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -274,113 +178,66 @@ zip -r channel.zip manifest source components
 
 Installation is complete when ALL of the following are true:
 
-- ✅ SDK files added to source directory
-- ✅ SDK key configured (config file OR temporary with TODO)
-- ✅ DevCycle initialized in main.brs
-- ✅ DevCycle component created
-- ✅ User object configured
-- ✅ Channel builds and packages successfully
-- ✅ Channel runs on Roku without errors
+- ✅ SDK files are copied to source/ directory
+- ✅ SDK key is configured (via manifest OR temporary hardcode with TODO)
+- ✅ DevCycle client is initialized in main scene
+- ✅ Channel deploys and runs without errors
+- ✅ Debug output shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="scene_graph_channel">
-**Scenario:** SceneGraph-based channel, Roku OS 9.0+
+<example scenario="scenegraph_channel">
+**Scenario:** SceneGraph Roku channel, full file access
 **Actions taken:**
-1. ✅ Added SDK files to source/
-2. ✅ Created config.brs for SDK key
-3. ✅ Initialized in Main()
-4. ✅ Created Task component
-5. ✅ Accessed from scene components
-**Result:** Installation successful with SceneGraph
+1. ✅ Added SDK key to manifest file
+2. ✅ Copied DevCycle SDK files to source/
+3. ✅ Initialized client in main scene
+4. ✅ Channel deploys and runs successfully
+**Result:** Installation successful
 </example>
 
-<example scenario="legacy_channel_update">
-**Scenario:** Updating legacy SDK-1 channel
+<example scenario="legacy_channel">
+**Scenario:** Legacy Roku channel, BrightScript only
 **Actions taken:**
-1. ✅ Migrated to SceneGraph structure
-2. ✅ Added DevCycle SDK files
-3. ✅ Updated manifest for new requirements
-4. ✅ Refactored initialization
-5. ✅ Tested on multiple Roku models
-**Result:** Migration successful
-</example>
-
-<example scenario="direct_publisher">
-**Scenario:** Direct Publisher channel with custom code
-**Actions taken:**
-1. ✅ Converted to SDK channel
-2. ✅ Added DevCycle integration
-3. ✅ Maintained Direct Publisher feed
-4. ✅ Hybrid approach implemented
-5. ✅ Published to channel store
-**Result:** Installation successful with hybrid approach
+1. ✅ Created config.brs with mobile SDK key
+2. ✅ Added SDK files to channel
+3. ✅ Configured client in main application
+4. ✅ Channel functions correctly on device
+**Result:** Installation successful with legacy support
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"DevCycle SDK key is not configured" in debug console</symptom>
+<error type="sdk_not_loaded">
+<symptom>"DevCycle functions not found" or initialization fails</symptom>
 <diagnosis>
-1. Check: Is config.brs present?
-2. Check: Is SDK key valid?
-3. Check: Is configuration loaded?
+1. Check: Are SDK files in the correct source/ directory?
+2. Check: Is the SDK key valid?
+3. Check: Are function names spelled correctly?
 </diagnosis>
 <solution>
-- Verify mobile SDK key (starts with dvc_mobile_)
-- Ensure getDevCycleConfig() returns key
-- Check file paths are correct
-- Use print statements for debugging
+- Verify all SDK files are in source/ folder
+- Check mobile SDK key (starts with dvc_mobile_)
+- Ensure BrightScript function calls match SDK documentation
 </solution>
 </error>
 
-<error type="packaging">
-<symptom>Channel fails to package or install</symptom>
+<error type="deployment_errors">
+<symptom>Channel fails to deploy or run on Roku device</symptom>
 <diagnosis>
-1. Check: Are all files in correct directories?
-2. Check: Is manifest valid?
-3. Check: Are there syntax errors?
+1. Check: Are there BrightScript syntax errors?
+2. Check: Is the channel manifest valid?
+3. Check: Are there memory or performance issues?
 </diagnosis>
 <solution>
-- Validate manifest format
-- Check BrightScript syntax
-- Ensure no missing files
-- Review Roku packaging requirements
-</solution>
-</error>
-
-<error type="component">
-<symptom>DevCycleClient component not found</symptom>
-<diagnosis>
-1. Check: Is component XML in components/?
-2. Check: Is URI path correct?
-3. Check: Is component name matching?
-</diagnosis>
-<solution>
-- Verify components/DevCycleClient.xml exists
-- Check pkg:/ paths are correct
-- Ensure XML is well-formed
-- Component name must match filename
-</solution>
-</error>
-
-<error type="performance">
-<symptom>Channel performance degradation</symptom>
-<diagnosis>
-1. Check: Is client being recreated?
-2. Check: Are there memory leaks?
-3. Check: Is network blocking UI?
-</diagnosis>
-<solution>
-- Initialize client once globally
-- Use Task nodes for async operations
-- Implement proper cleanup
-- Cache variable values appropriately
+- Review BrightScript syntax in SDK integration
+- Validate manifest file format
+- Monitor channel performance and memory usage
 </solution>
 </error>
 </troubleshooting>
@@ -388,14 +245,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
-1. Update the user object with real user data when available
-2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-3. When requested, help implement feature flags in scene components
-4. Help set up targeting rules for different user segments when asked
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using Roku/BrightScript methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when needed
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -406,16 +261,4 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [DevCycle Documentation](https://docs.devcycle.com/)
 - [Roku SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/roku/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [Roku Developer Documentation](https://developer.roku.com/docs/)
-- [BrightScript Reference](https://developer.roku.com/docs/references/brightscript/language/brightscript-language-reference.md)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Use Roku debug console for diagnostics
-4. Contact DevCycle support through the dashboard
-5. Check the GitHub repository for known issues
+- [Roku SDK GitHub Repository](https://github.com/DevCycleHQ/roku-client-sdk)

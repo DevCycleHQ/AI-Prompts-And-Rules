@@ -1,16 +1,35 @@
 # DevCycle Ruby OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for Ruby server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for Ruby. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a Ruby server application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
-- Mobile applications (use iOS/Android SDKs instead)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -19,42 +38,63 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for Ruby backend applications. Never expose server keys to client-side code. Store keys in environment variables or Rails credentials.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create an environment file** (.env) in the project root or use Rails credentials:
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` file or use Rails credentials
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment configuration succeeds:**
+   <success_path>
+
+   For Rails, use credentials:
 
    ```bash
-   # .env
+   rails credentials:edit
+   ```
+
+   Add:
+
+   ```yaml
+   devcycle:
+     server_sdk_key: your_server_sdk_key_here
+   ```
+
+   Or use .env file:
+
+   ```bash
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   Or for Rails applications, use encrypted credentials.
+   - Test that the key is accessible
+     </success_path>
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
-
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
-
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
-
-**Note:** Always prefer environment variables or Rails credentials over hardcoding for security reasons.
+3. **If environment configuration fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle Provider
 
-Add to your `Gemfile`:
+Add to your Gemfile:
 
 ```ruby
-gem 'openfeature-sdk'
-gem 'devcycle-ruby-server-sdk'
-gem 'devcycle-ruby-server-sdk-openfeature'
+gem 'openfeature-ruby-sdk'
+gem 'devcycle-openfeature-ruby-provider'
 ```
 
 Then run:
@@ -63,342 +103,176 @@ Then run:
 bundle install
 ```
 
-Or install directly:
+### Step 2: Initialize OpenFeature with DevCycle Provider
 
-```bash
-gem install openfeature-sdk
-gem install devcycle-ruby-server-sdk
-gem install devcycle-ruby-server-sdk-openfeature
-```
-
-### 2. Initialize OpenFeature with DevCycle Provider
-
-Create an OpenFeature configuration file (e.g., `config/initializers/openfeature.rb` for Rails):
+For Rails, create initializer (`config/initializers/openfeature.rb`):
 
 ```ruby
 require 'openfeature'
-require 'devcycle'
-require 'devcycle/openfeature'
+require 'devcycle_openfeature_provider'
 
 module OpenFeatureConfig
-  class << self
-    attr_reader :client
+  def self.initialize!
+    sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY'] ||
+              Rails.application.credentials.dig(:devcycle, :server_sdk_key)
 
-    def initialize_client
-      sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY']
-
-      if sdk_key.nil? || sdk_key.empty?
-        raise 'DEVCYCLE_SERVER_SDK_KEY environment variable is not set'
-      end
-
-      begin
-        # Initialize DevCycle client
-        devcycle_client = DevCycle::Client.new(sdk_key)
-
-        # Create DevCycle provider
-        provider = DevCycle::OpenFeature::Provider.new(devcycle_client)
-
-        # Set the provider for OpenFeature
-        OpenFeature::SDK.configure do |config|
-          config.provider = provider
-        end
-
-        # Get OpenFeature client
-        @client = OpenFeature::SDK.build_client
-
-        Rails.logger.info('OpenFeature with DevCycle initialized successfully') if defined?(Rails)
-        @client
-      rescue => e
-        Rails.logger.error("Failed to initialize OpenFeature: #{e.message}") if defined?(Rails)
-        raise
-      end
+    if sdk_key.nil? || sdk_key.empty?
+      # TODO: Replace with environment variable before production
+      sdk_key = 'your_server_sdk_key_here'
     end
 
-    def client
-      @client ||= initialize_client
+    if sdk_key == 'your_server_sdk_key_here'
+      raise 'DevCycle SDK key is not configured'
     end
 
-    def shutdown
-      @client&.close
-      @client = nil
-    end
+    # Create DevCycle provider
+    provider = DevCycleOpenFeatureProvider.new(sdk_key)
+
+    # Set the provider
+    OpenFeature::API.set_provider(provider)
+
+    Rails.logger.info 'OpenFeature with DevCycle initialized successfully'
+  rescue => e
+    Rails.logger.error "OpenFeature initialization failed: #{e.message}"
+    raise
   end
 end
 
 # Initialize on Rails startup
-if defined?(Rails)
-  Rails.application.config.after_initialize do
-    OpenFeatureConfig.client
-  end
-
-  # Clean up on shutdown
-  at_exit do
-    OpenFeatureConfig.shutdown
-  end
-end
+OpenFeatureConfig.initialize! if defined?(Rails)
 ```
 
-### 3. Framework-Specific Integration
-
-#### For Rails Applications
-
-Create a concern for controllers:
+### Step 3: Use in Your Application
 
 ```ruby
-# app/controllers/concerns/feature_flaggable.rb
-module FeatureFlaggable
-  extend ActiveSupport::Concern
-
-  included do
-    helper_method :feature_enabled? if respond_to?(:helper_method)
-  end
-
-  def openfeature_client
-    @openfeature_client ||= OpenFeatureConfig.client
-  end
-
-  def feature_enabled?(feature_key, default = false)
-    context = build_evaluation_context
-    openfeature_client.get_boolean_value(feature_key, default, context)
-  rescue => e
-    Rails.logger.error "Error checking feature #{feature_key}: #{e.message}"
-    default
-  end
-
-  def get_string_config(config_key, default = '')
-    context = build_evaluation_context
-    openfeature_client.get_string_value(config_key, default, context)
-  end
-
-  def get_number_config(config_key, default = 0)
-    context = build_evaluation_context
-    openfeature_client.get_number_value(config_key, default, context)
-  end
-
-  def get_object_config(config_key, default = {})
-    context = build_evaluation_context
-    openfeature_client.get_object_value(config_key, default, context)
-  end
-
+# In a Rails controller
+class ApplicationController < ActionController::Base
   private
 
-  def build_evaluation_context
-    OpenFeature::SDK::EvaluationContext.new(
+  def openfeature_client
+    @openfeature_client ||= OpenFeature::API.client
+  end
+
+  def current_user_context
+    OpenFeature::EvaluationContext.new(
       targeting_key: current_user&.id || 'anonymous',
       attributes: {
         email: current_user&.email,
-        plan: current_user&.subscription_plan,
-        role: current_user&.role,
-        authenticated: user_signed_in?
-      }.compact
-    )
-  end
-end
-
-# Include in ApplicationController
-class ApplicationController < ActionController::Base
-  include FeatureFlaggable
-end
-```
-
-#### For Sinatra Applications
-
-```ruby
-require 'sinatra'
-require 'openfeature'
-require_relative 'openfeature_config'
-
-class MyApp < Sinatra::Base
-  configure do
-    set :openfeature_client, OpenFeatureConfig.client
-  end
-
-  helpers do
-    def feature_enabled?(feature_key, default = false)
-      context = OpenFeature::SDK::EvaluationContext.new(
-        targeting_key: session[:user_id] || 'anonymous',
-        attributes: {
-          authenticated: !session[:user_id].nil?
-        }
-      )
-
-      settings.openfeature_client.get_boolean_value(feature_key, default, context)
-    end
-  end
-
-  get '/api/feature/:key' do
-    feature_key = params[:key]
-    enabled = feature_enabled?(feature_key)
-
-    content_type :json
-    { feature: feature_key, enabled: enabled }.to_json
-  end
-end
-```
-
-### 4. Using Feature Flags with OpenFeature
-
-Service class example:
-
-```ruby
-class FeatureService
-  def initialize(openfeature_client = OpenFeatureConfig.client)
-    @client = openfeature_client
-  end
-
-  def feature_enabled_for_user?(feature_key, user_id, email = nil)
-    context = OpenFeature::SDK::EvaluationContext.new(
-      targeting_key: user_id,
-      attributes: {
-        email: email,
         plan: 'premium',
         role: 'admin'
-      }.compact
+      }
     )
-
-    @client.get_boolean_value(feature_key, false, context)
-  rescue => e
-    Rails.logger.error "Error checking feature #{feature_key}: #{e.message}"
-    false
   end
+end
 
-  def get_all_flags_for_user(user_id)
-    context = OpenFeature::SDK::EvaluationContext.new(
-      targeting_key: user_id
-    )
-
-    {
-      new_feature: @client.get_boolean_value('new-feature', false, context),
-      button_text: @client.get_string_value('button-text', 'Click Here', context),
-      max_items: @client.get_number_value('max-items', 10, context),
-      ui_config: @client.get_object_value('ui-config', { theme: 'light' }, context)
-    }
+# Example route
+class HomeController < ApplicationController
+  def index
+    render json: { message: 'Ruby app with OpenFeature and DevCycle!' }
   end
 end
 ```
 
-Rails controller example:
+<verification_checkpoint>
+**Verify before continuing:**
 
-```ruby
-class FeaturesController < ApplicationController
-  def check
-    feature_key = params[:feature_key]
+- [ ] Both gems installed successfully
+- [ ] DevCycle provider initialized
+- [ ] Application starts without errors
+- [ ] Log shows successful initialization
+      </verification_checkpoint>
 
-    # Using the concern method
-    enabled = feature_enabled?(feature_key)
+<success_criteria>
 
-    # Or using different value types
-    text = get_string_config("#{feature_key}_text", 'Default Text')
-    limit = get_number_config("#{feature_key}_limit", 100)
-    config = get_object_config("#{feature_key}_config", { enabled: false })
+## Installation Success Criteria
 
-    render json: {
-      feature_enabled: enabled,
-      text: text,
-      limit: limit,
-      config: config
-    }
-  end
+Installation is complete when ALL of the following are true:
 
-  def user_features
-    service = FeatureService.new
-    features = service.get_all_flags_for_user(current_user&.id || 'anonymous')
+- ✅ OpenFeature SDK and DevCycle provider gems installed
+- ✅ SDK key is configured (via env var OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Application starts without OpenFeature/DevCycle errors
+- ✅ Log shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-    render json: features
-  end
-end
-```
+<examples>
+## Common Installation Scenarios
 
-### 5. Environment Configuration
+<example scenario="rails_7_api">
+**Scenario:** Rails 7 API, Ruby 3.1
+**Actions taken:**
+1. ✅ Added gems to Gemfile
+2. ✅ Used Rails credentials for SDK key
+3. ✅ Created OpenFeature initializer
+4. ✅ Added context helpers
+5. ✅ Rails starts successfully
+**Result:** Installation successful
+</example>
 
-Using dotenv for Rails/Ruby:
+<example scenario="sinatra_service">
+**Scenario:** Sinatra microservice, Ruby 2.7
+**Actions taken:**
+1. ✅ Installed gems directly
+2. ✅ Used dotenv for configuration
+3. ✅ Initialized in app.rb
+4. ✅ Created context helper methods
+5. ✅ Service runs without errors
+**Result:** Installation successful with Sinatra
+</example>
+</examples>
 
-Add to `Gemfile`:
-
-```ruby
-gem 'dotenv-rails', groups: [:development, :test]
-```
-
-Create `.env` file:
-
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-RAILS_ENV=development
-```
-
-Using Rails credentials:
-
-```bash
-rails credentials:edit
-```
-
-Add:
-
-```yaml
-devcycle:
-  server_sdk_key: your_server_sdk_key_here
-```
-
-Then update initialization:
-
-```ruby
-sdk_key = Rails.application.credentials.devcycle[:server_sdk_key] ||
-          ENV['DEVCYCLE_SERVER_SDK_KEY']
-```
-
-After installation, run your Ruby application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or service returning default values only</symptom>
+<diagnosis>
+1. Check: Is set_provider() called before client usage?
+2. Check: Is the SDK key valid?
+3. Check: Is targeting_key provided in context?
+</diagnosis>
+<solution>
+- Call set_provider() before getting client
+- Verify server SDK key (starts with dvc_server_)
+- Always include targeting_key in EvaluationContext
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-
-   - Ensure OpenFeature provider is set during initialization
-   - Check that DevCycle client initializes successfully
-   - Verify your SDK key is correct (server SDK key)
-
-2. **Gem installation errors:**
-
-   - Run `bundle update` to update dependencies
-   - Check Ruby version compatibility (2.7+)
-   - Clear bundler cache: `bundle clean --force`
-
-3. **Client returning default values only:**
-
-   - Confirm the provider is initialized before use
-   - Check that evaluation context has targeting_key
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall settings allow HTTPS
+<error type="gem_errors">
+<symptom>Gem installation or loading failures</symptom>
+<diagnosis>
+1. Check: Is Ruby version 2.7+?
+2. Check: Is Bundler up to date?
+3. Check: Are there gem conflicts?
+</diagnosis>
+<solution>
+- Check Ruby version: ruby -v
+- Update Bundler: gem update bundler
+- Clear cache: bundle clean --force
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, help implement evaluation context strategies
-3. Set up proper error handling and logging
+2. When requested, help implement feature flag usage in controllers and services
+3. Set up proper error handling for feature flag evaluations
 4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [OpenFeature Ruby SDK](https://github.com/open-feature/ruby-sdk)
-- [DevCycle Ruby SDK](https://docs.devcycle.com/sdk/server-side-sdks/ruby/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature Ruby SDK](https://openfeature.dev/docs/reference/technologies/server/ruby/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)

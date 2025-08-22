@@ -19,19 +19,19 @@ Follow this complete guide to successfully integrate DevCycle feature flags.
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
-- Client-side JavaScript applications (use `@devcycle/js-client-sdk` instead)
-- React applications (use `@devcycle/react-client-sdk` instead)
-- Next.js applications (use `@devcycle/nextjs-sdk` instead)
-- NestJS applications (use NestJS-specific SDK instead)
+**Do not use this setup for:**
+- Client-side JavaScript applications (use JavaScript SDK instead)
+- React applications (use React SDK instead)
+- Next.js applications (use Next.js SDK instead)
+- NestJS applications (use NestJS SDK instead)
 
-If you detect that the user is trying to install the Node.js SDK in an incompatible application, stop immediately and advise which SDK they should use instead.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -62,32 +62,23 @@ Before proceeding, verify you have:
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   - Install dotenv if not present: `npm install dotenv`
-   - Load at application start: `require('dotenv').config()`
    - Verify the file is in .gitignore
+   - Ensure your app can read environment variables
    - Test that `process.env.DEVCYCLE_SERVER_SDK_KEY` is accessible
      </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
-   Ask the user: "I'm unable to create/modify environment files. Please choose:
-   **Option A: Temporary hardcoding for testing**
-   - I will add the SDK key directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before committing or deploying
-   **Option B: Manual setup**
-   - I will provide you with the SDK key value
-   - I will give you step-by-step instructions for setting it up
-   - You will configure the environment variable yourself"
-   Based on their response:
-   - Option A → Add key with `// TODO: Replace with environment variable before production`
-   - Option B → Provide key and detailed setup instructions
+   - Provide the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
 ## Installation Steps
 
-### Step 1: Install the DevCycle Node.js SDK
+### Step 1: Install DevCycle Node.js SDK
 
 ```bash
 # Using npm
@@ -108,153 +99,68 @@ pnpm add @devcycle/nodejs-server-sdk
 - [ ] Node modules updated
       </verification_checkpoint>
 
-### Step 2: Create DevCycle Configuration Module
+### Step 2: Initialize DevCycle Client
 
-Create a DevCycle initialization file (e.g., `devcycle.js` or `devcycle.ts`):
-
-#### JavaScript Example
+Create or update your main application file:
 
 ```javascript
 const { initializeDevCycle } = require("@devcycle/nodejs-server-sdk");
 
-let devcycleClient;
+// Initialize DevCycle
+const dvcClient = initializeDevCycle(
+  process.env.DEVCYCLE_SERVER_SDK_KEY // Use environment variable
+);
 
-async function initDevCycle() {
-  if (!devcycleClient) {
-    // Initialize the DevCycle client
-    devcycleClient = await initializeDevCycle(
-      process.env.DEVCYCLE_SERVER_SDK_KEY || "<DEVCYCLE_SERVER_SDK_KEY>"
-    ).onClientInitialized();
-
-    console.log("DevCycle initialized successfully");
-  }
-  return devcycleClient;
-}
-
-// Export the initialization function and getter
-module.exports = {
-  initDevCycle,
-  getDevCycleClient: () => devcycleClient,
-};
-```
-
-#### TypeScript Example
-
-```typescript
-import {
-  initializeDevCycle,
-  DevCycleClient,
-} from "@devcycle/nodejs-server-sdk";
-
-let devcycleClient: DevCycleClient | null = null;
-
-export async function initDevCycle(): Promise<DevCycleClient> {
-  if (!devcycleClient) {
-    // Initialize the DevCycle client
-    devcycleClient = await initializeDevCycle(
-      process.env.DEVCYCLE_SERVER_SDK_KEY || "<DEVCYCLE_SERVER_SDK_KEY>"
-    ).onClientInitialized();
-
-    console.log("DevCycle initialized successfully");
-  }
-  return devcycleClient;
-}
-
-export function getDevCycleClient(): DevCycleClient | null {
-  return devcycleClient;
-}
+// Example usage (for reference only - do not implement yet)
+// const user = { user_id: "user123" };
+// const variable = dvcClient.variable(user, "feature-key", false);
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Configuration module created
-- [ ] SDK key properly referenced (via env or temporary)
-- [ ] Export functions are correct
-- [ ] No syntax errors
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
+- [ ] No initialization errors in console
+- [ ] Application starts without issues
       </verification_checkpoint>
 
-### Step 3: Initialize DevCycle on Application Startup
+### Step 3: Test Your Application
 
-In your main application file (e.g., `app.js`, `index.js`, or `server.js`):
-
-```javascript
-const express = require("express");
-const { initDevCycle } = require("./devcycle");
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-async function startServer() {
-  try {
-    // Initialize DevCycle before starting the server
-    await initDevCycle();
-
-    // Your application routes and middleware
-    app.get("/", (req, res) => {
-      res.send("Server is running with DevCycle!");
-    });
-
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to initialize server:", error);
-    process.exit(1);
-  }
-}
-
-startServer();
+```bash
+# Start your Node.js application
+npm start
+# or
+node app.js
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] DevCycle initializes before server starts
-- [ ] Error handling is in place
-- [ ] Server starts successfully
-- [ ] Console shows "DevCycle initialized successfully"
+- [ ] Application starts successfully
+- [ ] No DevCycle-related errors
+- [ ] Console shows successful initialization
+- [ ] Server runs normally
       </verification_checkpoint>
 
-### Step 4: Example Usage in Routes
+## 🎉 Installation Complete!
 
-Here's how to use DevCycle in your routes (for reference, but don't implement unless requested):
+**STOP HERE** - The DevCycle Node.js installation is now complete.
 
-```javascript
-const { getDevCycleClient } = require("./devcycle");
+**DO NOT CREATE:**
 
-app.get("/api/feature", async (req, res) => {
-  const devcycleClient = getDevCycleClient();
+- Example route handlers using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any middleware or handlers like `FeatureMiddleware` or similar
 
-  // Define user for this request
-  const user = {
-    user_id: req.user?.id || "anonymous",
-    email: req.user?.email,
-    name: req.user?.name,
-    customData: {
-      plan: req.user?.plan,
-      role: req.user?.role,
-    },
-  };
+**Available methods for future reference only:**
 
-  // Check feature flag value
-  const featureEnabled = await devcycleClient.variableValue(
-    user,
-    "feature-key",
-    false // default value
-  );
+- `dvcClient.variable(user, key, defaultValue)`
+- `dvcClient.variableValue(user, key, defaultValue)`
+- `dvcClient.allVariables(user)`
 
-  res.json({ featureEnabled });
-});
-```
-
-### Step 5: Environment Configuration
-
-If using dotenv, ensure it's loaded at the application start:
-
-```javascript
-require("dotenv").config();
-```
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -264,108 +170,64 @@ Installation is complete when ALL of the following are true:
 
 - ✅ SDK package is installed in package.json
 - ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
-- ✅ DevCycle client initialization module created
-- ✅ DevCycle initializes on application startup
-- ✅ Application runs without DevCycle-related errors
-- ✅ Console shows "DevCycle initialized successfully"
+- ✅ DevCycle client is initialized
+- ✅ Application starts and runs without errors
+- ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="express_standard">
-**Scenario:** Express.js app, full file access, npm
+<example scenario="express_app">
+**Scenario:** Express.js app, npm, full file access
 **Actions taken:**
 1. ✅ Created .env with server SDK key
-2. ✅ Installed @devcycle/nodejs-server-sdk
-3. ✅ Created devcycle.js configuration module
-4. ✅ Initialized in server startup
-5. ✅ Verified initialization message
+2. ✅ Installed DevCycle Node.js SDK
+3. ✅ Initialized client in app.js
+4. ✅ App starts successfully
 **Result:** Installation successful
 </example>
 
 <example scenario="typescript_project">
-**Scenario:** TypeScript Node.js app, yarn
+**Scenario:** TypeScript Node.js project, yarn
 **Actions taken:**
-1. ✅ Created .env with server SDK key
-2. ✅ Installed SDK via yarn
-3. ✅ Created devcycle.ts with proper types
-4. ✅ Added initialization to async startup
-5. ✅ TypeScript compilation successful
-**Result:** Installation successful
-</example>
-
-<example scenario="restricted_docker">
-**Scenario:** Docker container, cannot modify files
-**Actions taken:**
-1. ❌ Cannot create .env file - read-only filesystem
-2. 🔄 Asked user for preference
-3. ✅ User chose Option B (manual setup)
-4. ✅ Provided SDK key and Docker ENV instructions
-5. ✅ User configured via Dockerfile/docker-compose
-**Result:** Installation successful with manual configuration
+1. ✅ Created .env with SDK key
+2. ✅ Installed SDK with TypeScript support
+3. ✅ Added proper type imports
+4. ✅ Configured client with type safety
+**Result:** Installation successful with TypeScript
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"DevCycle client is not initialized" error</symptom>
+<error type="sdk_not_initialized">
+<symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is initDevCycle() called before using the client?
-2. Check: Does the initialization promise resolve?
-3. Check: Is the SDK key valid?
+1. Check: Is the SDK key valid?
+2. Check: Is initializeDevCycle called correctly?
+3. Check: Are environment variables loaded?
 </diagnosis>
 <solution>
-- Ensure initDevCycle() is awaited on startup
-- Check that SDK key is a valid server key
-- Verify the initialization completes without errors
+- Verify server SDK key (starts with dvc_server_)
+- Ensure initializeDevCycle is called before using client
+- Check if dotenv is needed for environment variable loading
 </solution>
 </error>
 
-<error type="environment">
-<symptom>Environment variable not found</symptom>
+<error type="environment_variables">
+<symptom>Environment variable not found or undefined</symptom>
 <diagnosis>
 1. Check: Is .env file in project root?
-2. Check: Is dotenv installed and configured?
-3. Check: Does the variable name match exactly?
+2. Check: Is dotenv configured if needed?
+3. Check: Is the application restarted?
 </diagnosis>
 <solution>
-- Place .env file in same directory as package.json
-- Install dotenv: `npm install dotenv`
-- Add `require('dotenv').config()` at app start
-- Ensure variable names match exactly (case-sensitive)
-</solution>
-</error>
-
-<error type="typescript">
-<symptom>TypeScript compilation errors</symptom>
-<diagnosis>
-1. Check: Is @types/node installed?
-2. Check: Is TypeScript version compatible?
-3. Check: Are import statements correct?
-</diagnosis>
-<solution>
-- Install types: `npm install --save-dev @types/node`
-- Ensure TypeScript 4.0+ is used
-- Use correct import syntax for your module system
-</solution>
-</error>
-
-<error type="network">
-<symptom>Connection/Network errors</symptom>
-<diagnosis>
-1. Check: Is there network connectivity?
-2. Check: Is the SDK key valid and active?
-3. Check: Are there firewall restrictions?
-</diagnosis>
-<solution>
-- Verify internet connectivity
-- Check SDK key in DevCycle dashboard
-- Ensure outbound HTTPS (port 443) is allowed
-- Check proxy settings if behind corporate firewall
+- Place .env in same directory as package.json
+- Add require('dotenv').config() if using dotenv package
+- Restart application after adding env vars
 </solution>
 </error>
 </troubleshooting>
@@ -373,14 +235,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
-1. Set up user identification logic for your application
-2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-3. Implement proper error handling for feature flag evaluations if needed
-4. Help set up targeting rules for different user segments when requested
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using DevCycle methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when needed
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -392,13 +252,3 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [Node.js SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/node/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Node.js SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues

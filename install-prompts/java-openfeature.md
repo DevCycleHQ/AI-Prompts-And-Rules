@@ -1,15 +1,35 @@
 # DevCycle Java OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for Java server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for Java. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a Java server application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - Android applications (use Android SDK instead)
 - Client-side applications (use appropriate client SDKs instead)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -18,336 +38,236 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for Java backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration files.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create a configuration file** (application.properties or application.yml):
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create environment variable or application.properties
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment configuration succeeds:**
+   <success_path>
+
+   Via application.properties:
 
    ```properties
-   # application.properties
-   devcycle.server.sdk.key=your_server_sdk_key_here
+   devcycle.sdk.key=${DEVCYCLE_SERVER_SDK_KEY}
    ```
 
-   Or use environment variables:
+   Or environment variable:
 
    ```bash
    export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-2. **If you cannot create or modify configuration files** (due to system restrictions or security policies), ask the user:
+   - Test that the key is accessible in your application
+     </success_path>
 
-   - "I'm unable to create/modify configuration files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
-
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with configuration files or environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set it up
-
-**Note:** Always prefer configuration files or environment variables over hardcoding for security reasons.
+3. **If environment configuration fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Add OpenFeature SDK and DevCycle Provider Dependencies
+### Step 1: Add OpenFeature SDK and DevCycle Provider Dependencies
 
-#### For Maven (pom.xml)
+#### Maven
+
+Add to your `pom.xml`:
 
 ```xml
 <dependencies>
-    <!-- OpenFeature SDK -->
     <dependency>
         <groupId>dev.openfeature</groupId>
         <artifactId>sdk</artifactId>
-        <version>1.7.0</version>
+        <version>1.6.0</version>
     </dependency>
-
-    <!-- DevCycle SDK -->
     <dependency>
         <groupId>com.devcycle</groupId>
-        <artifactId>java-server-sdk</artifactId>
-        <version>2.0.0</version>
-    </dependency>
-
-    <!-- DevCycle OpenFeature Provider -->
-    <dependency>
-        <groupId>com.devcycle</groupId>
-        <artifactId>java-server-sdk-openfeature</artifactId>
-        <version>2.0.0</version>
+        <artifactId>openfeature-java-provider</artifactId>
+        <version>1.0.0</version>
     </dependency>
 </dependencies>
 ```
 
-#### For Gradle (build.gradle)
+#### Gradle
 
-```groovy
+Add to your `build.gradle`:
+
+```gradle
 dependencies {
-    implementation 'dev.openfeature:sdk:1.7.0'
-    implementation 'com.devcycle:java-server-sdk:2.0.0'
-    implementation 'com.devcycle:java-server-sdk-openfeature:2.0.0'
+    implementation 'dev.openfeature:sdk:1.6.0'
+    implementation 'com.devcycle:openfeature-java-provider:1.0.0'
 }
 ```
 
-### 2. Initialize OpenFeature with DevCycle Provider
-
-Create a configuration class:
+### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```java
-package com.yourcompany.config;
-
 import dev.openfeature.sdk.OpenFeatureAPI;
-import dev.openfeature.sdk.Client;
-import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
-import com.devcycle.sdk.server.openfeature.DevCycleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.devcycle.openfeature.DevCycleProvider;
 
-public class OpenFeatureConfig {
-    private static final Logger logger = LoggerFactory.getLogger(OpenFeatureConfig.class);
-    private static Client openFeatureClient;
-    private static DevCycleLocalClient devCycleClient;
-    private static final Object lock = new Object();
+public class FeatureFlagConfig {
 
-    public static Client getInstance() {
-        if (openFeatureClient == null) {
-            synchronized (lock) {
-                if (openFeatureClient == null) {
-                    initialize();
-                }
-            }
-        }
-        return openFeatureClient;
-    }
-
-    private static void initialize() {
+    public static void initializeFeatureFlags() {
         String sdkKey = System.getenv("DEVCYCLE_SERVER_SDK_KEY");
+
         if (sdkKey == null || sdkKey.isEmpty()) {
-            throw new RuntimeException("DEVCYCLE_SERVER_SDK_KEY is not configured");
+            // TODO: Replace with environment variable before production
+            sdkKey = "your_server_sdk_key_here";
         }
 
-        try {
-            // Initialize DevCycle client
-            devCycleClient = new DevCycleLocalClient(sdkKey);
-
-            // Create DevCycle provider
-            DevCycleProvider provider = new DevCycleProvider(devCycleClient);
-
-            // Set the provider for OpenFeature
-            OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-            api.setProviderAndWait(provider);
-
-            // Get OpenFeature client
-            openFeatureClient = api.getClient();
-
-            logger.info("OpenFeature with DevCycle initialized successfully");
-        } catch (Exception e) {
-            logger.error("Failed to initialize OpenFeature with DevCycle", e);
-            throw new RuntimeException("OpenFeature initialization failed", e);
-        }
-    }
-
-    public static void shutdown() {
-        if (devCycleClient != null) {
-            try {
-                devCycleClient.close();
-                logger.info("DevCycle client closed successfully");
-            } catch (Exception e) {
-                logger.error("Error closing DevCycle client", e);
-            }
-        }
-    }
-}
-```
-
-### 3. Spring Boot Integration
-
-For Spring Boot applications:
-
-```java
-package com.yourcompany.config;
-
-import dev.openfeature.sdk.Client;
-import dev.openfeature.sdk.OpenFeatureAPI;
-import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
-import com.devcycle.sdk.server.openfeature.DevCycleProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import javax.annotation.PreDestroy;
-
-@Configuration
-public class OpenFeatureSpringConfig {
-
-    @Value("${devcycle.server.sdk.key:#{environment.DEVCYCLE_SERVER_SDK_KEY}}")
-    private String sdkKey;
-
-    private DevCycleLocalClient devCycleClient;
-
-    @Bean
-    public Client openFeatureClient() throws Exception {
-        if (sdkKey == null || sdkKey.isEmpty()) {
+        if (sdkKey.equals("your_server_sdk_key_here")) {
             throw new IllegalStateException("DevCycle SDK key is not configured");
         }
 
-        // Initialize DevCycle client
-        devCycleClient = new DevCycleLocalClient(sdkKey);
+        // Create DevCycle provider
+        DevCycleProvider provider = new DevCycleProvider(sdkKey);
 
-        // Create provider and set it
-        DevCycleProvider provider = new DevCycleProvider(devCycleClient);
-        OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-        api.setProviderAndWait(provider);
+        // Set the provider
+        OpenFeatureAPI.getInstance().setProviderAndWait(provider);
 
-        return api.getClient();
-    }
-
-    @PreDestroy
-    public void cleanup() {
-        if (devCycleClient != null) {
-            devCycleClient.close();
-        }
+        System.out.println("OpenFeature with DevCycle initialized successfully");
     }
 }
 ```
 
-### 4. Using Feature Flags with OpenFeature
+### Step 3: Use in Your Application
 
 ```java
-package com.yourcompany.service;
-
 import dev.openfeature.sdk.Client;
 import dev.openfeature.sdk.EvaluationContext;
-import dev.openfeature.sdk.MutableContext;
-import dev.openfeature.sdk.Value;
-import dev.openfeature.sdk.Structure;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.util.Map;
-import java.util.HashMap;
+import dev.openfeature.sdk.OpenFeatureAPI;
 
-@Service
-public class FeatureService {
+public class ExampleController {
 
-    @Autowired
-    private Client openFeatureClient;
+    private final Client client = OpenFeatureAPI.getInstance().getClient();
 
-    public boolean isFeatureEnabled(String userId, String featureKey) {
+    public String checkFeature(String userId) {
         // Create evaluation context
-        MutableContext context = new MutableContext(userId);
-        context.add("plan", "premium");
-        context.add("role", "admin");
+        EvaluationContext context = EvaluationContext.builder()
+            .targetingKey(userId)
+            .add("email", "user@example.com")
+            .add("plan", "premium")
+            .build();
 
-        // Get boolean value
-        return openFeatureClient.getBooleanValue(featureKey, false, context);
-    }
-
-    public String getStringConfig(String userId, String configKey) {
-        MutableContext context = new MutableContext(userId);
-        return openFeatureClient.getStringValue(configKey, "default", context);
-    }
-
-    public Integer getNumberConfig(String userId, String configKey) {
-        MutableContext context = new MutableContext(userId);
-        return openFeatureClient.getIntegerValue(configKey, 100, context);
-    }
-
-    public Map<String, Object> getObjectConfig(String userId, String configKey) {
-        MutableContext context = new MutableContext(userId);
-
-        // Default value
-        Map<String, Value> defaultMap = new HashMap<>();
-        defaultMap.put("theme", new Value("light"));
-        defaultMap.put("fontSize", new Value(14));
-        Structure defaultValue = new Structure(defaultMap);
-
-        Value result = openFeatureClient.getObjectValue(configKey, defaultValue, context);
-        return result.asStructure().asMap();
+        return "Java app with OpenFeature and DevCycle!";
     }
 }
 ```
 
-### 5. REST Controller Example
+<verification_checkpoint>
+**Verify before continuing:**
 
-```java
-@RestController
-@RequestMapping("/api/features")
-public class FeatureController {
+- [ ] Both dependencies added to build file
+- [ ] DevCycle provider initialized
+- [ ] Application compiles and starts without errors
+- [ ] Console shows successful initialization
+      </verification_checkpoint>
 
-    @Autowired
-    private Client openFeatureClient;
+<success_criteria>
 
-    @GetMapping("/check")
-    public ResponseEntity<?> checkFeature(
-        @RequestHeader(value = "X-User-Id", defaultValue = "anonymous") String userId,
-        @RequestParam String featureKey
-    ) {
-        MutableContext context = new MutableContext(userId);
-        context.add("timestamp", System.currentTimeMillis());
+## Installation Success Criteria
 
-        boolean enabled = openFeatureClient.getBooleanValue(featureKey, false, context);
+Installation is complete when ALL of the following are true:
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("featureKey", featureKey);
-        response.put("enabled", enabled);
-        response.put("userId", userId);
+- ✅ OpenFeature SDK and DevCycle provider dependencies added
+- ✅ SDK key is configured (via env var OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Application compiles and runs without errors
+- ✅ Console shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-        return ResponseEntity.ok(response);
-    }
-}
-```
+<examples>
+## Common Installation Scenarios
 
-After installation, build and run your Java application to verify everything works with no errors.
+<example scenario="spring_boot_maven">
+**Scenario:** Spring Boot 2.7, Maven, Java 11
+**Actions taken:**
+1. ✅ Added dependencies to pom.xml
+2. ✅ Set SDK key in application.properties
+3. ✅ Initialized in @Configuration class
+4. ✅ Used client in controllers
+5. ✅ Spring Boot starts successfully
+**Result:** Installation successful with Spring Boot
+</example>
 
+<example scenario="gradle_microservice">
+**Scenario:** Standalone microservice, Gradle, Java 17
+**Actions taken:**
+1. ✅ Added dependencies to build.gradle
+2. ✅ Used environment variable for key
+3. ✅ Initialized in main method
+4. ✅ Created evaluation context helper
+5. ✅ Service runs without errors
+**Result:** Installation successful with Gradle
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or service returning default values only</symptom>
+<diagnosis>
+1. Check: Is setProviderAndWait() called before client usage?
+2. Check: Is the SDK key valid?
+3. Check: Is targetingKey provided in context?
+</diagnosis>
+<solution>
+- Call setProviderAndWait() before getting client
+- Verify server SDK key (starts with dvc_server_)
+- Always include targetingKey in EvaluationContext
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-
-   - Ensure OpenFeature.setProviderAndWait() completes
-   - Check that your SDK key is correctly set (server SDK key)
-   - Verify Spring beans are properly configured if using Spring
-
-2. **Dependency resolution errors:**
-
-   - Run `mvn clean install` or `gradle clean build`
-   - Check for version conflicts between OpenFeature and DevCycle
-   - Ensure repository access for all artifacts
-
-3. **Client returning default values only:**
-
-   - Confirm the provider is initialized before use
-   - Check that evaluation context has targetingKey
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall settings allow HTTPS
+<error type="dependency_errors">
+<symptom>ClassNotFoundException or dependency issues</symptom>
+<diagnosis>
+1. Check: Are dependencies added to build file?
+2. Check: Are versions compatible?
+3. Check: Is Java version 8+?
+</diagnosis>
+<solution>
+- Run mvn dependency:tree or gradle dependencies
+- Check for version conflicts
+- Ensure Java 8+ compatibility
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, help implement evaluation context strategies
-3. Set up proper error handling and fallbacks
+2. When requested, help implement feature flag usage in controllers and services
+3. Set up proper error handling for feature flag evaluations
 4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [OpenFeature Java SDK](https://github.com/open-feature/java-sdk)
-- [DevCycle Java SDK](https://docs.devcycle.com/sdk/server-side-sdks/java/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature Java SDK](https://openfeature.dev/docs/reference/technologies/server/java/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)

@@ -19,18 +19,18 @@ Follow this complete guide to successfully integrate DevCycle feature flags.
 </task_overview>
 
 <restrictions>
-**Do not use this SDK for:**
+**Do not use this setup for:**
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
 - Mobile applications (use iOS/Android SDKs instead)
 
-If you detect an incompatible application type, stop immediately and advise which SDK they should use instead.
+If you detect an incompatible application, stop immediately and advise on the correct approach.
 </restrictions>
 
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -61,41 +61,23 @@ Before proceeding, verify you have:
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   Install python-dotenv if not present:
-
-   ```bash
-   pip install python-dotenv
-   ```
-
-   Load in your application:
-
-   ```python
-   from dotenv import load_dotenv
-   load_dotenv()
-   ```
-
-   </success_path>
+   - Verify the file is in .gitignore
+   - Ensure your app can read environment variables
+   - Test that `os.environ.get("DEVCYCLE_SERVER_SDK_KEY")` is accessible
+     </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
-   Ask the user: "I'm unable to create/modify environment files. Please choose:
-   **Option A: Temporary hardcoding for testing**
-   - I will add the SDK key directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before deploying
-   **Option B: Manual setup**
-   - I will provide you with the SDK key value
-   - I will give you step-by-step instructions for setting it up
-   - You will configure the environment variable yourself"
-   Based on their response:
-   - Option A → Add key with `# TODO: Replace with environment variable before production`
-   - Option B → Provide key and detailed setup instructions
+   - Provide the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
 ## Installation Steps
 
-### Step 1: Install the DevCycle Python SDK
+### Step 1: Install DevCycle Python SDK
 
 ```bash
 # Using pip
@@ -103,6 +85,10 @@ pip install devcycle-python-server-sdk
 
 # Using poetry
 poetry add devcycle-python-server-sdk
+
+# Using pip with requirements.txt
+echo "devcycle-python-server-sdk" >> requirements.txt
+pip install -r requirements.txt
 ```
 
 <verification_checkpoint>
@@ -110,155 +96,71 @@ poetry add devcycle-python-server-sdk
 
 - [ ] Package installed successfully
 - [ ] No dependency conflicts
-- [ ] Check with `pip list | grep devcycle`
+- [ ] Virtual environment activated (if used)
       </verification_checkpoint>
 
-### Step 2: Create DevCycle Configuration Module
+### Step 2: Initialize DevCycle Client
 
-Create a DevCycle initialization module (e.g., `devcycle_config.py`):
+Create or update your main application file:
 
 ```python
 import os
-from devcycle_python_server_sdk import DevCycleLocalClient
+from devcycle_python_sdk import DevCycleLocalClient
 
-# Global client instance
-devcycle_client = None
+# Initialize DevCycle
+sdk_key = os.environ.get("DEVCYCLE_SERVER_SDK_KEY")
+dvc_client = DevCycleLocalClient(sdk_key)
 
-def init_devcycle():
-    """Initialize the DevCycle client."""
-    global devcycle_client
-
-    if devcycle_client is None:
-        sdk_key = os.environ.get('DEVCYCLE_SERVER_SDK_KEY', '<DEVCYCLE_SERVER_SDK_KEY>')
-
-        if not sdk_key or sdk_key == '<DEVCYCLE_SERVER_SDK_KEY>':
-            raise ValueError("DevCycle SDK key is not configured")
-
-        # Initialize the client
-        devcycle_client = DevCycleLocalClient(sdk_key)
-        print("DevCycle initialized successfully")
-
-    return devcycle_client
-
-def get_devcycle_client():
-    """Get the initialized DevCycle client."""
-    if devcycle_client is None:
-        raise RuntimeError("DevCycle client not initialized. Call init_devcycle() first.")
-    return devcycle_client
+# Example usage (for reference only - do not implement yet)
+# user = {"user_id": "user123"}
+# variable = dvc_client.variable(user, "feature-key", False)
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Configuration module created
-- [ ] SDK key properly referenced
-- [ ] Import statements are correct
-- [ ] No syntax errors
-      </verification_checkpoint>
-
-### Step 3: Initialize DevCycle on Application Startup
-
-#### For Flask Applications
-
-```python
-from flask import Flask
-from devcycle_config import init_devcycle
-
-app = Flask(__name__)
-
-# Initialize DevCycle when the app starts
-@app.before_first_request
-def initialize_services():
-    init_devcycle()
-
-@app.route('/')
-def hello():
-    return 'Flask app with DevCycle!'
-
-if __name__ == '__main__':
-    # Initialize DevCycle before running the app
-    init_devcycle()
-    app.run(debug=True)
-```
-
-#### For Django Applications
-
-In your Django app's `apps.py`:
-
-```python
-from django.apps import AppConfig
-from devcycle_config import init_devcycle
-
-class MyAppConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'myapp'
-
-    def ready(self):
-        # Initialize DevCycle when Django starts
-        init_devcycle()
-```
-
-#### For FastAPI Applications
-
-```python
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-from devcycle_config import init_devcycle
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    init_devcycle()
-    yield
-    # Shutdown (cleanup if needed)
-
-app = FastAPI(lifespan=lifespan)
-
-@app.get("/")
-def read_root():
-    return {"message": "FastAPI with DevCycle!"}
-```
-
-<verification_checkpoint>
-**Verify before continuing:**
-
-- [ ] DevCycle initializes on application startup
+- [ ] DevCycle client initializes successfully
+- [ ] SDK key is properly referenced
 - [ ] No initialization errors
-- [ ] Console shows "DevCycle initialized successfully"
-- [ ] Application starts normally
+- [ ] Application starts without issues
       </verification_checkpoint>
 
-### Step 4: Example Usage (Reference Only)
+### Step 3: Test Your Application
 
-Here's how to use DevCycle in your application (don't implement unless requested):
-
-```python
-from devcycle_config import get_devcycle_client
-from devcycle_python_server_sdk import DevCycleUser
-
-def check_feature_for_user(user_id, email=None):
-    """Check if a feature is enabled for a specific user."""
-    client = get_devcycle_client()
-
-    # Create user object
-    user = DevCycleUser(
-        user_id=user_id,
-        email=email,
-        custom_data={
-            'plan': 'premium',
-            'role': 'admin'
-        }
-    )
-
-    # Check feature flag value
-    feature_enabled = client.variable_value(
-        user,
-        'feature-key',
-        False  # default value
-    )
-
-    return feature_enabled
+```bash
+# Start your Python application
+python app.py
+# or for Flask/Django
+python manage.py runserver
 ```
+
+<verification_checkpoint>
+**Verify before continuing:**
+
+- [ ] Application starts successfully
+- [ ] No DevCycle-related errors
+- [ ] Console shows successful initialization
+- [ ] Server runs normally
+      </verification_checkpoint>
+
+## 🎉 Installation Complete!
+
+**STOP HERE** - The DevCycle Python installation is now complete.
+
+**DO NOT CREATE:**
+
+- Example route handlers using feature flags
+- Sample variable implementations
+- Demo feature flag code
+- Any middleware or decorators like `@feature_flag` or similar
+
+**Available methods for future reference only:**
+
+- `dvc_client.variable(user, key, default_value)`
+- `dvc_client.variable_value(user, key, default_value)`
+- `dvc_client.all_variables(user)`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
 
@@ -266,111 +168,66 @@ def check_feature_for_user(user_id, email=None):
 
 Installation is complete when ALL of the following are true:
 
-- ✅ SDK package is installed (verified with pip list)
+- ✅ SDK package is installed
 - ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
-- ✅ DevCycle configuration module created
-- ✅ DevCycle initializes on application startup
-- ✅ Application runs without DevCycle-related errors
-- ✅ Console shows "DevCycle initialized successfully"
+- ✅ DevCycle client is initialized
+- ✅ Application starts and runs without errors
+- ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
 <examples>
 ## Common Installation Scenarios
 
-<example scenario="flask_standard">
-**Scenario:** Flask app, Python 3.9, pip, full file access
+<example scenario="flask_app">
+**Scenario:** Flask application, pip, full file access
 **Actions taken:**
 1. ✅ Created .env with server SDK key
-2. ✅ Installed python-dotenv and SDK
-3. ✅ Created devcycle_config.py
-4. ✅ Added initialization to Flask startup
-5. ✅ Verified initialization message
+2. ✅ Installed DevCycle Python SDK
+3. ✅ Initialized client in app.py
+4. ✅ Flask app starts successfully
 **Result:** Installation successful
 </example>
 
-<example scenario="django_docker">
-**Scenario:** Django in Docker, Python 3.8, environment variables via docker-compose
+<example scenario="django_project">
+**Scenario:** Django project, poetry
 **Actions taken:**
-1. ✅ Added SDK to requirements.txt
-2. ✅ Created configuration module
-3. ✅ Set SDK key in docker-compose.yml
-4. ✅ Added to Django AppConfig
-5. ✅ Rebuilt container and verified
-**Result:** Installation successful with Docker configuration
-</example>
-
-<example scenario="fastapi_poetry">
-**Scenario:** FastAPI, Python 3.10, poetry, async application
-**Actions taken:**
-1. ✅ Added SDK via poetry
-2. ✅ Created .env with SDK key
-3. ✅ Set up async lifespan handler
-4. ✅ Initialized client on startup
-5. ✅ Tested with uvicorn
-**Result:** Installation successful with async support
+1. ✅ Created .env with SDK key
+2. ✅ Installed SDK via poetry
+3. ✅ Added client to Django settings
+4. ✅ Django server starts successfully
+**Result:** Installation successful with Django
 </example>
 </examples>
 
 <troubleshooting>
 ## Troubleshooting
 
-<error type="initialization">
-<symptom>"DevCycle client not initialized" error</symptom>
+<error type="sdk_not_initialized">
+<symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is init_devcycle() called on startup?
-2. Check: Is the SDK key valid?
+1. Check: Is the SDK key valid?
+2. Check: Is DevCycleLocalClient instantiated correctly?
 3. Check: Are environment variables loaded?
 </diagnosis>
 <solution>
-- Ensure init_devcycle() is called before using client
 - Verify server SDK key (starts with dvc_server_)
-- Check that load_dotenv() is called if using .env
+- Ensure client is instantiated before using methods
+- Check if python-dotenv is needed for environment variable loading
 </solution>
 </error>
 
-<error type="import">
-<symptom>ImportError or ModuleNotFoundError</symptom>
+<error type="import_errors">
+<symptom>ModuleNotFoundError or import errors</symptom>
 <diagnosis>
-1. Check: Is the SDK installed?
-2. Check: Is the correct virtual environment activated?
-3. Check: Is the package name correct?
+1. Check: Is the package installed in the current environment?
+2. Check: Is virtual environment activated?
+3. Check: Are there package conflicts?
 </diagnosis>
 <solution>
-- Run `pip install devcycle-python-server-sdk`
-- Activate virtual environment if using one
-- Check `pip list | grep devcycle`
-- Package name is devcycle-python-server-sdk
-</solution>
-</error>
-
-<error type="environment">
-<symptom>Environment variable not found</symptom>
-<diagnosis>
-1. Check: Is .env file in project root?
-2. Check: Is python-dotenv installed?
-3. Check: Is load_dotenv() called?
-</diagnosis>
-<solution>
-- Place .env file in same directory as main script
-- Install: `pip install python-dotenv`
-- Add `load_dotenv()` before accessing env vars
-- For production, set actual environment variables
-</solution>
-</error>
-
-<error type="network">
-<symptom>Connection errors or timeouts</symptom>
-<diagnosis>
-1. Check: Is there network connectivity?
-2. Check: Is the SDK key valid and active?
-3. Check: Are there proxy/firewall restrictions?
-</diagnosis>
-<solution>
-- Verify internet connectivity
-- Check SDK key in DevCycle dashboard
-- Configure proxy if behind corporate firewall
-- Ensure outbound HTTPS is allowed
+- Reinstall package: pip install devcycle-python-server-sdk
+- Activate virtual environment if used
+- Check for conflicting package versions
 </solution>
 </error>
 </troubleshooting>
@@ -378,14 +235,12 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
-
 After successful installation:
 
-1. Set up user identification logic for your application
-2. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-3. Implement proper error handling for feature flag evaluations if needed
-4. Help set up targeting rules for different user segments when requested
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using DevCycle methods
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when needed
 
 Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
 </next_steps>
@@ -397,13 +252,3 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [Python SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/python/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Python SDK GitHub Repository](https://github.com/DevCycleHQ/python-server-sdk)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues

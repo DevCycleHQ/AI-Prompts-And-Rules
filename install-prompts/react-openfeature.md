@@ -20,9 +20,6 @@ Follow this complete guide to successfully integrate DevCycle with OpenFeature f
 
 <restrictions>
 **Do not use this setup for:**
-- Next.js applications (use Next.js-specific configuration)
-- React Native mobile apps (use React Native OpenFeature setup)
-- Server-side React rendering without browser context
 - Non-React JavaScript applications
 
 If you detect an incompatible application, stop immediately and advise on the correct approach.
@@ -31,7 +28,7 @@ If you detect an incompatible application, stop immediately and advise on the co
 <prerequisites>
 ## Required Information
 
-Before proceeding, verify you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
@@ -69,18 +66,10 @@ Before proceeding, verify you have:
 
 3. **If environment file creation fails:**
    <fallback_path>
-   Ask the user: "I'm unable to create/modify environment files. Please choose:
-   **Option A: Temporary hardcoding for testing**
-   - I will add the SDK key directly in code with clear TODO comments
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - You MUST replace this before committing or deploying
-     **Option B: Manual setup**
-   - I will provide you with the SDK key value
-   - I will give you step-by-step instructions for setting it up
-   - You will configure the environment variable yourself"
-     Based on their response:
-   - Option A → Add key with `// TODO: Replace with environment variable before production`
-   - Option B → Provide key and detailed setup instructions
+   - Provie the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
@@ -198,39 +187,6 @@ export default App;
 - [ ] Application compiles without errors
       </verification_checkpoint>
 
-### Step 4: Example Hook Usage (Reference Only)
-
-Here's how to use OpenFeature hooks (don't implement unless requested):
-
-```javascript
-import React from "react";
-import {
-  useBooleanFlagValue,
-  useStringFlagValue,
-  useNumberFlagValue,
-  useObjectFlagValue,
-} from "@openfeature/react-sdk";
-
-function FeatureComponent() {
-  // Boolean flag
-  const showNewFeature = useBooleanFlagValue("new-feature", false);
-
-  // String flag
-  const buttonText = useStringFlagValue("button-text", "Click Here");
-
-  // Number flag
-  const maxItems = useNumberFlagValue("max-items", 10);
-
-  // Object flag
-  const uiConfig = useObjectFlagValue("ui-config", {
-    theme: "light",
-    fontSize: 14,
-  });
-
-  return <div>{/* Component implementation */}</div>;
-}
-```
-
 <success_criteria>
 
 ## Installation Success Criteria
@@ -241,7 +197,7 @@ Installation is complete when ALL of the following are true:
 - ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
 - ✅ OpenFeature initialized with DevCycle provider
 - ✅ OpenFeatureProvider wraps the application
-- ✅ Application runs without OpenFeature/DevCycle errors
+- ✅ Application runs (using npm start or similar) without OpenFeature/DevCycle errors
 - ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
@@ -333,7 +289,7 @@ Installation is complete when ALL of the following are true:
 ## Next Steps
 
 <next_steps>
-Suggest these as next steps to the user.
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
@@ -352,13 +308,3 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 - [React OpenFeature SDK](https://openfeature.dev/docs/reference/technologies/client/web/react/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the OpenFeature documentation
-2. Review the DevCycle provider documentation
-3. Review the troubleshooting section above
-4. Contact DevCycle support through the dashboard
-5. Check the OpenFeature community for help

@@ -1,16 +1,35 @@
 # DevCycle NestJS OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for NestJS server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for NestJS. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a NestJS server application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - Plain Node.js applications (use `nodejs-openfeature.md` instead)
 - Client-side applications (use appropriate client SDKs instead)
-- Express applications without NestJS (use Node.js OpenFeature instead)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -20,471 +39,235 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for NestJS backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration service.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create an environment file** (.env) in the project root:
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` file in project root
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file creation succeeds:**
+   <success_path>
 
    ```bash
    # .env
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   And ensure the NestJS ConfigModule is set up if not already present.
+   - Ensure @nestjs/config is installed
+   - Test that ConfigService can access the key
+     </success_path>
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
-
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
-
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
-
-**Note:** Always prefer environment variables or ConfigService over hardcoding for security reasons.
+3. **If environment file creation fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install Required Packages
 
 ```bash
-# Using npm
-npm install --save @openfeature/server-sdk @openfeature/nestjs-sdk @devcycle/openfeature-nodejs-provider @devcycle/nodejs-server-sdk
-
-# Using yarn
-yarn add @openfeature/server-sdk @openfeature/nestjs-sdk @devcycle/openfeature-nodejs-provider @devcycle/nodejs-server-sdk
-
-# Using pnpm
-pnpm add @openfeature/server-sdk @openfeature/nestjs-sdk @devcycle/openfeature-nodejs-provider @devcycle/nodejs-server-sdk
+npm install @openfeature/server-sdk @devcycle/openfeature-nodejs-provider @nestjs/config
 ```
 
-### 2. Create OpenFeature Module
+### Step 2: Create OpenFeature Module
 
-Create an OpenFeature module (`src/openfeature/openfeature.module.ts`):
+Create `src/openfeature/openfeature.module.ts`:
 
 ```typescript
 import { Module, Global } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { OpenFeatureModule as NestOpenFeatureModule } from "@openfeature/nestjs-sdk";
-import { OpenFeature } from "@openfeature/server-sdk";
-import { DevCycleProvider } from "@devcycle/openfeature-nodejs-provider";
-import { initializeDevCycle } from "@devcycle/nodejs-server-sdk";
+import { ConfigModule } from "@nestjs/config";
+import { OpenFeatureService } from "./openfeature.service";
 
 @Global()
 @Module({
-  imports: [
-    ConfigModule,
-    NestOpenFeatureModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        const sdkKey = configService.get<string>("DEVCYCLE_SERVER_SDK_KEY");
-
-        if (!sdkKey) {
-          throw new Error("DEVCYCLE_SERVER_SDK_KEY is not configured");
-        }
-
-        // Initialize DevCycle client
-        const devcycleClient = await initializeDevCycle(
-          sdkKey
-        ).onClientInitialized();
-
-        // Create DevCycle provider
-        const provider = new DevCycleProvider(devcycleClient);
-
-        // Set the provider
-        await OpenFeature.setProviderAndWait(provider);
-
-        return {
-          defaultProvider: provider,
-          providers: {
-            devcycle: provider,
-          },
-        };
-      },
-      inject: [ConfigService],
-    }),
-  ],
-  exports: [NestOpenFeatureModule],
+  imports: [ConfigModule],
+  providers: [OpenFeatureService],
+  exports: [OpenFeatureService],
 })
 export class OpenFeatureModule {}
 ```
 
-### 3. Create OpenFeature Service
-
-Create a service wrapper (`src/openfeature/openfeature.service.ts`):
+Create `src/openfeature/openfeature.service.ts`:
 
 ```typescript
-import { Injectable, Logger } from "@nestjs/common";
-import { OpenFeatureService as NestOpenFeatureService } from "@openfeature/nestjs-sdk";
-import { EvaluationContext } from "@openfeature/server-sdk";
+import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { OpenFeature } from "@openfeature/server-sdk";
+import { DevCycleProvider } from "@devcycle/openfeature-nodejs-provider";
 
 @Injectable()
-export class FeatureFlagService {
-  private readonly logger = new Logger(FeatureFlagService.name);
+export class OpenFeatureService implements OnModuleInit {
+  private readonly logger = new Logger(OpenFeatureService.name);
 
-  constructor(private readonly openFeatureService: NestOpenFeatureService) {}
+  constructor(private configService: ConfigService) {}
 
-  async getBooleanValue(
-    key: string,
-    defaultValue: boolean,
-    userId: string,
-    attributes?: Record<string, any>
-  ): Promise<boolean> {
-    const context: EvaluationContext = {
-      targetingKey: userId,
-      ...attributes,
-    };
+  async onModuleInit() {
+    const sdkKey = this.configService.get<string>("DEVCYCLE_SERVER_SDK_KEY");
 
-    try {
-      return await this.openFeatureService.getBooleanValue(
-        key,
-        defaultValue,
-        context
-      );
-    } catch (error) {
-      this.logger.error(`Error evaluating boolean flag ${key}:`, error);
-      return defaultValue;
+    if (!sdkKey) {
+      // TODO: Replace with environment variable before production
+      const fallbackKey = "your_server_sdk_key_here";
+
+      if (fallbackKey === "your_server_sdk_key_here") {
+        throw new Error("DevCycle SDK key is not configured");
+      }
+
+      this.logger.warn("Using fallback SDK key - replace before production");
+      await this.initializeProvider(fallbackKey);
+    } else {
+      await this.initializeProvider(sdkKey);
     }
   }
 
-  async getStringValue(
-    key: string,
-    defaultValue: string,
-    userId: string,
-    attributes?: Record<string, any>
-  ): Promise<string> {
-    const context: EvaluationContext = {
-      targetingKey: userId,
-      ...attributes,
-    };
-
-    try {
-      return await this.openFeatureService.getStringValue(
-        key,
-        defaultValue,
-        context
-      );
-    } catch (error) {
-      this.logger.error(`Error evaluating string flag ${key}:`, error);
-      return defaultValue;
-    }
+  private async initializeProvider(sdkKey: string) {
+    const provider = new DevCycleProvider(sdkKey);
+    await OpenFeature.setProviderAndWait(provider);
+    this.logger.log("OpenFeature with DevCycle initialized successfully");
   }
 
-  async getNumberValue(
-    key: string,
-    defaultValue: number,
-    userId: string,
-    attributes?: Record<string, any>
-  ): Promise<number> {
-    const context: EvaluationContext = {
-      targetingKey: userId,
-      ...attributes,
-    };
-
-    try {
-      return await this.openFeatureService.getNumberValue(
-        key,
-        defaultValue,
-        context
-      );
-    } catch (error) {
-      this.logger.error(`Error evaluating number flag ${key}:`, error);
-      return defaultValue;
-    }
-  }
-
-  async getObjectValue<T extends object>(
-    key: string,
-    defaultValue: T,
-    userId: string,
-    attributes?: Record<string, any>
-  ): Promise<T> {
-    const context: EvaluationContext = {
-      targetingKey: userId,
-      ...attributes,
-    };
-
-    try {
-      return (await this.openFeatureService.getObjectValue(
-        key,
-        defaultValue,
-        context
-      )) as T;
-    } catch (error) {
-      this.logger.error(`Error evaluating object flag ${key}:`, error);
-      return defaultValue;
-    }
+  getClient() {
+    return OpenFeature.getClient();
   }
 }
 ```
 
-### 4. Register OpenFeature Module in App Module
+### Step 3: Register in App Module
 
-Update your `src/app.module.ts`:
+Update `src/app.module.ts`:
 
 ```typescript
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { OpenFeatureModule } from "./openfeature/openfeature.module";
-import { FeatureFlagService } from "./openfeature/openfeature.service";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [".env.local", ".env"],
+      envFilePath: ".env",
     }),
     OpenFeatureModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, FeatureFlagService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
 ```
 
-### 5. Using OpenFeature in Controllers
+<verification_checkpoint>
+**Verify before continuing:**
 
-Example controller:
+- [ ] OpenFeature module and service created
+- [ ] Module registered in AppModule
+- [ ] Application starts without errors
+- [ ] Log shows successful initialization
+      </verification_checkpoint>
 
-```typescript
-import { Controller, Get, Headers, Query } from "@nestjs/common";
-import { FeatureFlagService } from "./openfeature/openfeature.service";
+<success_criteria>
 
-@Controller("features")
-export class FeaturesController {
-  constructor(private readonly featureFlagService: FeatureFlagService) {}
+## Installation Success Criteria
 
-  @Get("check")
-  async checkFeature(
-    @Query("feature") featureKey: string,
-    @Headers("x-user-id") userId: string = "anonymous",
-    @Headers("x-user-email") email?: string
-  ) {
-    const attributes = {
-      email,
-      plan: "premium",
-      role: "admin",
-    };
+Installation is complete when ALL of the following are true:
 
-    const [boolValue, stringValue, numberValue, objectValue] =
-      await Promise.all([
-        this.featureFlagService.getBooleanValue(
-          featureKey,
-          false,
-          userId,
-          attributes
-        ),
-        this.featureFlagService.getStringValue(
-          `${featureKey}_text`,
-          "default",
-          userId,
-          attributes
-        ),
-        this.featureFlagService.getNumberValue(
-          `${featureKey}_limit`,
-          100,
-          userId,
-          attributes
-        ),
-        this.featureFlagService.getObjectValue(
-          `${featureKey}_config`,
-          { theme: "light", fontSize: 14 },
-          userId,
-          attributes
-        ),
-      ]);
+- ✅ OpenFeature SDK and DevCycle provider packages installed
+- ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
+- ✅ OpenFeature module created with proper NestJS patterns
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Application starts without errors
+- ✅ Log shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-    return {
-      featureKey,
-      userId,
-      values: {
-        boolean: boolValue,
-        string: stringValue,
-        number: numberValue,
-        object: objectValue,
-      },
-    };
-  }
-}
-```
+<examples>
+## Common Installation Scenarios
 
-### 6. Using OpenFeature in Services
+<example scenario="nestjs_microservice">
+**Scenario:** NestJS 9 microservice, TypeScript
+**Actions taken:**
+1. ✅ Created .env with server SDK key
+2. ✅ Installed packages via npm
+3. ✅ Created global OpenFeature module
+4. ✅ Implemented service with lifecycle hooks
+5. ✅ NestJS starts successfully
+**Result:** Installation successful
+</example>
 
-Example service:
+<example scenario="nestjs_graphql">
+**Scenario:** NestJS with GraphQL, code-first
+**Actions taken:**
+1. ✅ Configured SDK in environment
+2. ✅ Created OpenFeature service
+3. ✅ Injected into GraphQL resolvers
+4. ✅ Set up context for GraphQL
+5. ✅ GraphQL endpoint works
+**Result:** Installation successful with GraphQL
+</example>
+</examples>
 
-```typescript
-import { Injectable } from "@nestjs/common";
-import { FeatureFlagService } from "./openfeature/openfeature.service";
-
-@Injectable()
-export class UserService {
-  constructor(private readonly featureFlagService: FeatureFlagService) {}
-
-  async getUserDashboard(userId: string, email?: string) {
-    const attributes = { email, authenticated: true };
-
-    const showNewDashboard = await this.featureFlagService.getBooleanValue(
-      "new-dashboard",
-      false,
-      userId,
-      attributes
-    );
-
-    if (showNewDashboard) {
-      return this.getNewDashboard(userId);
-    }
-
-    return this.getLegacyDashboard(userId);
-  }
-
-  async getApiLimits(userId: string) {
-    const rateLimit = await this.featureFlagService.getNumberValue(
-      "api-rate-limit",
-      100,
-      userId
-    );
-
-    const config = await this.featureFlagService.getObjectValue(
-      "api-config",
-      { timeout: 30000, retries: 3 },
-      userId
-    );
-
-    return {
-      rateLimit,
-      config,
-    };
-  }
-
-  private async getNewDashboard(userId: string) {
-    // New dashboard implementation
-    return { type: "new", userId };
-  }
-
-  private async getLegacyDashboard(userId: string) {
-    // Legacy dashboard implementation
-    return { type: "legacy", userId };
-  }
-}
-```
-
-### 7. Optional: Create Guard for Feature Flags
-
-Create a guard (`src/openfeature/feature-flag.guard.ts`):
-
-```typescript
-import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { FeatureFlagService } from "./openfeature.service";
-
-export const RequireFeature = (featureKey: string) =>
-  Reflect.metadata("featureKey", featureKey);
-
-@Injectable()
-export class FeatureFlagGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private featureFlagService: FeatureFlagService
-  ) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const featureKey = this.reflector.get<string>(
-      "featureKey",
-      context.getHandler()
-    );
-
-    if (!featureKey) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
-    const userId = request.user?.id || "anonymous";
-
-    return this.featureFlagService.getBooleanValue(featureKey, false, userId);
-  }
-}
-```
-
-Use in controller:
-
-```typescript
-@Get('premium')
-@UseGuards(FeatureFlagGuard)
-@RequireFeature('premium-features')
-async getPremiumContent() {
-  return { content: 'Premium content' };
-}
-```
-
-### 8. Environment Configuration
-
-Create a `.env` file:
-
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-NODE_ENV=development
-PORT=3000
-```
-
-After installation, run your NestJS application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or service returning default values only</symptom>
+<diagnosis>
+1. Check: Is setProviderAndWait() called in onModuleInit?
+2. Check: Is the SDK key valid?
+3. Check: Is targeting key provided in evaluation context?
+</diagnosis>
+<solution>
+- Await provider initialization in service
+- Verify server SDK key (starts with dvc_server_)
+- Include targeting key when evaluating flags
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-
-   - Ensure OpenFeatureModule is imported in AppModule
-   - Check that DevCycle client initializes in the module factory
-   - Verify your SDK key is correct (server SDK key)
-
-2. **Dependency injection errors:**
-
-   - Ensure all services are properly provided in their modules
-   - Check that OpenFeatureModule is marked as @Global() if needed
-   - Verify service imports and exports
-
-3. **Service returning default values only:**
-
-   - Confirm the provider is initialized before use
-   - Check that evaluation context has targetingKey
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall settings allow HTTPS
+<error type="dependency_injection">
+<symptom>NestJS dependency injection failures</symptom>
+<diagnosis>
+1. Check: Is OpenFeatureModule imported?
+2. Check: Is @Global() decorator used?
+3. Check: Are providers exported correctly?
+</diagnosis>
+<solution>
+- Import OpenFeatureModule in AppModule
+- Use @Global() for app-wide access
+- Export OpenFeatureService from module
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, help implement guards for feature-based route protection
-3. Set up evaluation context strategies if needed
+2. When requested, help implement feature flag usage in controllers and services
+3. Set up proper error handling for feature flag evaluations
 4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [OpenFeature NestJS SDK](https://github.com/open-feature/js-sdk/tree/main/packages/nestjs-sdk)
-- [DevCycle Node.js SDK](https://docs.devcycle.com/sdk/server-side-sdks/node/)
-- [NestJS Documentation](https://nestjs.com/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature Node.js SDK](https://openfeature.dev/docs/reference/technologies/server/nodejs/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)

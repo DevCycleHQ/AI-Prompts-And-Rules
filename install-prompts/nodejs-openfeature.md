@@ -1,16 +1,35 @@
 # DevCycle Node.js OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for Node.js server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for Node.js. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a Node.js server application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - Client-side JavaScript applications (use `javascript-openfeature.md` instead)
 - React applications (use `react-openfeature.md` instead)
-- NestJS applications (consider NestJS-specific patterns)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -19,301 +38,204 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for Node.js backend applications. Never expose server keys to client-side code. Store keys in environment variables.
+</prerequisites>
 
 ## SDK Key Configuration
 
-**IMPORTANT:** After obtaining the SDK key, you must set it up properly:
+<decision_tree>
 
-1. **First, attempt to create an environment file** (.env) in the project root:
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` file in project root
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file creation succeeds:**
+   <success_path>
 
    ```bash
    # .env
    DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
    ```
 
-   And ensure dotenv is configured if not already present.
+   - Ensure dotenv is configured if not already present
+   - Test that `process.env.DEVCYCLE_SERVER_SDK_KEY` is accessible
+     </success_path>
 
-2. **If you cannot create or modify environment files** (due to system restrictions or security policies), ask the user:
-
-   - "I'm unable to create/modify environment files. Would you like me to:
-     a) Temporarily hardcode the SDK key for testing purposes (you'll need to update it later for production)
-     b) Provide you with the SDK key and instructions so you can set it up yourself?"
-
-3. **Based on the user's response:**
-   - If they choose hardcoding: Add a clear comment indicating this is temporary and should be replaced with environment variables
-   - If they choose manual setup: Provide them with the SDK key and clear instructions on how to set up the environment variable
-
-**Note:** Always prefer environment variables over hardcoding for security reasons.
+3. **If environment file creation fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle Provider
 
 ```bash
 # Using npm
-npm install --save @openfeature/server-sdk @devcycle/openfeature-nodejs-provider @devcycle/nodejs-server-sdk
+npm install --save @openfeature/server-sdk @devcycle/openfeature-nodejs-provider
 
 # Using yarn
-yarn add @openfeature/server-sdk @devcycle/openfeature-nodejs-provider @devcycle/nodejs-server-sdk
+yarn add @openfeature/server-sdk @devcycle/openfeature-nodejs-provider
 
 # Using pnpm
-pnpm add @openfeature/server-sdk @devcycle/openfeature-nodejs-provider @devcycle/nodejs-server-sdk
+pnpm add @openfeature/server-sdk @devcycle/openfeature-nodejs-provider
 ```
 
-### 2. Initialize OpenFeature with DevCycle Provider
-
-Create an initialization file (e.g., `openfeature-config.js`):
+### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```javascript
 const { OpenFeature } = require("@openfeature/server-sdk");
 const { DevCycleProvider } = require("@devcycle/openfeature-nodejs-provider");
-const { initializeDevCycle } = require("@devcycle/nodejs-server-sdk");
 
-let openFeatureClient;
+async function initializeFeatureFlags() {
+  // Create the DevCycle provider
+  const devCycleProvider = new DevCycleProvider(
+    process.env.DEVCYCLE_SERVER_SDK_KEY || "your_server_sdk_key_here"
+  );
 
-async function initializeOpenFeature() {
-  const sdkKey = process.env.DEVCYCLE_SERVER_SDK_KEY;
-
-  if (!sdkKey) {
-    throw new Error("DEVCYCLE_SERVER_SDK_KEY is not set");
-  }
-
-  // Initialize DevCycle client
-  const devcycleClient = await initializeDevCycle(sdkKey).onClientInitialized();
-
-  // Create DevCycle provider
-  const provider = new DevCycleProvider(devcycleClient);
-
-  // Set the provider for OpenFeature
-  await OpenFeature.setProviderAndWait(provider);
-
-  // Get the OpenFeature client
-  openFeatureClient = OpenFeature.getClient();
+  // Set the provider
+  await OpenFeature.setProviderAndWait(devCycleProvider);
 
   console.log("OpenFeature with DevCycle initialized successfully");
-  return openFeatureClient;
 }
 
-function getOpenFeatureClient() {
-  if (!openFeatureClient) {
-    throw new Error("OpenFeature client not initialized");
-  }
-  return openFeatureClient;
-}
-
-module.exports = {
-  initializeOpenFeature,
-  getOpenFeatureClient,
-};
+// Initialize before starting your server
+initializeFeatureFlags().catch(console.error);
 ```
 
-### 3. Initialize on Application Startup
-
-In your main application file:
+### Step 3: Use in Your Application
 
 ```javascript
 const express = require("express");
-const { initializeOpenFeature } = require("./openfeature-config");
+const { OpenFeature } = require("@openfeature/server-sdk");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-async function startServer() {
-  try {
-    // Initialize OpenFeature with DevCycle
-    await initializeOpenFeature();
+app.get("/", async (req, res) => {
+  const client = OpenFeature.getClient();
 
-    // Your application routes
-    app.get("/", (req, res) => {
-      res.send("Server with OpenFeature and DevCycle!");
-    });
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-}
-
-startServer();
-```
-
-### 4. Using Feature Flags in Your Application
-
-```javascript
-const { getOpenFeatureClient } = require("./openfeature-config");
-
-// Example route using OpenFeature
-app.get("/api/feature", async (req, res) => {
-  const client = getOpenFeatureClient();
-
-  // Set evaluation context for this request
+  // Define user for this request
   const context = {
     targetingKey: req.user?.id || "anonymous",
     email: req.user?.email,
     name: req.user?.name,
-    plan: req.user?.plan,
-    role: req.user?.role,
   };
 
-  // Get feature flag values
-  const featureEnabled = await client.getBooleanValue(
-    "new-feature",
-    false,
-    context
-  );
-  const buttonText = await client.getStringValue(
-    "button-text",
-    "Click Here",
-    context
-  );
-  const rateLimit = await client.getNumberValue("rate-limit", 100, context);
-  const config = await client.getObjectValue(
-    "ui-config",
-    { theme: "light" },
-    context
-  );
-
-  res.json({
-    featureEnabled,
-    buttonText,
-    rateLimit,
-    config,
-  });
+  res.send("Node.js app with OpenFeature and DevCycle!");
 });
 
-// Service class example
-class FeatureService {
-  constructor() {
-    this.client = getOpenFeatureClient();
-  }
-
-  async isFeatureEnabledForUser(userId, featureKey) {
-    const context = {
-      targetingKey: userId,
-    };
-
-    return this.client.getBooleanValue(featureKey, false, context);
-  }
-
-  async getConfigForUser(userId, configKey, defaultValue) {
-    const context = {
-      targetingKey: userId,
-    };
-
-    return this.client.getObjectValue(configKey, defaultValue, context);
-  }
-}
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
 ```
 
-### 5. TypeScript Support
+<verification_checkpoint>
+**Verify before continuing:**
 
-For TypeScript projects:
+- [ ] Both packages installed successfully
+- [ ] DevCycle provider initialized
+- [ ] Server starts without errors
+- [ ] Console shows successful initialization
+      </verification_checkpoint>
 
-```typescript
-import { OpenFeature, EvaluationContext } from "@openfeature/server-sdk";
-import { DevCycleProvider } from "@devcycle/openfeature-nodejs-provider";
-import { initializeDevCycle } from "@devcycle/nodejs-server-sdk";
+<success_criteria>
 
-let openFeatureClient: ReturnType<typeof OpenFeature.getClient>;
+## Installation Success Criteria
 
-export async function initializeOpenFeature(): Promise<void> {
-  const sdkKey = process.env.DEVCYCLE_SERVER_SDK_KEY;
+Installation is complete when ALL of the following are true:
 
-  if (!sdkKey) {
-    throw new Error("DEVCYCLE_SERVER_SDK_KEY is not set");
-  }
+- ✅ OpenFeature SDK and DevCycle provider packages installed
+- ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Server starts without OpenFeature/DevCycle errors
+- ✅ Console shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-  const devcycleClient = await initializeDevCycle(sdkKey).onClientInitialized();
-  const provider = new DevCycleProvider(devcycleClient);
+<examples>
+## Common Installation Scenarios
 
-  await OpenFeature.setProviderAndWait(provider);
-  openFeatureClient = OpenFeature.getClient();
-}
+<example scenario="express_api">
+**Scenario:** Express.js API, Node.js 18, npm
+**Actions taken:**
+1. ✅ Created .env with server SDK key
+2. ✅ Installed OpenFeature and DevCycle packages
+3. ✅ Initialized provider before server startup
+4. ✅ Added feature flag usage in routes
+5. ✅ Server starts successfully
+**Result:** Installation successful
+</example>
 
-export function getFeatureFlag(
-  key: string,
-  defaultValue: boolean,
-  userId: string
-): Promise<boolean> {
-  const context: EvaluationContext = {
-    targetingKey: userId,
-  };
+<example scenario="fastify_service">
+**Scenario:** Fastify microservice, TypeScript
+**Actions taken:**
+1. ✅ Set SDK key via environment variable
+2. ✅ Installed packages with TypeScript support
+3. ✅ Created initialization plugin
+4. ✅ Registered plugin before routes
+5. ✅ Type-safe implementation
+**Result:** Installation successful with TypeScript
+</example>
+</examples>
 
-  return openFeatureClient.getBooleanValue(key, defaultValue, context);
-}
-```
-
-### 6. Environment Configuration
-
-Create a `.env` file:
-
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-NODE_ENV=development
-```
-
-Load with dotenv:
-
-```javascript
-require("dotenv").config();
-```
-
-After installation, run your Node.js application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or service returning default values only</symptom>
+<diagnosis>
+1. Check: Did you await setProviderAndWait()?
+2. Check: Is the SDK key valid?
+3. Check: Is provider initialized before server starts?
+</diagnosis>
+<solution>
+- Always await provider initialization
+- Verify server SDK key (starts with dvc_server_)
+- Initialize provider before registering routes
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-
-   - Ensure `OpenFeature.setProviderAndWait()` is called
-   - Check that DevCycle client initializes successfully
-   - Verify your SDK key is correct (server SDK key)
-
-2. **Client returning default values only:**
-
-   - Confirm the provider is initialized before use
-   - Check that evaluation context has `targetingKey`
-
-3. **TypeScript compilation errors:**
-
-   - Ensure all type packages are installed
-   - Check TypeScript version compatibility
-   - Verify import statements match module system
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid
-   - Ensure firewall settings allow HTTPS
+<error type="context_issues">
+<symptom>Targeting not working or all users getting same values</symptom>
+<diagnosis>
+1. Check: Is targetingKey provided in context?
+2. Check: Is context passed to flag evaluation?
+3. Check: Are user attributes consistent?
+</diagnosis>
+<solution>
+- Always provide targetingKey in evaluation context
+- Pass user-specific context for each request
+- Ensure consistent user identification
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
-2. When requested, help implement evaluation context strategies
-3. Set up proper error handling and fallbacks
+2. When requested, help implement feature flag usage in routes and middleware
+3. Set up proper error handling for feature flag evaluations
 4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle Node.js OpenFeature Provider](https://docs.devcycle.com/sdk/server-side-sdks/node/node-openfeature/)
-- [OpenFeature Node.js SDK](https://openfeature.dev/docs/reference/technologies/server/javascript)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature Node.js SDK](https://openfeature.dev/docs/reference/technologies/server/nodejs/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)
