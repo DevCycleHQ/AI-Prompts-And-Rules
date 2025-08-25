@@ -1,15 +1,35 @@
 # DevCycle Go OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for Go server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for Go. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a Go server application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - Client-side applications (use appropriate client SDKs instead)
 - Applications already using the DevCycle Go SDK directly
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -18,348 +38,232 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for Go backend applications. Never expose server keys to client-side code. Store keys in environment variables.
+</prerequisites>
+
+## SDK Key Configuration
+
+<decision_tree>
+
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` file in project root or set environment variable
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment configuration succeeds:**
+   <success_path>
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   Or set system environment variable:
+
+   ```bash
+   export DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   - Test that `os.Getenv("DEVCYCLE_SERVER_SDK_KEY")` returns the key
+     </success_path>
+
+3. **If environment configuration fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle Provider
 
 ```bash
 go get github.com/open-feature/go-sdk
-go get github.com/devcyclehq/go-server-sdk/v2
-go get github.com/devcyclehq/go-server-sdk/v2/openfeature
+go get github.com/devcyclehq/go-openfeature-provider
 ```
 
-### 2. Initialize OpenFeature with DevCycle Provider
-
-Create an OpenFeature configuration file (e.g., `openfeature/config.go`):
+### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```go
-package openfeature
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+
+    "github.com/open-feature/go-sdk/openfeature"
+    "github.com/devcyclehq/go-openfeature-provider/pkg/provider"
+)
+
+func initializeFeatureFlags() error {
+    sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
+    if sdkKey == "" {
+        // TODO: Replace with environment variable before production
+        sdkKey = "your_server_sdk_key_here"
+    }
+
+    if sdkKey == "your_server_sdk_key_here" {
+        return fmt.Errorf("DevCycle SDK key is not configured")
+    }
+
+    // Create DevCycle provider
+    devCycleProvider := provider.NewDevCycleProvider(sdkKey)
+
+    // Set the provider
+    openfeature.SetProvider(devCycleProvider)
+
+    log.Println("OpenFeature with DevCycle initialized successfully")
+    return nil
+}
+```
+
+### Step 3: Use in Your Application
+
+```go
+package main
 
 import (
     "context"
     "fmt"
     "log"
-    "os"
-    "sync"
-    
-    "github.com/open-feature/go-sdk/openfeature"
-    devcycle "github.com/devcyclehq/go-server-sdk/v2"
-    devcycleprovider "github.com/devcyclehq/go-server-sdk/v2/openfeature"
-)
-
-var (
-    client *openfeature.Client
-    once   sync.Once
-    mu     sync.RWMutex
-)
-
-// Initialize sets up OpenFeature with DevCycle provider
-func Initialize(ctx context.Context) error {
-    var initErr error
-    
-    once.Do(func() {
-        sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
-        if sdkKey == "" {
-            initErr = fmt.Errorf("DEVCYCLE_SERVER_SDK_KEY is not set")
-            return
-        }
-        
-        // Create DevCycle client
-        config := devcycle.ClientConfig{
-            SDKKey: sdkKey,
-        }
-        
-        devcycleClient, err := devcycle.NewClient(config)
-        if err != nil {
-            initErr = fmt.Errorf("failed to create DevCycle client: %w", err)
-            return
-        }
-        
-        // Create DevCycle provider for OpenFeature
-        provider := devcycleprovider.NewProvider(devcycleClient)
-        
-        // Set the provider
-        openfeature.SetProvider(provider)
-        
-        // Create OpenFeature client
-        client = openfeature.NewClient("my-app")
-        
-        log.Println("OpenFeature with DevCycle initialized successfully")
-    })
-    
-    return initErr
-}
-
-// GetClient returns the OpenFeature client
-func GetClient() (*openfeature.Client, error) {
-    mu.RLock()
-    defer mu.RUnlock()
-    
-    if client == nil {
-        return nil, fmt.Errorf("OpenFeature client not initialized")
-    }
-    return client, nil
-}
-```
-
-### 3. Initialize on Application Startup
-
-In your main application:
-
-```go
-package main
-
-import (
-    "context"
-    "log"
     "net/http"
-    "os"
-    "os/signal"
-    "syscall"
-    
-    "your-module/openfeature"
+
+    "github.com/open-feature/go-sdk/openfeature"
 )
 
 func main() {
-    ctx := context.Background()
-    
-    // Initialize OpenFeature with DevCycle
-    if err := openfeature.Initialize(ctx); err != nil {
-        log.Fatal("Failed to initialize OpenFeature:", err)
+    // Initialize OpenFeature
+    if err := initializeFeatureFlags(); err != nil {
+        log.Fatal(err)
     }
-    
-    // Set up HTTP server
+
     http.HandleFunc("/", homeHandler)
-    http.HandleFunc("/api/feature", featureHandler)
-    
-    server := &http.Server{Addr: ":8080"}
-    
-    // Handle graceful shutdown
-    go func() {
-        sigChan := make(chan os.Signal, 1)
-        signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-        <-sigChan
-        
-        log.Println("Shutting down server...")
-        server.Close()
-    }()
-    
     log.Println("Server starting on :8080")
-    if err := server.ListenAndServe(); err != http.ErrServerClosed {
-        log.Fatal("Server failed:", err)
-    }
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("Go server with OpenFeature and DevCycle!"))
-}
-```
+    client := openfeature.NewClient("my-app")
 
-### 4. Using Feature Flags with OpenFeature
-
-```go
-package main
-
-import (
-    "context"
-    "encoding/json"
-    "net/http"
-    
-    "github.com/open-feature/go-sdk/openfeature"
-    "your-module/openfeature"
-)
-
-func featureHandler(w http.ResponseWriter, r *http.Request) {
-    client, err := openfeature.GetClient()
-    if err != nil {
-        http.Error(w, "OpenFeature not available", http.StatusInternalServerError)
-        return
-    }
-    
-    // Set evaluation context
-    ctx := openfeature.NewEvaluationContext(
-        "user-123", // targetingKey
+    // Create evaluation context for the user
+    evalCtx := openfeature.NewEvaluationContext(
+        "user-123", // targeting key
         map[string]interface{}{
             "email": "user@example.com",
-            "plan": "premium",
-            "role": "admin",
+            "plan":  "premium",
         },
     )
-    
-    // Get boolean value
-    featureEnabled, err := client.BooleanValue(
-        context.Background(),
-        "new-feature",
-        false,
-        ctx,
-    )
-    if err != nil {
-        http.Error(w, "Error evaluating feature", http.StatusInternalServerError)
-        return
-    }
-    
-    // Get string value
-    buttonText, _ := client.StringValue(
-        context.Background(),
-        "button-text",
-        "Click Here",
-        ctx,
-    )
-    
-    // Get number value
-    rateLimit, _ := client.FloatValue(
-        context.Background(),
-        "rate-limit",
-        100.0,
-        ctx,
-    )
-    
-    // Get object value
-    config, _ := client.ObjectValue(
-        context.Background(),
-        "ui-config",
-        map[string]interface{}{"theme": "light"},
-        ctx,
-    )
-    
-    response := map[string]interface{}{
-        "featureEnabled": featureEnabled,
-        "buttonText": buttonText,
-        "rateLimit": rateLimit,
-        "config": config,
-    }
-    
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
+
+    fmt.Fprintf(w, "Go server with OpenFeature and DevCycle!")
 }
 ```
 
-### 5. Service Pattern Example
+<verification_checkpoint>
+**Verify before continuing:**
 
-```go
-package services
+- [ ] Both packages installed successfully
+- [ ] DevCycle provider initialized
+- [ ] Server starts without errors
+- [ ] Console shows successful initialization
+      </verification_checkpoint>
 
-import (
-    "context"
-    
-    "github.com/open-feature/go-sdk/openfeature"
-)
+<success_criteria>
 
-type FeatureService struct {
-    client *openfeature.Client
-}
+## Installation Success Criteria
 
-func NewFeatureService() (*FeatureService, error) {
-    client, err := openfeature.GetClient()
-    if err != nil {
-        return nil, err
-    }
-    
-    return &FeatureService{
-        client: client,
-    }, nil
-}
+Installation is complete when ALL of the following are true:
 
-func (s *FeatureService) IsFeatureEnabledForUser(userID string, featureKey string) (bool, error) {
-    ctx := openfeature.NewEvaluationContext(
-        userID,
-        map[string]interface{}{},
-    )
-    
-    return s.client.BooleanValue(
-        context.Background(),
-        featureKey,
-        false,
-        ctx,
-    )
-}
+- ✅ OpenFeature SDK and DevCycle provider packages installed
+- ✅ SDK key is configured (via env var OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Application compiles and runs without errors
+- ✅ Console shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-func (s *FeatureService) GetConfigForUser(userID string, configKey string) (map[string]interface{}, error) {
-    ctx := openfeature.NewEvaluationContext(
-        userID,
-        map[string]interface{}{},
-    )
-    
-    return s.client.ObjectValue(
-        context.Background(),
-        configKey,
-        map[string]interface{}{},
-        ctx,
-    )
-}
-```
+<examples>
+## Common Installation Scenarios
 
-### 6. Environment Configuration
+<example scenario="gin_framework">
+**Scenario:** Gin web framework, Go 1.20, modules
+**Actions taken:**
+1. ✅ Set SDK key as environment variable
+2. ✅ Installed packages with go get
+3. ✅ Initialized provider in main()
+4. ✅ Created middleware for context
+5. ✅ Gin server starts successfully
+**Result:** Installation successful with Gin
+</example>
 
-Create a `.env` file:
+<example scenario="http_microservice">
+**Scenario:** Standard net/http microservice
+**Actions taken:**
+1. ✅ Used godotenv for configuration
+2. ✅ Installed OpenFeature and provider
+3. ✅ Initialized in startup function
+4. ✅ Added context helpers
+5. ✅ Service runs without errors
+**Result:** Installation successful with standard library
+</example>
+</examples>
 
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-GO_ENV=development
-```
-
-Load with godotenv:
-
-```bash
-go get github.com/joho/godotenv
-```
-
-```go
-import _ "github.com/joho/godotenv/autoload"
-```
-
-After installation, run your Go application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or service returning default values only</symptom>
+<diagnosis>
+1. Check: Is SetProvider() called before client usage?
+2. Check: Is the SDK key valid?
+3. Check: Is targeting key provided in context?
+</diagnosis>
+<solution>
+- Call SetProvider() before creating clients
+- Verify server SDK key (starts with dvc_server_)
+- Always include targeting key in EvaluationContext
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-   - Ensure OpenFeature.SetProvider() is called
-   - Check that DevCycle client initializes successfully
-   - Verify your SDK key is correct (server SDK key)
-
-2. **Feature flags returning default values only:**
-   - Confirm the provider is initialized before use
-   - Check that evaluation context has targetingKey
-   - Verify feature flags are configured in DevCycle dashboard
-
-3. **Import errors:**
-   - Run `go mod tidy` to resolve dependencies
-   - Check Go version compatibility (1.19+)
-   - Verify import paths are correct
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid
-   - Ensure firewall settings allow HTTPS
+<error type="module_errors">
+<symptom>Module download or import errors</symptom>
+<diagnosis>
+1. Check: Is Go 1.19+ installed?
+2. Check: Are modules enabled?
+3. Check: Is there proxy access?
+</diagnosis>
+<solution>
+- Check Go version: go version
+- Run go mod tidy to resolve dependencies
+- Check GOPROXY settings if behind firewall
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement evaluation context strategies
-3. Set up proper error handling and fallbacks
-4. Configure targeting rules in DevCycle dashboard
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flag usage in handlers and middleware
+3. Set up proper error handling for feature flag evaluations
+4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [OpenFeature Go SDK](https://github.com/open-feature/go-sdk)
-- [DevCycle Go SDK](https://docs.devcycle.com/sdk/server-side-sdks/go/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature Go SDK](https://openfeature.dev/docs/reference/technologies/server/go/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)

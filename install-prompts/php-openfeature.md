@@ -1,16 +1,35 @@
 # DevCycle PHP OpenFeature Provider Installation Prompt
 
-You are helping to install and configure the DevCycle OpenFeature Provider for PHP server applications. Follow this complete guide to successfully integrate DevCycle feature flags using the OpenFeature standard. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle and OpenFeature integration specialist helping a developer install the DevCycle OpenFeature Provider for PHP. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the environment and framework before proceeding
+- Adaptive: Provide alternatives when standard approaches fail
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use this for:**
+<context>
+You are helping to install and configure the DevCycle OpenFeature Provider in a PHP server application using the OpenFeature SDK.
+</context>
 
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle with OpenFeature for standardized feature flagging.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
+
+<restrictions>
+**Do not use this setup for:**
 - Client-side applications (use appropriate client SDKs instead)
 - JavaScript/Node.js applications (use Node.js SDK instead)
-- Mobile applications (use iOS/Android SDKs instead)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
@@ -19,347 +38,213 @@ Before proceeding, use your own analysis, the DevCycle MCP or web search to ensu
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for PHP backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration files.
+</prerequisites>
+
+## SDK Key Configuration
+
+<decision_tree>
+
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` file in project root
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file creation succeeds:**
+   <success_path>
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   - Install vlucas/phpdotenv if needed: `composer require vlucas/phpdotenv`
+   - Test that the key is accessible via `$_ENV` or `getenv()`
+     </success_path>
+
+3. **If environment file creation fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle Provider
 
 ```bash
-composer require open-feature/sdk
-composer require devcycle/php-server-sdk
-composer require devcycle/php-server-sdk-openfeature
+composer require open-feature/sdk devcycle/openfeature-php-provider
 ```
 
-### 2. Initialize OpenFeature with DevCycle Provider
-
-Create an OpenFeature configuration file (e.g., `openfeature_config.php`):
-
-```php
-<?php
-namespace App\Config;
-
-use OpenFeature\OpenFeatureAPI;
-use OpenFeature\implementation\flags\EvaluationContext;
-use OpenFeature\implementation\flags\Attributes;
-use DevCycle\Sdk\DevCycleClient;
-use DevCycle\OpenFeature\DevCycleProvider;
-
-class OpenFeatureConfig {
-    private static ?OpenFeatureAPI $api = null;
-    private static ?DevCycleClient $devCycleClient = null;
-    
-    public static function initialize(): void {
-        if (self::$api !== null) {
-            return;
-        }
-        
-        $sdkKey = $_ENV['DEVCYCLE_SERVER_SDK_KEY'] ?? null;
-        
-        if (empty($sdkKey)) {
-            throw new \RuntimeException('DEVCYCLE_SERVER_SDK_KEY is not configured');
-        }
-        
-        try {
-            // Initialize DevCycle client
-            self::$devCycleClient = new DevCycleClient($sdkKey);
-            
-            // Create DevCycle provider
-            $provider = new DevCycleProvider(self::$devCycleClient);
-            
-            // Get OpenFeature API instance and set provider
-            self::$api = OpenFeatureAPI::getInstance();
-            self::$api->setProvider($provider);
-            
-            error_log('OpenFeature with DevCycle initialized successfully');
-        } catch (\Exception $e) {
-            error_log('Failed to initialize OpenFeature: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-    
-    public static function getClient(): \OpenFeature\interfaces\flags\FlagValueResolver {
-        if (self::$api === null) {
-            throw new \RuntimeException('OpenFeature not initialized. Call initialize() first.');
-        }
-        
-        return self::$api->getClient();
-    }
-    
-    public static function shutdown(): void {
-        if (self::$devCycleClient !== null) {
-            self::$devCycleClient->close();
-            self::$devCycleClient = null;
-        }
-    }
-}
-```
-
-### 3. Framework-Specific Integration
-
-#### For Laravel Applications
-
-Create a service provider:
-
-```php
-<?php
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-use OpenFeature\OpenFeatureAPI;
-use OpenFeature\interfaces\flags\FlagValueResolver;
-use DevCycle\Sdk\DevCycleClient;
-use DevCycle\OpenFeature\DevCycleProvider;
-
-class OpenFeatureServiceProvider extends ServiceProvider
-{
-    public function register()
-    {
-        $this->app->singleton(FlagValueResolver::class, function ($app) {
-            $sdkKey = config('services.devcycle.server_sdk_key');
-            
-            if (empty($sdkKey)) {
-                throw new \RuntimeException('DevCycle SDK key is not configured');
-            }
-            
-            // Initialize DevCycle client
-            $devCycleClient = new DevCycleClient($sdkKey);
-            
-            // Create DevCycle provider
-            $provider = new DevCycleProvider($devCycleClient);
-            
-            // Set provider
-            $api = OpenFeatureAPI::getInstance();
-            $api->setProvider($provider);
-            
-            return $api->getClient();
-        });
-    }
-    
-    public function boot()
-    {
-        // Optional: Close client on application shutdown
-        $this->app->terminating(function () {
-            // Cleanup if needed
-        });
-    }
-}
-```
-
-Register the provider in `config/app.php`:
-
-```php
-'providers' => [
-    // ...
-    App\Providers\OpenFeatureServiceProvider::class,
-],
-```
-
-#### For Symfony Applications
-
-Create a service configuration:
-
-```yaml
-# config/services.yaml
-services:
-    DevCycle\Sdk\DevCycleClient:
-        arguments:
-            - '%env(DEVCYCLE_SERVER_SDK_KEY)%'
-    
-    DevCycle\OpenFeature\DevCycleProvider:
-        arguments:
-            - '@DevCycle\Sdk\DevCycleClient'
-    
-    OpenFeature\OpenFeatureAPI:
-        factory: ['OpenFeature\OpenFeatureAPI', 'getInstance']
-        calls:
-            - setProvider: ['@DevCycle\OpenFeature\DevCycleProvider']
-    
-    openfeature.client:
-        factory: ['@OpenFeature\OpenFeatureAPI', 'getClient']
-```
-
-#### For Plain PHP Applications
-
-Initialize in your bootstrap file:
+### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```php
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/openfeature_config.php';
 
-use App\Config\OpenFeatureConfig;
+use OpenFeature\OpenFeatureAPI;
+use DevCycle\OpenFeature\DevCycleProvider;
 
-// Load environment variables
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+function initializeFeatureFlags() {
+    $sdkKey = $_ENV['DEVCYCLE_SERVER_SDK_KEY'] ?? getenv('DEVCYCLE_SERVER_SDK_KEY');
 
-// Initialize OpenFeature
-OpenFeatureConfig::initialize();
+    if (empty($sdkKey)) {
+        // TODO: Replace with environment variable before production
+        $sdkKey = 'your_server_sdk_key_here';
+    }
 
-// Register shutdown function
-register_shutdown_function(function() {
-    OpenFeatureConfig::shutdown();
+    if ($sdkKey === 'your_server_sdk_key_here') {
+        throw new Exception('DevCycle SDK key is not configured');
+    }
+
+    // Create DevCycle provider
+    $provider = new DevCycleProvider($sdkKey);
+
+    // Set the provider
+    OpenFeatureAPI::getInstance()->setProvider($provider);
+
+    error_log('OpenFeature with DevCycle initialized successfully');
+}
+
+// Initialize before your application starts
+initializeFeatureFlags();
+```
+
+### Step 3: Use in Your Application
+
+```php
+<?php
+use OpenFeature\OpenFeatureAPI;
+use OpenFeature\Interfaces\Flags\EvaluationContext;
+
+// Get OpenFeature client
+$client = OpenFeatureAPI::getInstance()->getClient();
+
+function checkFeatureForUser($userId, $email = null) {
+    global $client;
+
+    // Create evaluation context
+    $context = new EvaluationContext($userId, [
+        'email' => $email,
+        'plan' => 'premium',
+        'role' => 'admin'
+    ]);
+
+    // Ready to use feature flags when requested
+    return $context;
+}
+
+// Laravel example route
+Route::get('/', function () {
+    return 'PHP app with OpenFeature and DevCycle!';
 });
 ```
 
-### 4. Using Feature Flags with OpenFeature
+<verification_checkpoint>
+**Verify before continuing:**
 
-```php
-<?php
-use OpenFeature\implementation\flags\EvaluationContext;
-use OpenFeature\implementation\flags\Attributes;
-use App\Config\OpenFeatureConfig;
+- [ ] Both packages installed successfully
+- [ ] DevCycle provider initialized
+- [ ] Application starts without errors
+- [ ] Log shows successful initialization
+      </verification_checkpoint>
 
-class FeatureService {
-    private $client;
-    
-    public function __construct() {
-        $this->client = OpenFeatureConfig::getClient();
-    }
-    
-    public function isFeatureEnabled($userId, $featureKey) {
-        // Create evaluation context
-        $attributes = new Attributes([
-            'email' => 'user@example.com',
-            'plan' => 'premium',
-            'role' => 'admin'
-        ]);
-        
-        $context = new EvaluationContext($userId, $attributes);
-        
-        // Get boolean value
-        return $this->client->getBooleanValue($featureKey, false, $context);
-    }
-    
-    public function getStringConfig($userId, $configKey) {
-        $context = new EvaluationContext($userId);
-        return $this->client->getStringValue($configKey, 'default', $context);
-    }
-    
-    public function getNumberConfig($userId, $configKey) {
-        $context = new EvaluationContext($userId);
-        return $this->client->getIntegerValue($configKey, 100, $context);
-    }
-    
-    public function getObjectConfig($userId, $configKey) {
-        $context = new EvaluationContext($userId);
-        
-        $defaultValue = [
-            'theme' => 'light',
-            'fontSize' => 14
-        ];
-        
-        return $this->client->getObjectValue($configKey, $defaultValue, $context);
-    }
-}
-```
+<success_criteria>
 
-### 5. Laravel Controller Example
+## Installation Success Criteria
 
-```php
-<?php
-namespace App\Http\Controllers;
+Installation is complete when ALL of the following are true:
 
-use Illuminate\Http\Request;
-use OpenFeature\interfaces\flags\FlagValueResolver;
-use OpenFeature\implementation\flags\EvaluationContext;
-use OpenFeature\implementation\flags\Attributes;
+- ✅ OpenFeature SDK and DevCycle provider packages installed
+- ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
+- ✅ OpenFeature initialized with DevCycle provider
+- ✅ Application runs without OpenFeature/DevCycle errors
+- ✅ Log shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
 
-class FeatureController extends Controller
-{
-    private $openFeatureClient;
-    
-    public function __construct(FlagValueResolver $openFeatureClient)
-    {
-        $this->openFeatureClient = $openFeatureClient;
-    }
-    
-    public function checkFeature(Request $request, $featureKey)
-    {
-        $userId = $request->user()->id ?? 'anonymous';
-        
-        // Create evaluation context
-        $attributes = new Attributes([
-            'email' => $request->user()->email ?? null,
-            'authenticated' => $request->user() !== null
-        ]);
-        
-        $context = new EvaluationContext($userId, $attributes);
-        
-        // Get different types of values
-        $boolValue = $this->openFeatureClient->getBooleanValue($featureKey, false, $context);
-        $stringValue = $this->openFeatureClient->getStringValue("{$featureKey}_text", 'default', $context);
-        $numberValue = $this->openFeatureClient->getIntegerValue("{$featureKey}_limit", 100, $context);
-        
-        return response()->json([
-            'featureEnabled' => $boolValue,
-            'text' => $stringValue,
-            'limit' => $numberValue
-        ]);
-    }
-}
-```
+<examples>
+## Common Installation Scenarios
 
-### 6. Environment Configuration
+<example scenario="laravel_9">
+**Scenario:** Laravel 9, PHP 8.1, Composer
+**Actions taken:**
+1. ✅ Installed packages via Composer
+2. ✅ Added SDK key to .env
+3. ✅ Initialized in service provider
+4. ✅ Created context helper
+5. ✅ Laravel app starts successfully
+**Result:** Installation successful
+</example>
 
-Create a `.env` file:
+<example scenario="plain_php">
+**Scenario:** Plain PHP application, no framework
+**Actions taken:**
+1. ✅ Used Composer for dependencies
+2. ✅ Created config.php for settings
+3. ✅ Initialized in bootstrap file
+4. ✅ Created context function
+5. ✅ App runs without errors
+**Result:** Installation successful with plain PHP
+</example>
+</examples>
 
-```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-APP_ENV=development
-```
-
-After installation, run your PHP application and verify everything works with no errors.
-
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="provider_not_ready">
+<symptom>"Provider not ready" error or service returning default values only</symptom>
+<diagnosis>
+1. Check: Is setProvider() called before client usage?
+2. Check: Is the SDK key valid?
+3. Check: Is targetingKey provided in context?
+</diagnosis>
+<solution>
+- Call setProvider() before getting client
+- Verify server SDK key (starts with dvc_server_)
+- Always include targetingKey in EvaluationContext
+</solution>
+</error>
 
-1. **"Provider not initialized" error:**
-   - Ensure OpenFeatureAPI::setProvider() is called
-   - Check that DevCycle client initializes successfully
-   - Verify your SDK key is correct (server SDK key)
-
-2. **Composer installation errors:**
-   - Run `composer update` to update dependencies
-   - Check PHP version compatibility (7.4+)
-   - Clear Composer cache: `composer clear-cache`
-
-3. **Feature flags returning default values only:**
-   - Confirm the provider is initialized before use
-   - Check that evaluation context has targetingKey
-   - Verify feature flags are configured in DevCycle dashboard
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall settings allow HTTPS
+<error type="composer_errors">
+<symptom>Composer installation failures</symptom>
+<diagnosis>
+1. Check: Is PHP version 7.4+?
+2. Check: Is Composer up to date?
+3. Check: Are there package conflicts?
+</diagnosis>
+<solution>
+- Check PHP version: php -v
+- Update Composer: composer self-update
+- Clear cache: composer clear-cache
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
+<next_steps>
+Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
 
-1. Create feature flags via the DevCycle MCP
-2. Implement evaluation context strategies
-3. Set up proper error handling and logging
-4. Configure targeting rules in DevCycle dashboard
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flag usage in routes and controllers
+3. Set up proper error handling for feature flag evaluations
+4. Help configure targeting rules in DevCycle dashboard when asked
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [OpenFeature PHP SDK](https://github.com/open-feature/php-sdk)
-- [DevCycle PHP SDK](https://docs.devcycle.com/sdk/server-side-sdks/php/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [OpenFeature PHP SDK](https://openfeature.dev/docs/reference/technologies/server/php/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the OpenFeature community for help
+- [OpenFeature Specification](https://openfeature.dev/specification/)

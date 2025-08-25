@@ -1,31 +1,83 @@
 # DevCycle NestJS SDK Installation Prompt
 
-You are helping to install and configure the DevCycle SDK in a NestJS server application. Follow this complete guide to successfully integrate DevCycle feature flags. Do not install any Variables as part of this process, the user can ask for you to do that later.
+<role>
+You are an expert DevCycle integration specialist helping a developer install the DevCycle Node.js SDK in a NestJS application. 
+Your approach should be:
+- Methodical: Follow each step in sequence
+- Diagnostic: Detect the NestJS version and configuration before proceeding
+- Adaptive: Utilize NestJS dependency injection patterns
+- Conservative: Do not create feature flags unless explicitly requested by the user
+</role>
 
-**Do not use the SDK for:**
+<context>
+You are helping to install and configure the DevCycle Node.js SDK specifically for a NestJS server application using proper NestJS patterns.
+</context>
 
-- Plain Node.js applications (use `@devcycle/nodejs-server-sdk` instead)
-- Client-side applications (use appropriate client SDKs instead)
-- Express applications without NestJS (use Node.js SDK instead)
+<task_overview>
+Follow this complete guide to successfully integrate DevCycle feature flags using NestJS best practices.
+**Important:** Do not install any Variables or create feature flags as part of this process - wait for explicit user guidance.
+</task_overview>
 
-If you detect that the user is trying to have you install the NestJS approach in an application where it will not work, please stop what you are doing and advise the user which SDK they should be using.
+<restrictions>
+**Do not use this setup for:**
+- Client-side Angular applications (use Angular SDK instead)
+- Regular Express applications (follow Node.js SDK guide instead)
+- React/Vue frontend (use appropriate client SDKs)
 
+If you detect an incompatible application, stop immediately and advise on the correct approach.
+</restrictions>
+
+<prerequisites>
 ## Required Information
 
-Before proceeding, use your own analysis, the DevCycle MCP or web search to ensure you have:
+Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] NestJS 8+ installed
-- [ ] Node.js 14+ installed
-- [ ] npm, yarn, or pnpm package manager
-- [ ] The most recent DevCycle Node.js SDK version to install
+- [ ] Node.js 14+ and npm/yarn
+- [ ] The most recent DevCycle Node.js SDK version available
 
-**Security Note:** Use a SERVER SDK key for NestJS backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration service.
+**Security Note:** Use a SERVER SDK key for NestJS backend applications. Never expose server keys to client-side code. Store keys securely in environment variables.
+</prerequisites>
+
+## SDK Key Configuration
+
+<decision_tree>
+
+### Setting Up Your SDK Key
+
+1. **First, check if you can create/modify environment files:**
+
+   - Try: Create `.env` file in project root
+   - If successful → Continue to step 2
+   - If blocked → Go to step 3 (fallback options)
+
+2. **If environment file creation succeeds:**
+   <success_path>
+
+   ```bash
+   # .env
+   DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
+   ```
+
+   - Verify the file is in .gitignore
+   - Ensure NestJS ConfigModule can read the variable
+   - Test that `process.env.DEVCYCLE_SERVER_SDK_KEY` is accessible
+     </success_path>
+
+3. **If environment file creation fails:**
+   <fallback_path>
+   **Temporary hardcoding for testing**
+   - Add the SDK key directly in code with clear TODO comments
+   - This is suitable for local testing only
+   - Provide the user guidance that they MUST replace this before committing or deploying
+     </fallback_path>
+     </decision_tree>
 
 ## Installation Steps
 
-### 1. Install the DevCycle Node.js SDK
+### Step 1: Install DevCycle Node.js SDK
 
 ```bash
 # Using npm
@@ -38,319 +90,224 @@ yarn add @devcycle/nodejs-server-sdk
 pnpm add @devcycle/nodejs-server-sdk
 ```
 
-### 2. Create DevCycle Module
+<verification_checkpoint>
+**Verify before continuing:**
 
-Create a DevCycle module (`src/devcycle/devcycle.module.ts`):
+- [ ] Package installed successfully (check package.json)
+- [ ] No peer dependency warnings
+- [ ] Node modules updated
+      </verification_checkpoint>
+
+### Step 2: Create DevCycle Service
+
+Create a DevCycle service using NestJS patterns:
 
 ```typescript
-import { Module, Global } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { DevCycleService } from './devcycle.service';
+// src/devcycle/devcycle.service.ts
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { initializeDevCycle } from "@devcycle/nodejs-server-sdk";
+
+@Injectable()
+export class DevCycleService {
+  private readonly logger = new Logger(DevCycleService.name);
+  private dvcClient: any;
+
+  constructor(private configService: ConfigService) {
+    this.initializeClient();
+  }
+
+  private initializeClient() {
+    const sdkKey = this.configService.get<string>("DEVCYCLE_SERVER_SDK_KEY");
+
+    if (!sdkKey) {
+      throw new Error("DevCycle SDK key is not configured");
+    }
+
+    this.dvcClient = initializeDevCycle(sdkKey);
+    this.logger.log("DevCycle client initialized successfully");
+  }
+
+  // Example methods (for reference only - do not implement yet)
+  // async getVariable(user: any, key: string, defaultValue: any) {
+  //   return this.dvcClient.variable(user, key, defaultValue);
+  // }
+}
+```
+
+### Step 3: Create DevCycle Module
+
+```typescript
+// src/devcycle/devcycle.module.ts
+import { Module, Global } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { DevCycleService } from "./devcycle.service";
 
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [
-    {
-      provide: DevCycleService,
-      useFactory: async (configService: ConfigService) => {
-        const service = new DevCycleService(configService);
-        await service.initialize();
-        return service;
-      },
-      inject: [ConfigService],
-    },
-  ],
+  providers: [DevCycleService],
   exports: [DevCycleService],
 })
 export class DevCycleModule {}
 ```
 
-### 3. Create DevCycle Service
-
-Create the service (`src/devcycle/devcycle.service.ts`):
+### Step 4: Import in App Module
 
 ```typescript
-import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { initializeDevCycle, DevCycleClient, DevCycleUser } from '@devcycle/nodejs-server-sdk';
-
-@Injectable()
-export class DevCycleService implements OnModuleDestroy {
-  private client: DevCycleClient;
-  private readonly logger = new Logger(DevCycleService.name);
-
-  constructor(private configService: ConfigService) {}
-
-  async initialize(): Promise<void> {
-    const sdkKey = this.configService.get<string>('DEVCYCLE_SERVER_SDK_KEY');
-    
-    if (!sdkKey) {
-      throw new Error('DevCycle SDK key is not configured');
-    }
-
-    try {
-      this.client = await initializeDevCycle(sdkKey).onClientInitialized();
-      this.logger.log('DevCycle initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize DevCycle', error);
-      throw error;
-    }
-  }
-
-  async onModuleDestroy() {
-    if (this.client) {
-      await this.client.close();
-      this.logger.log('DevCycle client closed');
-    }
-  }
-
-  async getVariableValue<T>(
-    user: DevCycleUser,
-    key: string,
-    defaultValue: T,
-  ): Promise<T> {
-    if (!this.client) {
-      this.logger.warn('DevCycle client not initialized, returning default value');
-      return defaultValue;
-    }
-
-    try {
-      return await this.client.variableValue(user, key, defaultValue);
-    } catch (error) {
-      this.logger.error(`Error getting variable ${key}:`, error);
-      return defaultValue;
-    }
-  }
-
-  async getAllVariables(user: DevCycleUser): Promise<Record<string, any>> {
-    if (!this.client) {
-      return {};
-    }
-
-    try {
-      return await this.client.allVariables(user);
-    } catch (error) {
-      this.logger.error('Error getting all variables:', error);
-      return {};
-    }
-  }
-}
-```
-
-### 4. Register DevCycle Module in App Module
-
-Update your `src/app.module.ts`:
-
-```typescript
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { DevCycleModule } from './devcycle/devcycle.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+// src/app.module.ts
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { DevCycleModule } from "./devcycle/devcycle.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: ".env",
     }),
     DevCycleModule,
+    // ... other modules
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
 ```
 
-### 5. Using DevCycle in Controllers and Services
+<verification_checkpoint>
+**Verify before continuing:**
 
-Example controller:
+- [ ] DevCycle service is created
+- [ ] Module is properly configured
+- [ ] App module imports DevCycle module
+- [ ] Application compiles without errors
+      </verification_checkpoint>
 
-```typescript
-import { Controller, Get, Headers } from '@nestjs/common';
-import { DevCycleService } from './devcycle/devcycle.service';
-import { DevCycleUser } from '@devcycle/nodejs-server-sdk';
-
-@Controller('features')
-export class FeaturesController {
-  constructor(private readonly devCycleService: DevCycleService) {}
-
-  @Get('check')
-  async checkFeature(
-    @Headers('x-user-id') userId: string = 'anonymous',
-    @Headers('x-user-email') email?: string,
-  ) {
-    const user: DevCycleUser = {
-      user_id: userId,
-      email,
-      customData: {
-        plan: 'premium',
-        role: 'admin',
-      },
-    };
-
-    const featureEnabled = await this.devCycleService.getVariableValue(
-      user,
-      'new-feature',
-      false,
-    );
-
-    return {
-      featureEnabled,
-      userId,
-    };
-  }
-
-  @Get('all')
-  async getAllFeatures(@Headers('x-user-id') userId: string = 'anonymous') {
-    const user: DevCycleUser = {
-      user_id: userId,
-    };
-
-    const variables = await this.devCycleService.getAllVariables(user);
-
-    return {
-      variables,
-      userId,
-    };
-  }
-}
-```
-
-Example service using DevCycle:
-
-```typescript
-import { Injectable } from '@nestjs/common';
-import { DevCycleService } from './devcycle/devcycle.service';
-import { DevCycleUser } from '@devcycle/nodejs-server-sdk';
-
-@Injectable()
-export class FeatureService {
-  constructor(private readonly devCycleService: DevCycleService) {}
-
-  async isFeatureEnabledForUser(
-    userId: string,
-    featureKey: string,
-  ): Promise<boolean> {
-    const user: DevCycleUser = {
-      user_id: userId,
-      customData: {
-        registrationDate: new Date().toISOString(),
-      },
-    };
-
-    return this.devCycleService.getVariableValue(user, featureKey, false);
-  }
-
-  async getUserFeatures(userId: string, email?: string): Promise<any> {
-    const user: DevCycleUser = {
-      user_id: userId,
-      email,
-    };
-
-    return this.devCycleService.getAllVariables(user);
-  }
-}
-```
-
-### 6. Environment Configuration
-
-Create a `.env` file for your environment variables:
+### Step 5: Test Your Application
 
 ```bash
-# .env
-DEVCYCLE_SERVER_SDK_KEY=your_server_sdk_key_here
-NODE_ENV=development
-PORT=3000
+# Start your NestJS application
+npm run start:dev
+# or
+yarn start:dev
 ```
 
-### 7. Optional: Create a Decorator for Feature Flags
+<verification_checkpoint>
+**Verify before continuing:**
 
-Create a custom decorator (`src/devcycle/feature-flag.decorator.ts`):
+- [ ] Application starts successfully
+- [ ] No DevCycle-related errors
+- [ ] Console shows successful initialization
+- [ ] NestJS server runs normally
+      </verification_checkpoint>
 
-```typescript
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+## 🎉 Installation Complete!
 
-export const FeatureFlag = createParamDecorator(
-  async (featureKey: string, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const devCycleService = request.app.get(DevCycleService);
-    
-    const userId = request.user?.id || 'anonymous';
-    const user = {
-      user_id: userId,
-      email: request.user?.email,
-    };
-    
-    return devCycleService.getVariableValue(user, featureKey, false);
-  },
-);
-```
+**STOP HERE** - The DevCycle NestJS installation is now complete.
 
-Use in controller:
+**DO NOT CREATE:**
 
-```typescript
-@Get('premium')
-async getPremiumContent(@FeatureFlag('premium-features') isPremium: boolean) {
-  if (isPremium) {
-    return { content: 'Premium content' };
-  }
-  return { content: 'Standard content' };
-}
-```
+- Example controller methods using feature flags
+- Sample guard implementations
+- Demo feature flag code
+- Any decorators like `@FeatureFlag` or similar
 
-After installation, run your NestJS application and verify everything works with no errors.
+**Available service methods for future reference only:**
 
+- `dvcClient.variable(user, key, defaultValue)`
+- `dvcClient.variableValue(user, key, defaultValue)`
+- `dvcClient.allVariables(user)`
+
+**Wait for explicit user instruction** before implementing any feature flag usage.
+
+<success_criteria>
+
+## Installation Success Criteria
+
+Installation is complete when ALL of the following are true:
+
+- ✅ SDK package is installed in package.json
+- ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
+- ✅ DevCycle service is created with proper dependency injection
+- ✅ DevCycle module is imported globally
+- ✅ Application starts and runs without errors
+- ✅ Console shows successful initialization
+- ✅ User has been informed about next steps (no flags created yet)
+  </success_criteria>
+
+<examples>
+## Common Installation Scenarios
+
+<example scenario="nestjs_typescript">
+**Scenario:** NestJS TypeScript project, npm, full file access
+**Actions taken:**
+1. ✅ Created .env with server SDK key
+2. ✅ Installed DevCycle Node.js SDK
+3. ✅ Created DevCycleService with dependency injection
+4. ✅ Configured global module
+5. ✅ NestJS app starts successfully
+**Result:** Installation successful
+</example>
+
+<example scenario="nestjs_microservices">
+**Scenario:** NestJS microservices architecture, yarn
+**Actions taken:**
+1. ✅ Created .env with SDK key
+2. ✅ Installed SDK with yarn
+3. ✅ Added DevCycle as global module
+4. ✅ Microservices start successfully
+**Result:** Installation successful with microservices
+</example>
+</examples>
+
+<troubleshooting>
 ## Troubleshooting
 
-**Common Issues:**
+<error type="service_not_initialized">
+<symptom>"DevCycle service not initialized" or injection fails</symptom>
+<diagnosis>
+1. Check: Is DevCycleService properly injectable?
+2. Check: Is the SDK key valid?
+3. Check: Is ConfigModule configured correctly?
+</diagnosis>
+<solution>
+- Verify @Injectable() decorator on service
+- Verify server SDK key (starts with dvc_server_)
+- Ensure ConfigModule.forRoot() is called with proper config
+</solution>
+</error>
 
-1. **"DevCycle client not initialized" error:**
-   - Ensure DevCycleModule is imported in AppModule
-   - Check that your SDK key is correctly set (server SDK key)
-   - Verify the async factory completes initialization
-
-2. **Dependency injection errors:**
-   - Ensure DevCycleModule is marked as @Global() if used across modules
-   - Check that ConfigModule is properly configured
-   - Verify service is properly exported from the module
-
-3. **Environment variable not found:**
-   - Ensure `.env` file is in the project root
-   - Check that ConfigModule is configured with correct env file path
-   - Verify the SDK key environment variable name matches
-
-4. **Connection/Network errors:**
-   - Check network connectivity
-   - Verify the server SDK key is valid and active
-   - Ensure firewall/proxy settings allow outbound HTTPS
+<error type="module_import_errors">
+<symptom>Module import errors or dependency resolution fails</symptom>
+<diagnosis>
+1. Check: Is DevCycleModule exported correctly?
+2. Check: Is ConfigModule imported?
+3. Check: Are circular dependencies present?
+</diagnosis>
+<solution>
+- Ensure DevCycleModule is @Global() and exports DevCycleService
+- Import ConfigModule in DevCycleModule
+- Check for circular imports between modules
+</solution>
+</error>
+</troubleshooting>
 
 ## Next Steps
 
-Suggest these as next steps to the user.
-
+<next_steps>
 After successful installation:
 
-1. Set up user identification logic for your application
-2. Create your first feature flag via the DevCycle MCP and use it in your services
-3. Implement guards for feature-based route protection
-4. Set up targeting rules for different user segments
+1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
+2. When requested, help implement feature flags using NestJS dependency injection
+3. Set up targeting rules for different user segments when asked
+4. Help with user identification logic when needed
+
+Remember: The user will guide you on when and what feature flags to create. Do not create them proactively.
+</next_steps>
 
 ## Helpful Resources
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
 - [Node.js SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/node/)
-- [NestJS Documentation](https://nestjs.com/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [Feature Flag Best Practices](https://docs.devcycle.com/best-practices/)
-
-## Support
-
-If you encounter issues:
-
-1. Check the official documentation
-2. Review the troubleshooting section above
-3. Contact DevCycle support through the dashboard
-4. Check the GitHub repository for known issues
+- [Node.js SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)
