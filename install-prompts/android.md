@@ -88,8 +88,19 @@ Add to your `app/build.gradle`:
 
 ```gradle
 dependencies {
-    implementation 'com.devcycle:android-client-sdk:+'
+    implementation 'com.devcycle:android-client-sdk:2.6.0+'
 }
+```
+
+Or using Maven:
+
+```xml
+<dependency>
+    <groupId>com.devcycle</groupId>
+    <artifactId>android-client-sdk</artifactId>
+    <version>2.6.0+</version>
+    <scope>compile</scope>
+</dependency>
 ```
 
 <verification_checkpoint>
@@ -106,26 +117,27 @@ Create or update your Application class or MainActivity:
 
 ```kotlin
 // Kotlin
-import com.devcycle.sdk.android.DVCClient
-import com.devcycle.sdk.android.model.DVCUser
+import com.devcycle.sdk.android.DevCycleClient
+import com.devcycle.sdk.android.model.DevCycleUser
 
 class MyApplication : Application() {
     companion object {
-        lateinit var dvcClient: DVCClient
+        lateinit var devcycleClient: DevCycleClient
     }
 
     override fun onCreate() {
         super.onCreate()
 
-        val user = DVCUser.builder()
-            .userId("default-user") // Replace with actual user ID when available
-            .email("user@example.com") // Optional
+        val user = DevCycleUser.builder()
+            .withUserId("default-user") // Replace with actual user ID when available
+            .withEmail("[email protected]") // Optional
             .build()
 
-        dvcClient = DVCClient.builder()
-            .sdkKey(BuildConfig.DEVCYCLE_MOBILE_SDK_KEY) // Use build config variable
-            .user(user)
-            .build(this)
+        devcycleClient = DevCycleClient.builder()
+            .withContext(applicationContext)
+            .withUser(user)
+            .withSDKKey(BuildConfig.DEVCYCLE_MOBILE_SDK_KEY) // Use build config variable
+            .build()
     }
 }
 ```
@@ -169,9 +181,9 @@ class MyApplication : Application() {
 
 **Available methods for future reference only:**
 
-- `dvcClient.variableValue(key, defaultValue)`
-- `dvcClient.variable(key, defaultValue)`
-- `dvcClient.allVariables()`
+- `devcycleClient.variableValue(key, defaultValue)`
+- `devcycleClient.variable(key, defaultValue)`
+- `devcycleClient.allVariables()`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -219,7 +231,7 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is DVCClient.builder() called correctly?
+1. Check: Is DevCycleClient.builder() called correctly?
 2. Check: Is the SDK key valid?
 3. Check: Does the user object have required fields?
 </diagnosis>
@@ -239,6 +251,7 @@ Installation is complete when ALL of the following are true:
 </diagnosis>
 <solution>
 - Use latest version: com.devcycle:android-client-sdk:+
+ - Use version: com.devcycle:android-client-sdk:2.6.0+
 - Resolve conflicts in build.gradle
 - Clean and rebuild: ./gradlew clean build
 </solution>

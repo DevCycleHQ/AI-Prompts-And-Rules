@@ -34,7 +34,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
-- [ ] Android project with minimum API level 21 (Android 5.0)
+- [ ] Android project with minimum API level 23 (Android 6.0)
 - [ ] Kotlin or Java project
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
@@ -88,15 +88,32 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Add OpenFeature SDK and DevCycle Provider Dependencies
+### Step 1: Add DevCycle Android SDK and OpenFeature SDK Dependencies
 
-In your `app/build.gradle`:
+The DevCycle OpenFeature Provider is included in the main Android SDK. To add it to your project, update your `app/build.gradle`:
 
 ```gradle
 dependencies {
-    implementation 'dev.openfeature:android-sdk:0.2.2'
-    implementation 'com.devcycle:openfeature-android-provider:1.0.0'
+    implementation 'com.devcycle:android-client-sdk:2.6.0+'
+    implementation 'dev.openfeature:android-sdk:0.4.1+'
 }
+```
+
+Or using Maven:
+
+```xml
+<dependency>
+    <groupId>com.devcycle</groupId>
+    <artifactId>android-client-sdk</artifactId>
+    <version>2.6.0+</version>
+    <scope>compile</scope>
+    </dependency>
+<dependency>
+    <groupId>dev.openfeature</groupId>
+    <artifactId>android-sdk</artifactId>
+    <version>0.4.1+</version>
+    <scope>compile</scope>
+</dependency>
 ```
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
@@ -105,7 +122,7 @@ In your Application class or main Activity:
 
 ```kotlin
 import dev.openfeature.sdk.OpenFeatureAPI
-import com.devcycle.openfeature.DevCycleProvider
+import com.devcycle.sdk.android.openfeature.DevCycleProvider
 import dev.openfeature.sdk.EvaluationContext
 
 class MyApplication : Application() {
@@ -132,8 +149,8 @@ class MyApplication : Application() {
             .add("anonymous", false)
             .build()
 
-        OpenFeatureAPI.getInstance().setEvaluationContext(context)
-        OpenFeatureAPI.getInstance().setProviderAndWait(provider)
+        OpenFeatureAPI.setEvaluationContext(context)
+        OpenFeatureAPI.setProviderAndWait(provider)
 
         println("OpenFeature with DevCycle initialized successfully")
     }
@@ -146,7 +163,7 @@ class MyApplication : Application() {
 import dev.openfeature.sdk.OpenFeatureAPI
 
 class MainActivity : AppCompatActivity() {
-    private val client = OpenFeatureAPI.getInstance().client
+    private val client = OpenFeatureAPI.getClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -233,7 +250,7 @@ Installation is complete when ALL of the following are true:
 <error type="build_errors">
 <symptom>Gradle build failures or dependency issues</symptom>
 <diagnosis>
-1. Check: Is minSdkVersion 21+?
+1. Check: Is minSdkVersion 23+?
 2. Check: Are dependency versions compatible?
 3. Check: Is repository accessible?
 </diagnosis>

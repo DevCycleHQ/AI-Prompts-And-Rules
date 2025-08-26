@@ -35,9 +35,9 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
-- [ ] Flutter 2.0+ installed
-- [ ] Dart 2.12+ installed
-- [ ] iOS 11+ and/or Android API 21+ target platforms
+- [ ] Flutter 2.5.0+ installed
+- [ ] Dart 2.14.0+ installed
+- [ ] iOS 13.7+ and/or Android API 23+ target platforms
 - [ ] The most recent DevCycle Flutter SDK version available
 
 **Security Note:** Use a MOBILE SDK key for Flutter apps, not a client or server SDK key. Store it securely and avoid committing it to version control.
@@ -96,13 +96,19 @@ Add to your `pubspec.yaml`:
 dependencies:
   flutter:
     sdk: flutter
-  devcycle_flutter_client_sdk: ^2.1.0
+  devcycle_flutter_client_sdk: ^1.11.2
 ```
 
 Then run:
 
 ```bash
 flutter pub get
+```
+
+Alternatively, you can run:
+
+```bash
+flutter pub add devcycle_flutter_client_sdk
 ```
 
 <verification_checkpoint>
@@ -121,35 +127,38 @@ Create or update your main app widget:
 import 'package:flutter/material.dart';
 import 'package:devcycle_flutter_client_sdk/devcycle_flutter_client_sdk.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize DevCycle
-  final user = DVCUserBuilder()
-      .userId('default-user') // Replace with actual user ID when available
-      .email('user@example.com') // Optional
-      .build();
-
-  final client = DVCClientBuilder()
-      .sdkKey('your_mobile_sdk_key_here') // Use configuration
-      .user(user)
-      .build();
-
-  await client.initialize();
-
-  runApp(MyApp(client: client));
+void main() {
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  final DVCClient client;
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
-  const MyApp({Key? key, required this.client}) : super(key: key);
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  static final user = DevCycleUserBuilder().isAnonymous(true).build();
+  static final options = DevCycleOptionsBuilder().logLevel(LogLevel.error).build();
+
+  final _devcycleClient = DevCycleClientBuilder()
+      .sdkKey('<DEVCYCLE_MOBILE_SDK_KEY>')
+      .user(user)
+      .options(options)
+      .build()
+      .onInitialized((error) {});
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Your App',
-      home: MyHomePage(),
+      home: Placeholder(),
     );
   }
 }
@@ -199,9 +208,10 @@ flutter run -d web
 
 **Available methods for future reference only:**
 
-- `client.variableValue(key, defaultValue)`
-- `client.variable(key, defaultValue)`
-- `client.allVariables()`
+- `client.variableValue(key: "bool_key", defaultValue: false)`
+- `await client.variable('my-variable', 'Default Value')`
+- `await client.allVariables()`
+- `await client.allFeatures()`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -249,13 +259,13 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is DVCClient initialized correctly?
+1. Check: Is DevCycleClient built correctly?
 2. Check: Is the SDK key valid?
 3. Check: Does the user object have required fields?
 </diagnosis>
 <solution>
 - Verify mobile SDK key (starts with dvc_mobile_)
-- Ensure client.initialize() is awaited
+- Use the onInitialized callback to determine when features have loaded
 - User must have userId or be marked as anonymous
 </solution>
 </error>
@@ -269,7 +279,7 @@ Installation is complete when ALL of the following are true:
 </diagnosis>
 <solution>
 - Run: flutter clean && flutter pub get
-- Check iOS 11+ and Android API 21+ requirements
+- Check iOS 13.7+ and Android API 23+ requirements
 - Verify platform-specific configurations
 </solution>
 </error>

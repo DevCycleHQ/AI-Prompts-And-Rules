@@ -87,15 +87,18 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ### Step 1: Install DevCycle .NET SDK Package
 
+Preferred: Local Bucketing
+
 ```bash
-# Using Package Manager Console
-Install-Package DevCycle.SDK.Server.Dotnet
+# Using .NET CLI (Local Bucketing - preferred)
+dotnet add package DevCycle.SDK.Server.Local
 
-# Using .NET CLI
-dotnet add package DevCycle.SDK.Server.Dotnet
+# Optional alternative: Cloud Bucketing
+# dotnet add package DevCycle.SDK.Server.Cloud
 
-# Using PackageReference in .csproj
-<PackageReference Include="DevCycle.SDK.Server.Dotnet" Version="1.10.0" />
+# Using PackageReference in .csproj (pick ONE)
+<PackageReference Include="DevCycle.SDK.Server.Local" />
+<!-- Optional: <PackageReference Include="DevCycle.SDK.Server.Cloud" /> -->
 ```
 
 <verification_checkpoint>
@@ -111,22 +114,26 @@ dotnet add package DevCycle.SDK.Server.Dotnet
 Create or update your application startup:
 
 ```csharp
-using DevCycle.SDK.Server.Cloud.Api;
+using DevCycle.SDK.Server.Local.Api;
 using DevCycle.SDK.Server.Common.Model;
+using Microsoft.Extensions.Logging;
 
 public class Program
 {
-    private static DevCycleCloudClient dvcClient;
+    private static DevCycleLocalClient dvcClient;
 
     public static async Task Main(string[] args)
     {
         // Initialize DevCycle
         var sdkKey = Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY");
-        dvcClient = new DevCycleCloudClient(sdkKey);
+        dvcClient = new DevCycleLocalClientBuilder()
+            .SetSDKKey(sdkKey)
+            .SetOptions(new DevCycleLocalOptions())
+            .Build();
 
         // Example usage (for reference only - do not implement yet)
-        // var user = DevCycleUser.Builder().UserId("user123").Build();
-        // var variable = await dvcClient.Variable(user, "feature-key", false);
+        // var user = new DevCycleUser("user123");
+        // bool enabled = await dvcClient.VariableValue(user, "your-variable-key", false);
     }
 }
 ```
@@ -242,7 +249,7 @@ Installation is complete when ALL of the following are true:
 3. Check: Is .NET SDK up to date?
 </diagnosis>
 <solution>
-- Use latest version: DevCycle.SDK.Server.Dotnet
+- Use latest version: DevCycle.SDK.Server.Local or DevCycle.SDK.Server.Cloud
 - Resolve conflicts in .csproj file
 - Clean and rebuild: dotnet clean && dotnet build
 </solution>
