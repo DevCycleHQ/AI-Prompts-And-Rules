@@ -35,7 +35,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] Node.js 12+ installed
+- [ ] Node.js 14+ installed
 - [ ] npm, yarn, or pnpm package manager available
 - [ ] The most recent DevCycle Node.js SDK version available
 
@@ -104,16 +104,34 @@ pnpm add @devcycle/nodejs-server-sdk
 Create or update your main application file:
 
 ```javascript
-const { initializeDevCycle } = require("@devcycle/nodejs-server-sdk");
+// JavaScript (CommonJS)
+const DevCycle = require('@devcycle/nodejs-server-sdk')
 
-// Initialize DevCycle
-const dvcClient = initializeDevCycle(
-  process.env.DEVCYCLE_SERVER_SDK_KEY // Use environment variable
-);
+async function initDevCycle() {
+  const dvcClient = await DevCycle
+    .initializeDevCycle(process.env.DEVCYCLE_SERVER_SDK_KEY)
+    .onClientInitialized()
+  return dvcClient
+}
+
+initDevCycle().catch(console.error)
 
 // Example usage (for reference only - do not implement yet)
-// const user = { user_id: "user123" };
-// const variable = dvcClient.variable(user, "feature-key", false);
+// const user = { user_id: 'user123' }
+// const value = dvcClient.variableValue(user, 'feature-key', false)
+```
+
+```typescript
+// TypeScript / ESM
+import { initializeDevCycle } from '@devcycle/nodejs-server-sdk'
+
+const dvcClient = await initializeDevCycle(
+  process.env.DEVCYCLE_SERVER_SDK_KEY,
+).onClientInitialized()
+
+// Example usage (for reference only - do not implement yet)
+// const user = { user_id: 'user123' }
+// const value = dvcClient.variableValue(user, 'feature-key', false)
 ```
 
 <verification_checkpoint>
@@ -249,6 +267,8 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
-- [Node.js SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/node/)
+- [Node.js SDK Getting Started](https://docs.devcycle.com/sdk/server-side-sdks/node/node-gettingstarted/)
+- [Node.js SDK Usage](https://docs.devcycle.com/sdk/server-side-sdks/node/node-usage/)
+- [Node.js SDK Typescript](https://docs.devcycle.com/sdk/server-side-sdks/node/node-typescript/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Node.js SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)
