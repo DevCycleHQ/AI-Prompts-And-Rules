@@ -91,7 +91,7 @@ pnpm add @openfeature/web-sdk @devcycle/openfeature-web-provider
 
 ```javascript
 import { OpenFeature } from "@openfeature/web-sdk";
-import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
+import DevCycleProvider from "@devcycle/openfeature-web-provider";
 
 async function initializeFeatureFlags() {
   // Create the DevCycle provider

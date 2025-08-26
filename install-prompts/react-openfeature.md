@@ -103,7 +103,7 @@ Create an initialization module (e.g., `openfeature-setup.js`):
 ```javascript
 import React from "react";
 import { OpenFeatureProvider, OpenFeature } from "@openfeature/react-sdk";
-import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
+import DevCycleProvider from "@devcycle/openfeature-web-provider";
 
 // Initialize OpenFeature with DevCycle
 async function setupOpenFeature() {
@@ -141,7 +141,7 @@ Update your main App component:
 ```javascript
 import React, { useEffect, useState } from "react";
 import { OpenFeatureProvider, OpenFeature } from "@openfeature/react-sdk";
-import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
+import DevCycleProvider from "@devcycle/openfeature-web-provider";
 
 function App() {
   const [isReady, setIsReady] = useState(false);

@@ -109,7 +109,7 @@ Create or update your `app.module.ts`:
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { OpenFeature } from "@openfeature/web-sdk";
-import { DevCycleProvider } from "@devcycle/openfeature-web-provider";
+import DevCycleProvider from "@devcycle/openfeature-web-provider";
 import { environment } from "../environments/environment";
 
 import { AppComponent } from "./app.component";
