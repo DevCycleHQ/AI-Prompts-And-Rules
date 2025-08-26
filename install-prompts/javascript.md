@@ -93,7 +93,10 @@ yarn add @devcycle/js-client-sdk
 **For CDN (plain HTML):**
 
 ```html
-<script src="https://unpkg.com/@devcycle/js-client-sdk"></script>
+<script
+  src="https://js.devcycle.com/devcycle.min.js"
+  type="text/javascript"
+></script>
 ```
 
 <verification_checkpoint>

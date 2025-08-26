@@ -1,7 +1,7 @@
 # DevCycle NestJS SDK Installation Prompt
 
 <role>
-You are an expert DevCycle integration specialist helping a developer install the DevCycle Node.js SDK in a NestJS application. 
+You are an expert DevCycle integration specialist helping a developer install the DevCycle NestJS SDK in a NestJS application. 
 Your approach should be:
 - Methodical: Follow each step in sequence
 - Diagnostic: Detect the NestJS version and configuration before proceeding
@@ -10,7 +10,7 @@ Your approach should be:
 </role>
 
 <context>
-You are helping to install and configure the DevCycle Node.js SDK specifically for a NestJS server application using proper NestJS patterns.
+You are helping to install and configure the DevCycle NestJS SDK specifically for a NestJS server application using proper NestJS patterns.
 </context>
 
 <task_overview>
@@ -36,7 +36,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
 - [ ] NestJS 8+ installed
 - [ ] Node.js 14+ and npm/yarn
-- [ ] The most recent DevCycle Node.js SDK version available
+- [ ] The most recent DevCycle NestJS SDK version available
 
 **Security Note:** Use a SERVER SDK key for NestJS backend applications. Never expose server keys to client-side code. Store keys securely in environment variables.
 </prerequisites>
@@ -77,17 +77,17 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Install DevCycle Node.js SDK
+### Step 1: Install DevCycle NestJS SDK
 
 ```bash
 # Using npm
-npm install --save @devcycle/nodejs-server-sdk
+npm install --save @devcycle/nestjs-server-sdk
 
 # Using yarn
-yarn add @devcycle/nodejs-server-sdk
+yarn add @devcycle/nestjs-server-sdk
 
 # Using pnpm
-pnpm add @devcycle/nodejs-server-sdk
+pnpm add @devcycle/nestjs-server-sdk
 ```
 
 <verification_checkpoint>
@@ -98,67 +98,17 @@ pnpm add @devcycle/nodejs-server-sdk
 - [ ] Node modules updated
       </verification_checkpoint>
 
-### Step 2: Create DevCycle Service
+### Step 2: Register DevCycleModule in App Module
 
-Create a DevCycle service using NestJS patterns:
+Use the NestJS SDK `DevCycleModule` from `@devcycle/nestjs-server-sdk`.
 
-```typescript
-// src/devcycle/devcycle.service.ts
-import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { initializeDevCycle } from "@devcycle/nodejs-server-sdk";
-
-@Injectable()
-export class DevCycleService {
-  private readonly logger = new Logger(DevCycleService.name);
-  private dvcClient: any;
-
-  constructor(private configService: ConfigService) {
-    this.initializeClient();
-  }
-
-  private initializeClient() {
-    const sdkKey = this.configService.get<string>("DEVCYCLE_SERVER_SDK_KEY");
-
-    if (!sdkKey) {
-      throw new Error("DevCycle SDK key is not configured");
-    }
-
-    this.dvcClient = initializeDevCycle(sdkKey);
-    this.logger.log("DevCycle client initialized successfully");
-  }
-
-  // Example methods (for reference only - do not implement yet)
-  // async getVariable(user: any, key: string, defaultValue: any) {
-  //   return this.dvcClient.variable(user, key, defaultValue);
-  // }
-}
-```
-
-### Step 3: Create DevCycle Module
-
-```typescript
-// src/devcycle/devcycle.module.ts
-import { Module, Global } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { DevCycleService } from "./devcycle.service";
-
-@Global()
-@Module({
-  imports: [ConfigModule],
-  providers: [DevCycleService],
-  exports: [DevCycleService],
-})
-export class DevCycleModule {}
-```
-
-### Step 4: Import in App Module
+Option A — forRoot with direct env read:
 
 ```typescript
 // src/app.module.ts
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { DevCycleModule } from "./devcycle/devcycle.module";
+import { DevCycleModule } from "@devcycle/nestjs-server-sdk";
 
 @Module({
   imports: [
@@ -166,8 +116,66 @@ import { DevCycleModule } from "./devcycle/devcycle.module";
       isGlobal: true,
       envFilePath: ".env",
     }),
-    DevCycleModule,
-    // ... other modules
+    DevCycleModule.forRoot({
+      key: process.env.DEVCYCLE_SERVER_SDK_KEY as string,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+Option B — forRootAsync with `ConfigService`:
+
+```typescript
+// src/app.module.ts
+import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { DevCycleModule } from "@devcycle/nestjs-server-sdk";
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ".env",
+    }),
+    DevCycleModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        key: config.get<string>("DEVCYCLE_SERVER_SDK_KEY"),
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Step 3: (Optional) Configure a userFactory
+
+To enable decorators and service methods to automatically evaluate variables for the current request user, provide a `userFactory`:
+
+```typescript
+// src/app.module.ts
+import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { DevCycleModule } from "@devcycle/nestjs-server-sdk";
+import { ExecutionContext } from "@nestjs/common";
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ".env" }),
+    DevCycleModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        key: config.get<string>("DEVCYCLE_SERVER_SDK_KEY"),
+        userFactory: (context: ExecutionContext) => {
+          const req = context.switchToHttp().getRequest();
+          return {
+            user_id: req?.user?.id ?? "anonymous",
+            email: req?.user?.email,
+          };
+        },
+      }),
+      inject: [ConfigService],
+    }),
   ],
 })
 export class AppModule {}
@@ -176,13 +184,12 @@ export class AppModule {}
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] DevCycle service is created
-- [ ] Module is properly configured
-- [ ] App module imports DevCycle module
+- [ ] `@devcycle/nestjs-server-sdk` is installed
+- [ ] App module imports `DevCycleModule`
 - [ ] Application compiles without errors
       </verification_checkpoint>
 
-### Step 5: Test Your Application
+### Step 4: Test Your Application
 
 ```bash
 # Start your NestJS application
@@ -196,7 +203,7 @@ yarn start:dev
 
 - [ ] Application starts successfully
 - [ ] No DevCycle-related errors
-- [ ] Console shows successful initialization
+- [ ] Logs indicate DevCycle initialized
 - [ ] NestJS server runs normally
       </verification_checkpoint>
 
@@ -227,10 +234,9 @@ Installation is complete when ALL of the following are true:
 
 - ✅ SDK package is installed in package.json
 - ✅ SDK key is configured (via env file OR temporary hardcode with TODO)
-- ✅ DevCycle service is created with proper dependency injection
-- ✅ DevCycle module is imported globally
+- ✅ DevCycle module is registered via `forRoot`/`forRootAsync`
 - ✅ Application starts and runs without errors
-- ✅ Console shows successful initialization
+- ✅ Logs show successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
   </success_criteria>
 
@@ -308,6 +314,8 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
-- [Node.js SDK Documentation](https://docs.devcycle.com/sdk/server-side-sdks/node/)
+- [NestJS SDK Getting Started](https://docs.devcycle.com/sdk/server-side-sdks/nestjs/nestjs-gettingstarted/)
+- [NestJS SDK Usage](https://docs.devcycle.com/sdk/server-side-sdks/nestjs/nestjs-usage/)
+- [NestJS SDK (Typescript)](https://docs.devcycle.com/sdk/server-side-sdks/nestjs/nestjs-typescript/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Node.js SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)

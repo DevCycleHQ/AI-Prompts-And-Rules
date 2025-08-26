@@ -34,12 +34,18 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] Java 8+ installed
-- [ ] Maven or Gradle build system (or manual JAR management)
+- [ ] Java 11+ installed
+- [ ] Maven or Gradle 7.6+ build system
 - [ ] The most recent DevCycle Java SDK version available
 
 **Security Note:** Use a SERVER SDK key for Java backend applications. Never expose server keys to client-side code. Store keys securely in environment variables or configuration files.
 </prerequisites>
+
+## Additional Requirements (Local Bucketing)
+
+- An x86_64 or aarch64 JDK is required for Local Bucketing
+- Supported platforms: Linux (ELF) x86_64/aarch64, Mac OS x86_64/aarch64, Windows x86_64
+- GLIBC v2.16+ required on Linux environments
 
 ## SDK Key Configuration
 
@@ -91,14 +97,15 @@ Before proceeding, verify using the DevCycle MCP that you have:
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>2.3.0</version>
+    <version>LATEST</version>
+    <scope>compile</scope>
 </dependency>
 ```
 
 **For Gradle (build.gradle):**
 
 ```gradle
-implementation 'com.devcycle:java-server-sdk:2.3.0'
+implementation "com.devcycle:java-server-sdk:+"
 ```
 
 <verification_checkpoint>
@@ -114,23 +121,27 @@ implementation 'com.devcycle:java-server-sdk:2.3.0'
 Create or update your main application class:
 
 ```java
-import com.devcycle.sdk.server.api.DVCClient;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 public class Application {
-    private static DVCClient dvcClient;
+    private static DevCycleLocalClient dvcClient;
 
     public static void main(String[] args) {
-        // Initialize DevCycle
+        // Initialize DevCycle (Local Bucketing)
         String sdkKey = System.getenv("DEVCYCLE_SERVER_SDK_KEY");
-        dvcClient = new DVCClient(sdkKey);
+        dvcClient = new DevCycleLocalClient(sdkKey);
+
+        // NOTE: use DevCycleCloudClient for Cloud Bucketing mode.
 
         // Example usage (for reference only - do not implement yet)
         // DevCycleUser user = DevCycleUser.builder().userId("user123").build();
-        // Variable<Boolean> variable = dvcClient.variable(user, "feature-key", false);
+        // Boolean enabled = dvcClient.variableValue(user, "feature-key", false);
     }
 }
 ```
+
+Default preference: Use DevCycleLocalClient (Local Bucketing). Use DevCycleCloudClient only if Cloud Bucketing is explicitly required.
 
 <verification_checkpoint>
 **Verify before continuing:**
@@ -161,7 +172,7 @@ java -jar your-app.jar
 - [ ] No DevCycle-related errors
 - [ ] Console shows successful initialization
 - [ ] Application runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -226,13 +237,13 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DVCClient not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is DVCClient constructor called correctly?
+1. Check: Is DevCycleLocalClient (or DevCycleCloudClient) constructor called correctly?
 2. Check: Is the SDK key valid?
 3. Check: Are there network connectivity issues?
 </diagnosis>
 <solution>
 - Verify server SDK key (starts with dvc_server_)
-- Ensure DVCClient is instantiated before using methods
+- Ensure the DevCycle client is instantiated before using methods
 - Check network connectivity to DevCycle services
 </solution>
 </error>
@@ -245,7 +256,7 @@ Installation is complete when ALL of the following are true:
 3. Check: Is build system up to date?
 </diagnosis>
 <solution>
-- Use latest version: com.devcycle:java-server-sdk:2.3.0
+- Use latest version: com.devcycle:java-server-sdk (Maven LATEST or Gradle +), or pin to the newest version from Maven Central
 - Resolve conflicts in pom.xml or build.gradle
 - Clean and rebuild: mvn clean compile or ./gradlew clean build
 </solution>

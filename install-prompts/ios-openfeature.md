@@ -34,7 +34,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
-- [ ] iOS 12.0+ / macOS 10.13+ / tvOS 12.0+ / watchOS 7.0+
+- [ ] iOS 14.0+ / macOS 11.0+ / tvOS 14.0+ / watchOS 7.0+
 - [ ] Xcode with Swift or Objective-C
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
@@ -85,51 +85,40 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ### Step 1: Add OpenFeature SDK and DevCycle Provider
 
-#### Swift Package Manager (Recommended)
+#### Swift Package Manager
 
 1. In Xcode, select File → Add Packages
 2. Add OpenFeature SDK: `https://github.com/open-feature/swift-sdk`
 3. Add DevCycle Provider: `https://github.com/DevCycleHQ/ios-openfeature-provider`
+4. Ensure your deployment targets meet OpenFeature requirements (iOS 14+, macOS 11+, tvOS 14+, watchOS 7+)
 
-#### CocoaPods
-
-Add to your Podfile:
-
-```ruby
-pod 'OpenFeature', '~> 0.1.0'
-pod 'DevCycleOpenFeature', '~> 1.0.0'
-```
-
-Then run: `pod install`
+Note: The OpenFeature Swift SDK primarily supports Swift Package Manager.
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```swift
 import OpenFeature
-import DevCycleOpenFeature
+import DevCycleOpenFeatureProvider
 
 class DevCycleManager {
     static let shared = DevCycleManager()
 
     func initialize() {
-        guard let sdkKey = Bundle.main.object(forInfoDictionaryKey: "DEVCYCLE_SDK_KEY") as? String else {
-            // TODO: Replace with configuration before production
-            let sdkKey = "your_mobile_sdk_key_here"
-
-            if sdkKey == "your_mobile_sdk_key_here" {
-                print("DevCycle SDK key is not configured")
-                return
-            }
+        // Obtain the SDK key from configuration
+        let configuredKey = Bundle.main.object(forInfoDictionaryKey: "DEVCYCLE_SDK_KEY") as? String
+        let sdkKey = configuredKey ?? "your_mobile_sdk_key_here" // Replace before production
+        guard sdkKey != "your_mobile_sdk_key_here" else {
+            print("DevCycle SDK key is not configured")
+            return
         }
 
         // Create DevCycle provider
         let provider = DevCycleProvider(sdkKey: sdkKey)
 
-        // Set evaluation context
+        // Set evaluation context with a targeting key
         let context = MutableContext(targetingKey: "default-user")
         context.add(key: "email", value: "user@example.com")
         context.add(key: "anonymous", value: false)
-
         OpenFeatureAPI.shared.setEvaluationContext(evaluationContext: context)
 
         // Set provider
@@ -175,7 +164,7 @@ struct MyApp: App {
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] Dependencies added via SPM or CocoaPods
+- [ ] Dependencies added via SPM
 - [ ] DevCycle provider initialized in app delegate
 - [ ] App builds and runs without errors
 - [ ] Console shows successful initialization
@@ -242,7 +231,7 @@ Installation is complete when ALL of the following are true:
 <symptom>Package resolution or build failures</symptom>
 <diagnosis>
 1. Check: Are package URLs correct?
-2. Check: Is iOS version 12.0+?
+2. Check: Is iOS version 14.0+?
 3. Check: Are there version conflicts?
 </diagnosis>
 <solution>
@@ -271,7 +260,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
-- [OpenFeature Swift SDK](https://openfeature.dev/docs/reference/technologies/client/ios/)
+- [DevCycle iOS OpenFeature Provider](https://docs.devcycle.com/sdk/client-side-sdks/ios/ios-openfeature/)
+- [OpenFeature Swift SDK](https://openfeature.dev/docs/reference/technologies/client/swift)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)
