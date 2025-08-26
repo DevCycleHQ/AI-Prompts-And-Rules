@@ -119,13 +119,14 @@ Create or update your application initialization:
 ```ruby
 require 'devcycle-ruby-server-sdk'
 
-# Initialize DevCycle
+# Default is Local Bucketing; set enable_cloud_bucketing: true to use Cloud Bucketing
 sdk_key = ENV['DEVCYCLE_SERVER_SDK_KEY']
-dvc_client = DevCycle::Api.new(sdk_key)
+options = DevCycle::Options.new
+devcycle_client = DevCycle::Client.new(sdk_key, options, true)
 
 # Example usage (for reference only - do not implement yet)
-# user = DevCycle::User.new(user_id: 'user123')
-# variable = dvc_client.variable(user, 'feature-key', false)
+# user = DevCycle::User.new({ user_id: 'user123' })
+# value = devcycle_client.variable_value(user, 'variable-key', false)
 ```
 
 <verification_checkpoint>
@@ -172,9 +173,11 @@ ruby your_script.rb
 
 **Available methods for future reference only:**
 
-- `dvc_client.variable(user, key, default_value)`
-- `dvc_client.variable_value(user, key, default_value)`
-- `dvc_client.all_variables(user)`
+- `devcycle_client.variable(user, key, default_value)`
+- `devcycle_client.variable_value(user, key, default_value)`
+- `devcycle_client.all_variables(user)`
+- `devcycle_client.all_features(user)`
+- `devcycle_client.track(user, event)`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -222,7 +225,7 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is DevCycle::Api.new called correctly?
+1. Check: Is DevCycle::Client.new called correctly?
 2. Check: Is the SDK key valid?
 3. Check: Are there network connectivity issues?
 </diagnosis>

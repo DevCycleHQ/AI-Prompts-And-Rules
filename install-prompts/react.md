@@ -60,9 +60,14 @@ Before proceeding, verify using the DevCycle MCP that you have:
    REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
    ```
 
+   ```bash
+   # Vite (.env)
+   VITE_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
+   ```
+
    - Verify the file is in .gitignore
-   - Ensure Create React App can read the variable
-   - Test that `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` is accessible
+   - Ensure your build tool can read the variable (e.g., CRA: `REACT_APP_`, Vite: `VITE_`)
+   - Test that your env var is accessible in code (e.g., `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` for CRA, `import.meta.env.VITE_DEVCYCLE_CLIENT_SDK_KEY` for Vite)
      </success_path>
 
 3. **If environment file creation fails:**
@@ -166,7 +171,8 @@ yarn start
 
 - `useVariableValue(key, defaultValue)`
 - `useVariable(key)`
-- `useDVCClient()`
+- `useDevCycleClient()`
+- `useIsDevCycleInitialized()`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -236,8 +242,19 @@ Installation is complete when ALL of the following are true:
 </diagnosis>
 <solution>
 - Place .env/.env.local in same directory as package.json
-- All React env vars must start with REACT_APP_
+- Follow your build tool's env var conventions (CRA: `REACT_APP_`, Vite: `VITE_`)
 - Restart development server after adding env vars
+</solution>
+</error>
+
+<error type="react17_jsx_runtime">
+<symptom>Build errors related to React runtime resolution on React 17</symptom>
+<diagnosis>
+On React 17, some setups may fail to resolve `react/jsx-runtime` correctly.
+</diagnosis>
+<solution>
+- Add an alias in your bundler config: `'react/jsx-runtime': require.resolve('react/jsx-runtime')`
+- See React 17 runtime resolution notes in the DevCycle docs
 </solution>
 </error>
 </troubleshooting>
@@ -261,6 +278,9 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
-- [React SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/react/)
+- [React SDK Installation](https://docs.devcycle.com/sdk/client-side-sdks/react/react-install)
+- [React SDK Getting Started](https://docs.devcycle.com/sdk/client-side-sdks/react/react-gettingstarted/)
+- [React SDK Usage](https://docs.devcycle.com/sdk/client-side-sdks/react/react-usage/)
+- [React SDK TypeScript](https://docs.devcycle.com/sdk/client-side-sdks/react/react-typescript/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [React SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)

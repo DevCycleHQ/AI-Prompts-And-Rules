@@ -38,6 +38,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 - [ ] Roku development environment set up
 - [ ] BrightScript knowledge
 - [ ] The most recent DevCycle Roku SDK version available
+- [ ] A Roku device running **Roku OS 9.4+**
 
 **Security Note:** Use a MOBILE SDK key for Roku channels. Store it in your channel's manifest or configuration files, avoiding exposure in public repositories.
 </prerequisites>
@@ -48,91 +49,75 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ### Setting Up Your SDK Key
 
-1. **First, check if you can modify channel configuration:**
+1. **Obtain your DevCycle Mobile SDK Key** for the appropriate environment (development recommended). This key starts with `dvc_mobile_`.
 
-   - Try: Edit `manifest` file or create configuration file
-   - If successful → Continue to step 2
-   - If blocked → Go to step 3 (fallback options)
+2. **Decide where to store the key** in your app. For development, you may inline it as a variable. For production, store it securely according to your project’s practices. Avoid exposing it in public repositories.
 
-2. **If configuration file modification succeeds:**
-   <success_path>
-
-   Add to `manifest`:
-
-   ```
-   devcycle_mobile_sdk_key=your_mobile_sdk_key_here
-   ```
-
-   Or create `source/config.brs`:
-
-   ```brightscript
-   function getDevCycleConfig() as Object
-       return {
-           sdkKey: "your_mobile_sdk_key_here"
-       }
-   end function
-   ```
-
-   - Verify the key is not committed to public repositories
-   - Ensure your channel can access the configuration
-     </success_path>
-
-3. **If configuration file modification fails:**
-   <fallback_path>
-   **Temporary hardcoding for testing**
-   - Add the SDK key directly in code with clear TODO comments
-   - This is suitable for local testing only
-   - Provide the user guidance that they MUST replace this before publishing
-     </fallback_path>
-     </decision_tree>
+3. **Pass the key into the SDK initialization** as shown in the initialization step below.
+   </decision_tree>
 
 ## Installation Steps
 
 ### Step 1: Download and Add DevCycle Roku SDK
 
-1. Download the DevCycle Roku SDK files from GitHub
-2. Copy the SDK files to your `source/` directory:
-   - `devcycle.brs`
-   - `devcycle_http.brs`
-   - Any additional SDK files
+1. Download the latest Roku SDK release from GitHub Releases and extract the provided files into your source tree.
+2. You may need to rename paths inside `DevCycleTask.xml` depending on your project structure.
+3. For SceneGraph usage, add a `DevCycleTask` node to your scene.
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] SDK files copied to source/ directory
+- [ ] SDK files extracted into your project source tree
 - [ ] Files are properly included in channel structure
 - [ ] No file naming conflicts
       </verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
-Create or update your main scene or application file:
+Create or update your main scene files following the SceneGraph example:
+
+```xml
+<!-- Within your MainScene.xml -->
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+    <script type="text/brightscript" uri="MainScene.brs" />
+    <script
+        type="text/brightscript"
+        uri="pkg:/components/DevCycle/DevCycleSGClient.brs"
+    />
+    <children>
+        <DevCycleTask id="devCycleTask" />
+        <!-- Other Child Nodes / Elements -->
+    </children>
+    </component>
+```
 
 ```brightscript
-' In your main scene init function
-function init()
-    ' Initialize DevCycle
-    m.devcycleConfig = {
-        sdkKey: "your_mobile_sdk_key_here"
-        user: {
-            userId: "default-user"
-            email: "user@example.com"
-        }
+' Within your MainScene.brs
+sub init()
+    m.devCycleTask = m.top.findNode("devCycleTask")
+
+    sdkKey = "<DEVCYCLE_MOBILE_SDK_KEY>"
+    options = {
+        enableEdgeDB: true,
+    }
+    user = {
+        user_id: "my_user_id",
     }
 
-    m.devcycleClient = DevCycleInit(m.devcycleConfig)
-
-    ' Example usage (for reference only - do not implement yet)
-    ' variable = m.devcycleClient.variable("feature-key", false)
-end function
+    InitializeDevCycleClient(sdkKey, user, options, m.devCycleTask)
+    m.devcycleClient = DevCycleSGClient(m.devCycleTask)
+end sub
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
+- [ ] DevCycle files extracted and referenced correctly (including `DevCycleTask.xml` paths)
+- [ ] `DevCycleTask` node added to your SceneGraph
 - [ ] DevCycle client initializes successfully
 - [ ] SDK key is properly referenced
-- [ ] User object includes required fields
+- [ ] User object uses `user_id` when identifying a known user
 - [ ] Channel compiles without errors
       </verification_checkpoint>
 
@@ -164,11 +149,15 @@ curl -d '' 'http://[roku-ip]:8060/keypress/Home'
 - Demo feature flag code
 - Any functions like `FeatureScene` or similar
 
-**Available functions for future reference only:**
+**Available methods for future reference only:**
 
-- `m.devcycleClient.variable(key, defaultValue)`
-- `m.devcycleClient.variableValue(key, defaultValue)`
-- `m.devcycleClient.allVariables()`
+- `m.devcycleClient.getVariableValue(key, defaultValue)`
+- `m.devcycleClient.getAllFeatures()`
+- `m.devcycleClient.getAllVariables()`
+- `m.devcycleClient.identifyUser(userObject)`
+- `m.devcycleClient.resetUser()`
+- `m.devcycleClient.track(eventObject)`
+- `m.devcycleClient.flushEvents()`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -216,14 +205,16 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_loaded">
 <symptom>"DevCycle functions not found" or initialization fails</symptom>
 <diagnosis>
-1. Check: Are SDK files in the correct source/ directory?
-2. Check: Is the SDK key valid?
-3. Check: Are function names spelled correctly?
+1. Check: SDK files extracted correctly and included in project
+2. Check: Paths inside `DevCycleTask.xml` match your project structure
+3. Check: Is the SDK key valid?
+4. Check: Is the `DevCycleTask` node present in your scene?
 </diagnosis>
 <solution>
-- Verify all SDK files are in source/ folder
-- Check mobile SDK key (starts with dvc_mobile_)
-- Ensure BrightScript function calls match SDK documentation
+- Verify extracted files exist and are referenced
+- Update `DevCycleTask.xml` paths if needed
+- Use a valid mobile SDK key (starts with `dvc_mobile_`)
+- Ensure calls match SDK documentation (e.g., `InitializeDevCycleClient`, `getVariableValue`)
 </solution>
 </error>
 
@@ -259,6 +250,8 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 
 - [DevCycle Homepage](https://www.devcycle.com/)
 - [DevCycle Documentation](https://docs.devcycle.com/)
-- [Roku SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/roku/)
+- [Roku SDK Installation](https://docs.devcycle.com/sdk/client-side-sdks/roku/roku-install)
+- [Roku SDK Getting Started](https://docs.devcycle.com/sdk/client-side-sdks/roku/roku-gettingstarted)
+- [Roku SDK Usage](https://docs.devcycle.com/sdk/client-side-sdks/roku/roku-usage)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [Roku SDK GitHub Repository](https://github.com/DevCycleHQ/roku-client-sdk)
