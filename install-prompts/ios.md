@@ -122,19 +122,22 @@ Create or update your AppDelegate or main app file:
 import DevCycle
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    var dvcClient: DVCClient?
+    var devcycleClient: DevCycleClient?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        do {
+            let user = try DevCycleUser.builder()
+                .userId("default-user") // Or set .isAnonymous(true)
+                .build()
 
-        let user = DVCUser.builder()
-            .userId("default-user") // Replace with actual user ID when available
-            .email("user@example.com") // Optional
-            .build()
-
-        dvcClient = DVCClient.builder()
-            .sdkKey(DevCycleConfig.mobileSDKKey) // Use configuration
-            .user(user)
-            .build()
+            guard let devcycleClient = try DevCycleClient.builder()
+                .sdkKey(DevCycleConfig.mobileSDKKey)
+                .user(user)
+                .build(onInitialized: nil)
+            self.devcycleClient = devcycleClient
+        } catch {
+            // Initialization failed; consider logging the error
+        }
 
         return true
     }
@@ -181,9 +184,9 @@ xcodebuild -workspace YourApp.xcworkspace -scheme YourApp -destination 'platform
 
 **Available methods for future reference only:**
 
-- `dvcClient.variableValue(key: String, defaultValue: T)`
-- `dvcClient.variable(key: String, defaultValue: T)`
-- `dvcClient.allVariables()`
+- `devcycleClient?.variableValue(key: String, defaultValue: T)`
+- `devcycleClient?.variable(key: String, defaultValue: T)`
+- `devcycleClient?.allVariables()`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -231,7 +234,7 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is DVCClient.builder() called correctly?
+1. Check: Is DevCycleClient.builder() called correctly?
 2. Check: Is the SDK key valid?
 3. Check: Does the user object have required fields?
 </diagnosis>

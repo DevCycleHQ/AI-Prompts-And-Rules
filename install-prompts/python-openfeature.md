@@ -248,7 +248,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
-- [OpenFeature Python SDK](https://openfeature.dev/docs/reference/technologies/server/python/)
+- [DevCycle OpenFeature Provider (Python)](https://docs.devcycle.com/sdk/server-side-sdks/python/python-openfeature/)
+- [OpenFeature Python SDK](https://openfeature.dev/docs/reference/technologies/server/python)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

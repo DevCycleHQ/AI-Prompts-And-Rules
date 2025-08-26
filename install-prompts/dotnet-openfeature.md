@@ -33,7 +33,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] .NET Core 3.1+ or .NET 5+ installed
+- [ ] .NET 8+ or .NET Framework 4.6.2+ installed
 - [ ] Visual Studio, VS Code, or .NET CLI available
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
@@ -85,52 +85,44 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Add OpenFeature SDK and DevCycle Provider Packages
+### Step 1: Add OpenFeature SDK and DevCycle SDK
 
-Using .NET CLI:
+The DevCycle .NET SDK includes an OpenFeature provider natively. Prefer Local Bucketing:
 
 ```bash
 dotnet add package OpenFeature
-dotnet add package DevCycle.OpenFeature.Provider
-```
-
-Using PackageReference in .csproj:
-
-```xml
-<PackageReference Include="OpenFeature" Version="1.4.0" />
-<PackageReference Include="DevCycle.OpenFeature.Provider" Version="1.0.0" />
+dotnet add package DevCycle.SDK.Server.Local
+# Optional alternative:
+# dotnet add package DevCycle.SDK.Server.Cloud
 ```
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```csharp
 using OpenFeature;
-using DevCycle.OpenFeature;
+using DevCycle.SDK.Server.Local.Api;
+using DevCycle.SDK.Server.Common.Model;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class FeatureFlagConfig
 {
-    public static void InitializeFeatureFlags(IConfiguration configuration)
+    public static async Task InitializeFeatureFlags(IConfiguration configuration)
     {
         var sdkKey = configuration["DevCycle:ServerSdkKey"] ??
                      Environment.GetEnvironmentVariable("DEVCYCLE_SERVER_SDK_KEY");
 
         if (string.IsNullOrEmpty(sdkKey))
         {
-            // TODO: Replace with configuration before production
-            sdkKey = "your_server_sdk_key_here";
-        }
-
-        if (sdkKey == "your_server_sdk_key_here")
-        {
             throw new InvalidOperationException("DevCycle SDK key is not configured");
         }
 
-        // Create DevCycle provider
-        var provider = new DevCycleProvider(sdkKey);
+        var dvcClient = new DevCycleLocalClientBuilder()
+            .SetSDKKey(sdkKey)
+            .Build();
 
-        // Set the provider
-        Api.Instance.SetProviderAsync(provider).Wait();
+        // Set DevCycle OpenFeature provider (async preferred)
+        await OpenFeature.Api.Instance.SetProviderAsync(dvcClient.GetOpenFeatureProvider());
 
         Console.WriteLine("OpenFeature with DevCycle initialized successfully");
     }
@@ -145,13 +137,13 @@ For ASP.NET Core, in Program.cs:
 var builder = WebApplication.CreateBuilder(args);
 
 // Initialize OpenFeature before building app
-FeatureFlagConfig.InitializeFeatureFlags(builder.Configuration);
+await FeatureFlagConfig.InitializeFeatureFlags(builder.Configuration);
 
 var app = builder.Build();
 
 app.MapGet("/", async (HttpContext context) =>
 {
-    var client = Api.Instance.GetClient();
+    var client = OpenFeature.Api.Instance.GetClient();
 
     // Create evaluation context for the user
     var evalContext = EvaluationContext.Builder()
@@ -181,7 +173,7 @@ app.Run();
 
 Installation is complete when ALL of the following are true:
 
-- ✅ OpenFeature SDK and DevCycle provider packages installed
+- ✅ OpenFeature SDK and DevCycle server SDK installed
 - ✅ SDK key is configured (via appsettings OR temporary hardcode with TODO)
 - ✅ OpenFeature initialized with DevCycle provider
 - ✅ Application builds and runs without errors
@@ -221,14 +213,14 @@ Installation is complete when ALL of the following are true:
 <error type="provider_not_ready">
 <symptom>"Provider not ready" error or service returning default values only</symptom>
 <diagnosis>
-1. Check: Is SetProviderAsync() awaited before client usage?
+1. Check: Is the provider set via OpenFeature.Api.Instance.SetProvider(...) before client usage?
 2. Check: Is the SDK key valid?
-3. Check: Is targetingKey provided in context?
+3. Check: Is user_id or targetingKey provided in context?
 </diagnosis>
 <solution>
-- Await provider initialization before getting client
-- Verify mobile SDK key (starts with dvc_mobile_)
-- Always include targetingKey in EvaluationContext
+- Ensure provider is set before getting client
+- Verify server SDK key (starts with dvc_server_)
+- Include user_id or targetingKey in EvaluationContext
 </solution>
 </error>
 
@@ -265,7 +257,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [DevCycle .NET OpenFeature](https://docs.devcycle.com/sdk/server-side-sdks/dotnet/dotnet-openfeature/)
 - [OpenFeature .NET SDK](https://openfeature.dev/docs/reference/technologies/server/dotnet/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

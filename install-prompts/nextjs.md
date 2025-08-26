@@ -42,6 +42,22 @@ Before proceeding, verify using the DevCycle MCP that you have:
 **Security Note:** You need BOTH a server SDK key and a client SDK key. The server key is used privately on the server, while the client key is public and sent to browsers. Never expose the server key to the client.
 </prerequisites>
 
+### Typescript (App Router)
+
+If you are using the App Router, ensure these minimum versions and settings:
+
+- Typescript ≥ 5.1.3
+- @types/react ≥ 18.2.8
+- In `tsconfig.json`, set `moduleResolution` to `bundler`:
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler"
+  }
+}
+```
+
 ## SDK Key Configuration
 
 <decision_tree>
@@ -100,16 +116,34 @@ pnpm add @devcycle/nextjs-sdk
 - [ ] Node modules updated
       </verification_checkpoint>
 
-### Step 2: Configure DevCycle Provider
+### Step 2: Create DevCycle Context and Provider (App Router)
 
-Create or update your `app/layout.tsx` (App Router) or `pages/_app.tsx` (Pages Router):
+Create a shared DevCycle file, then provide its context at the app root.
 
-**App Router (app/layout.tsx):**
+**Create `app/devcycle.ts`:**
+
+```typescript
+import { setupDevCycle } from "@devcycle/nextjs-sdk/server";
+
+const getUserIdentity = async () => {
+  return { user_id: "anonymous" };
+};
+
+export const { getVariableValue, getClientContext } = setupDevCycle({
+  serverSDKKey: process.env.DEVCYCLE_SERVER_SDK_KEY ?? "",
+  clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? "",
+  userGetter: getUserIdentity,
+  options: {},
+});
+```
+
+**Update `app/layout.tsx`:**
 
 ```typescript
 import { DevCycleClientsideProvider } from "@devcycle/nextjs-sdk";
+import { getClientContext } from "./devcycle";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -117,15 +151,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <DevCycleClientsideProvider
-          config={{
-            sdkKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY!,
-            user: {
-              user_id: "default-user", // Replace with actual user ID when available
-              isAnonymous: false,
-            },
-          }}
-        >
+        <DevCycleClientsideProvider context={getClientContext()}>
           {children}
         </DevCycleClientsideProvider>
       </body>
@@ -134,12 +160,14 @@ export default function RootLayout({
 }
 ```
 
+For Pages Router usage, refer to the official Pages Router guide: [Next.js Usage - Pages Router](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/nextjs-usage-pages/).
+
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] DevCycle provider wraps the application
-- [ ] SDK keys are properly referenced
-- [ ] User object includes required fields
+- [ ] DevCycle provider wraps the application with `context={getClientContext()}`
+- [ ] Server SDK key used only on server; client SDK key used in client context
+- [ ] `app/devcycle.ts` exports `getClientContext` (and `getVariableValue` for server use)
 - [ ] Application compiles without errors
       </verification_checkpoint>
 
@@ -225,14 +253,14 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle is not initialized" or hooks return undefined</symptom>
 <diagnosis>
-1. Check: Is DevCycleClientsideProvider wrapping your app?
-2. Check: Are the SDK keys valid?
-3. Check: Does the user object have required fields?
+1. Check: Is DevCycleClientsideProvider wrapping your app with `context={getClientContext()}`?
+2. Check: Are you exporting `getClientContext` from `app/devcycle.ts`?
+3. Check: Are the SDK keys valid and correctly scoped (server vs client)?
 </diagnosis>
 <solution>
-- Ensure provider is at the app root (layout.tsx or _app.tsx)
-- Verify both client and server SDK keys
-- User must have user_id or isAnonymous: true
+- Ensure provider is at the app root (layout.tsx) and receives `getClientContext()`
+- Verify both client and server SDK keys; never expose the server key to client
+- If using App Router, ensure Typescript settings and versions are compatible
 </solution>
 </error>
 
@@ -266,8 +294,9 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 
 ## Helpful Resources
 
-- [DevCycle Homepage](https://www.devcycle.com/)
-- [DevCycle Documentation](https://docs.devcycle.com/)
-- [Next.js SDK Documentation](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/)
+- [Next.js Installation](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/nextjs-install)
+- [Next.js Usage - App Router](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/nextjs-usage-app/)
+- [Next.js Usage - Pages Router](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/nextjs-usage-pages/)
+- [Next.js Typescript](https://docs.devcycle.com/sdk/client-side-sdks/nextjs/nextjs-typescript/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
-- [Next.js SDK GitHub Repository](https://github.com/DevCycleHQ/js-sdks)
+- [JS SDKs GitHub](https://github.com/DevCycleHQ/js-sdks)

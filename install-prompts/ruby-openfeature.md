@@ -93,7 +93,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 Add to your Gemfile:
 
 ```ruby
-gem 'openfeature-ruby-sdk'
+gem 'openfeature-sdk'
 gem 'devcycle-openfeature-ruby-provider'
 ```
 
@@ -272,7 +272,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [DevCycle Ruby OpenFeature Provider](https://docs.devcycle.com/sdk/server-side-sdks/ruby/ruby-openfeature)
 - [OpenFeature Ruby SDK](https://openfeature.dev/docs/reference/technologies/server/ruby/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

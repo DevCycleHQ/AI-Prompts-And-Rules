@@ -93,7 +93,7 @@ go get github.com/devcyclehq/go-openfeature-provider
 package main
 
 import (
-    "context"
+    "fmt"
     "log"
     "os"
 
@@ -104,11 +104,6 @@ import (
 func initializeFeatureFlags() error {
     sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
     if sdkKey == "" {
-        // TODO: Replace with environment variable before production
-        sdkKey = "your_server_sdk_key_here"
-    }
-
-    if sdkKey == "your_server_sdk_key_here" {
         return fmt.Errorf("DevCycle SDK key is not configured")
     }
 
@@ -129,7 +124,6 @@ func initializeFeatureFlags() error {
 package main
 
 import (
-    "context"
     "fmt"
     "log"
     "net/http"
@@ -159,6 +153,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
             "plan":  "premium",
         },
     )
+
+    _ = evalCtx
 
     fmt.Fprintf(w, "Go server with OpenFeature and DevCycle!")
 }
@@ -226,7 +222,7 @@ Installation is complete when ALL of the following are true:
 <solution>
 - Call SetProvider() before creating clients
 - Verify server SDK key (starts with dvc_server_)
-- Always include targeting key in EvaluationContext
+- Include the `targetingKey` in the EvaluationContext
 </solution>
 </error>
 
@@ -263,7 +259,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
-- [OpenFeature Go SDK](https://openfeature.dev/docs/reference/technologies/server/go/)
+- [DevCycle Go OpenFeature](https://docs.devcycle.com/sdk/server-side-sdks/go/go-openfeature/)
+- [OpenFeature Go SDK](https://openfeature.dev/docs/reference/technologies/server/go)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

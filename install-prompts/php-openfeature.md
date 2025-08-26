@@ -33,7 +33,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] PHP 7.4+ installed
+- [ ] PHP 8.0+ installed
 - [ ] Composer package manager installed
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
@@ -115,34 +115,16 @@ function initializeFeatureFlags() {
 initializeFeatureFlags();
 ```
 
-### Step 3: Use in Your Application
+### Step 3: Verify OpenFeature Client Initialization
 
 ```php
 <?php
 use OpenFeature\OpenFeatureAPI;
-use OpenFeature\Interfaces\Flags\EvaluationContext;
 
-// Get OpenFeature client
+// Retrieve OpenFeature client after provider is set
 $client = OpenFeatureAPI::getInstance()->getClient();
 
-function checkFeatureForUser($userId, $email = null) {
-    global $client;
-
-    // Create evaluation context
-    $context = new EvaluationContext($userId, [
-        'email' => $email,
-        'plan' => 'premium',
-        'role' => 'admin'
-    ]);
-
-    // Ready to use feature flags when requested
-    return $context;
-}
-
-// Laravel example route
-Route::get('/', function () {
-    return 'PHP app with OpenFeature and DevCycle!';
-});
+// Ready to evaluate flags when requested
 ```
 
 <verification_checkpoint>
@@ -153,6 +135,8 @@ Route::get('/', function () {
 - [ ] Application starts without errors
 - [ ] Log shows successful initialization
       </verification_checkpoint>
+
+> Note: When evaluating flags later, ensure your OpenFeature context includes a unique identifier via `user_id` or `targetingKey` as required by the provider.
 
 <success_criteria>
 
@@ -244,7 +228,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [DevCycle PHP OpenFeature Provider](https://docs.devcycle.com/sdk/server-side-sdks/php/php-openfeature/)
 - [OpenFeature PHP SDK](https://openfeature.dev/docs/reference/technologies/server/php/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

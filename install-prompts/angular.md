@@ -35,7 +35,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
-- [ ] Angular application (Angular 12+)
+- [ ] Angular application (Angular 16+)
 - [ ] The most recent DevCycle and OpenFeature SDK versions available
 
 **Security Note:** Use a CLIENT SDK key for Angular apps, not a server SDK key. Store it in Angular environment configuration files.
@@ -60,13 +60,13 @@ Before proceeding, verify using the DevCycle MCP that you have:
    // src/environments/environment.ts
    export const environment = {
      production: false,
-     devcycleClientKey: "your_client_sdk_key_here",
+     DEVCYCLE_CLIENT_SDK_KEY: "your_client_sdk_key_here",
    };
    ```
 
    - Verify the key is not committed to version control in production
    - Ensure Angular can access the environment variable
-   - Test that `environment.devcycleClientKey` is accessible
+   - Test that `environment.DEVCYCLE_CLIENT_SDK_KEY` is accessible
      </success_path>
 
 3. **If environment file modification fails:**
@@ -84,13 +84,13 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ```bash
 # Using npm
-npm install --save @openfeature/web-sdk @devcycle/openfeature-web-provider
+npm install --save @openfeature/angular-sdk @devcycle/openfeature-angular-provider
 
-# Using yarn
-yarn add @openfeature/web-sdk @devcycle/openfeature-web-provider
+# Using yarn (add peer deps manually)
+yarn add @openfeature/angular-sdk @openfeature/web-sdk @openfeature/core @devcycle/openfeature-angular-provider
 
 # Using pnpm
-pnpm add @openfeature/web-sdk @devcycle/openfeature-web-provider
+pnpm add @openfeature/angular-sdk @devcycle/openfeature-angular-provider
 ```
 
 <verification_checkpoint>
@@ -107,42 +107,45 @@ Create or update your `app.module.ts`:
 
 ```typescript
 import { NgModule } from "@angular/core";
-import { BrowserModule } from "@angular/platform-browser";
-import { OpenFeature } from "@openfeature/web-sdk";
-import DevCycleProvider from "@devcycle/openfeature-web-provider";
+import { CommonModule } from "@angular/common";
+import { OpenFeatureModule, OpenFeature } from "@openfeature/angular-sdk";
+import DevCycleAngularProvider from "@devcycle/openfeature-angular-provider";
 import { environment } from "../environments/environment";
 
 import { AppComponent } from "./app.component";
 
+const devCycleProvider = new DevCycleAngularProvider(
+  environment.DEVCYCLE_CLIENT_SDK_KEY,
+  { /* DevCycle Options */ }
+);
+
+// A `targetingKey` or `user_id` is required to initialize the DevCycle Provider.
+OpenFeature.setContext({
+  targetingKey: "user123",
+});
+
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule],
+  imports: [
+    CommonModule,
+    OpenFeatureModule.forRoot({
+      provider: devCycleProvider,
+    }),
+  ],
   providers: [],
   bootstrap: [AppComponent],
 })
-export class AppModule {
-  constructor() {
-    this.initializeOpenFeature();
-  }
-
-  private async initializeOpenFeature() {
-    const user = {
-      userId: "default-user", // Replace with actual user ID when available
-      email: "user@example.com", // Optional
-    };
-
-    const provider = new DevCycleProvider(environment.devcycleClientKey, user);
-    await OpenFeature.setProviderAndWait(provider);
-  }
-}
+export class AppModule {}
 ```
+
+Note: Import from `@openfeature/angular-sdk` directly. Avoid importing from `@openfeature/web-sdk` or `@openfeature/core` in Angular apps.
 
 <verification_checkpoint>
 **Verify before continuing:**
 
 - [ ] OpenFeature is properly configured
 - [ ] SDK key is properly referenced
-- [ ] User object includes required fields
+- [ ] OpenFeature context includes `targetingKey` or `user_id`
 - [ ] Application compiles without errors
       </verification_checkpoint>
 
@@ -173,11 +176,12 @@ ng serve
 - Demo feature flag code
 - Any services like `FeatureFlagService` or similar
 
-**Available OpenFeature methods for future reference only:**
+**Available Angular directives for future reference only:**
 
-- `OpenFeature.getClient().getBooleanValue(key, defaultValue)`
-- `OpenFeature.getClient().getStringValue(key, defaultValue)`
-- `OpenFeature.getClient().getNumberValue(key, defaultValue)`
+- `booleanFeatureFlag`
+- `numberFeatureFlag`
+- `stringFeatureFlag`
+- `objectFeatureFlag` (JSON object values only)
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -213,7 +217,7 @@ Installation is complete when ALL of the following are true:
 **Actions taken:**
 1. ✅ Updated environment files with SDK key
 2. ✅ Installed packages with yarn
-3. ✅ Configured OpenFeature in main.ts
+3. ✅ Configured `OpenFeatureModule.forRoot({ provider })` during bootstrap in `main.ts`
 4. ✅ Angular dev server starts successfully
 **Result:** Installation successful with standalone components
 </example>
@@ -230,9 +234,9 @@ Installation is complete when ALL of the following are true:
 3. Check: Does the user object have required fields?
 </diagnosis>
 <solution>
-- Ensure setProviderAndWait is called in app module constructor
+- Ensure the provider is passed to `OpenFeatureModule.forRoot({ provider })`
 - Verify client SDK key (starts with dvc_client_)
-- User must have userId or be marked as anonymous
+- Ensure `OpenFeature.setContext` includes a `targetingKey` or `user_id`
 </solution>
 </error>
 

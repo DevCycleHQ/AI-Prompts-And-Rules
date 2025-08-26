@@ -34,7 +34,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] Python 3.7+ installed
+- [ ] Python 3.8+ installed
 - [ ] pip or poetry package manager available
 - [ ] The most recent DevCycle Python SDK version available
 
@@ -105,15 +105,17 @@ Create or update your main application file:
 
 ```python
 import os
-from devcycle_python_sdk import DevCycleLocalClient
+from devcycle_python_sdk import DevCycleLocalClient, DevCycleLocalOptions
+from devcycle_python_sdk.models.user import DevCycleUser
 
-# Initialize DevCycle
+# Initialize DevCycle (Local Bucketing)
 sdk_key = os.environ.get("DEVCYCLE_SERVER_SDK_KEY")
-dvc_client = DevCycleLocalClient(sdk_key)
+options = DevCycleLocalOptions()
+dvc_client = DevCycleLocalClient(sdk_key, options)
 
 # Example usage (for reference only - do not implement yet)
-# user = {"user_id": "user123"}
-# variable = dvc_client.variable(user, "feature-key", False)
+# user = DevCycleUser(user_id="user123", email="user@example.com", country="CA")
+# value = dvc_client.variable_value(user, "feature-key", False)
 ```
 
 <verification_checkpoint>
@@ -156,8 +158,8 @@ python manage.py runserver
 
 **Available methods for future reference only:**
 
-- `dvc_client.variable(user, key, default_value)`
 - `dvc_client.variable_value(user, key, default_value)`
+- `dvc_client.variable(user, key, default_value)`
 - `dvc_client.all_variables(user)`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.

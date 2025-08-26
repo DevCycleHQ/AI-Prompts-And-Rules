@@ -34,7 +34,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] PHP 7.4+ installed
+- [ ] PHP 7.3+ installed
 - [ ] Composer package manager (recommended)
 - [ ] The most recent DevCycle PHP SDK version available
 
@@ -114,18 +114,17 @@ Create or update your application initialization:
 
 ```php
 <?php
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-use DevCycle\Api\DevCycleApi;
+use DevCycle\Api\DevCycleClient;
+use DevCycle\Model\DevCycleOptions;
 use DevCycle\Model\DevCycleUser;
 
-// Initialize DevCycle
-$sdkKey = $_ENV['DEVCYCLE_SERVER_SDK_KEY'];
-$dvcClient = new DevCycleApi($sdkKey);
-
-// Example usage (for reference only - do not implement yet)
-// $user = new DevCycleUser(['user_id' => 'user123']);
-// $variable = $dvcClient->variable($user, 'feature-key', false);
+$options = new DevCycleOptions();
+$devCycleClient = new DevCycleClient(
+    sdkKey: getenv('DEVCYCLE_SERVER_SDK_KEY'),
+    dvcOptions: $options
+);
 ?>
 ```
 
@@ -137,6 +136,10 @@ $dvcClient = new DevCycleApi($sdkKey);
 - [ ] No initialization errors
 - [ ] Application runs without errors
       </verification_checkpoint>
+
+## SDK Proxy
+
+Due to the PHP application lifecycle and state management, local bucketing uses a separate proxy process which mimics the Cloud Bucketing API and improves evaluation latency via caching. You can run the proxy alongside your PHP app or on a separate host.
 
 ### Step 3: Test Your Application
 
@@ -168,9 +171,9 @@ php -S localhost:8000
 
 **Available methods for future reference only:**
 
-- `$dvcClient->variable($user, $key, $defaultValue)`
-- `$dvcClient->variableValue($user, $key, $defaultValue)`
-- `$dvcClient->allVariables($user)`
+- `$devCycleClient->variable($user, $key, $defaultValue)`
+- `$devCycleClient->variableValue($user, $key, $defaultValue)`
+- `$devCycleClient->allVariables($user)`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
@@ -218,7 +221,7 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle client not initialized" or client methods fail</symptom>
 <diagnosis>
-1. Check: Is DevCycleApi constructor called correctly?
+1. Check: Is DevCycleClient constructed correctly?
 2. Check: Is the SDK key valid?
 3. Check: Are there network connectivity issues?
 </diagnosis>

@@ -33,8 +33,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
 - [ ] A Development environment **Server SDK Key** (starts with `dvc_server_`)
-- [ ] Java 8+ installed
-- [ ] Maven or Gradle build system
+- [ ] Java 11+ installed
+- [ ] Maven or Gradle 7.6+ build system
 - [ ] The most recent OpenFeature and DevCycle provider versions
 
 **Security Note:** Use a SERVER SDK key for Java backend applications. Never expose server keys to client-side code. Store keys in environment variables or configuration files.
@@ -92,12 +92,12 @@ Add to your `pom.xml`:
     <dependency>
         <groupId>dev.openfeature</groupId>
         <artifactId>sdk</artifactId>
-        <version>1.6.0</version>
+        <version>LATEST</version>
     </dependency>
     <dependency>
         <groupId>com.devcycle</groupId>
         <artifactId>openfeature-java-provider</artifactId>
-        <version>1.0.0</version>
+        <version>LATEST</version>
     </dependency>
 </dependencies>
 ```
@@ -108,8 +108,8 @@ Add to your `build.gradle`:
 
 ```gradle
 dependencies {
-    implementation 'dev.openfeature:sdk:1.6.0'
-    implementation 'com.devcycle:openfeature-java-provider:1.0.0'
+    implementation "dev.openfeature:sdk:+"
+    implementation "com.devcycle:openfeature-java-provider:+"
 }
 ```
 
@@ -144,6 +144,8 @@ public class FeatureFlagConfig {
 }
 ```
 
+Default preference: Use DevCycleLocalClient via the DevCycle provider (Local Bucketing). Use DevCycleCloudClient only if Cloud Bucketing is explicitly required.
+
 ### Step 3: Use in Your Application
 
 ```java
@@ -167,6 +169,8 @@ public class ExampleController {
     }
 }
 ```
+
+Note: The OpenFeature context must include either a `targetingKey` or a `user_id` attribute so DevCycle can identify the user for evaluation.
 
 <verification_checkpoint>
 **Verify before continuing:**
@@ -244,7 +248,7 @@ Installation is complete when ALL of the following are true:
 <solution>
 - Run mvn dependency:tree or gradle dependencies
 - Check for version conflicts
-- Ensure Java 8+ compatibility
+- Ensure Java 11+ compatibility
 </solution>
 </error>
 </troubleshooting>
@@ -267,7 +271,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [DevCycle Java OpenFeature Provider](https://docs.devcycle.com/sdk/server-side-sdks/java/java-openfeature/)
 - [OpenFeature Java SDK](https://openfeature.dev/docs/reference/technologies/server/java/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

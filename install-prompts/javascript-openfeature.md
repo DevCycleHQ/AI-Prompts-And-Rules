@@ -78,7 +78,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ```bash
 # Using npm
-npm install --save @openfeature/web-sdk @devcycle/openfeature-web-provider
+npm install @openfeature/web-sdk @devcycle/openfeature-web-provider
 
 # Using yarn
 yarn add @openfeature/web-sdk @devcycle/openfeature-web-provider
@@ -216,7 +216,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/sdk/client-side-sdks/javascript/javascript-openfeature/)
 - [OpenFeature Web SDK](https://openfeature.dev/docs/reference/technologies/client/web/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

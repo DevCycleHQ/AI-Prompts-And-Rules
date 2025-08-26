@@ -81,9 +81,9 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ```bash
 # Using go get
-go get github.com/devcyclehq/go-server-sdk/v2
+go get "github.com/devcyclehq/go-server-sdk/v2"
 
-# Or add to go.mod
+# Or update modules
 go mod tidy
 ```
 
@@ -103,24 +103,25 @@ Create or update your main application file:
 package main
 
 import (
-    "context"
+    "log"
     "os"
 
     devcycle "github.com/devcyclehq/go-server-sdk/v2"
 )
 
 func main() {
-    // Initialize DevCycle
     sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
-    client, err := devcycle.NewClient(sdkKey)
+    options := devcycle.Options{}
+
+    client, err := devcycle.NewClient(sdkKey, &options)
     if err != nil {
-        panic(err)
+        log.Fatalf("Error initializing DevCycle client: %v", err)
     }
     defer client.Close()
 
     // Example usage (for reference only - do not implement yet)
-    // user := devcycle.User{UserID: "user123"}
-    // variable, err := client.Variable(context.Background(), user, "feature-key", false)
+    // user := devcycle.User{UserId: "user123"}
+    // value, err := client.VariableValue(user, "feature-key", false)
 }
 ```
 
@@ -166,9 +167,10 @@ go run main.go
 
 **Available methods for future reference only:**
 
-- `client.Variable(ctx, user, key, defaultValue)`
-- `client.VariableValue(ctx, user, key, defaultValue)`
-- `client.AllVariables(ctx, user)`
+- `client.Variable(user, key, defaultValue)`
+- `client.VariableValue(user, key, defaultValue)`
+- `client.AllVariables(user)`
+- `client.AllFeatures(user)`
 
 **Wait for explicit user instruction** before implementing any feature flag usage.
 

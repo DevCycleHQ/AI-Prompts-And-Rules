@@ -1,7 +1,7 @@
 # DevCycle React Native SDK Installation Prompt
 
 <role>
-You are an expert DevCycle integration specialist helping a developer install the DevCycle React Native SDK. 
+You are an expert DevCycle integration specialist helping a developer install the DevCycle React Native SDK.
 Your approach should be:
 - Methodical: Follow each step in sequence
 - Diagnostic: Detect the environment and platform requirements before proceeding
@@ -89,61 +89,110 @@ Before proceeding, verify using the DevCycle MCP that you have:
 ```bash
 # Using npm
 npm install --save @devcycle/react-native-client-sdk
+# Install required SDK dependencies
+npm install --save @react-native-async-storage/async-storage react-native-get-random-values react-native-device-info react-native-sse
 
 # Using yarn
 yarn add @devcycle/react-native-client-sdk
+# Install required SDK dependencies
+yarn add @react-native-async-storage/async-storage react-native-get-random-values react-native-device-info react-native-sse
 
-# For iOS, also run:
-cd ios && pod install && cd ..
+# Install Pods (iOS)
+npx pod-install
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
 - [ ] Package installed successfully (check package.json)
+- [ ] Required dependencies installed: AsyncStorage, get-random-values, device-info, sse
 - [ ] iOS pods installed (for iOS projects)
 - [ ] No peer dependency warnings
       </verification_checkpoint>
+
+### (Optional) Expo Installation
+
+If you are using Expo (managed workflow), install the Expo client SDK and required dependencies using Expo's package manager:
+
+```bash
+# Install the DevCycle Expo SDK
+npx expo install @devcycle/react-native-expo-client-sdk
+
+# Install required SDK dependencies via Expo
+npx expo install @react-native-async-storage/async-storage react-native-get-random-values react-native-device-info react-native-sse
+```
+
+Then use the same HOC pattern shown below; the API is the same when using the Expo client SDK.
 
 ### Step 2: Initialize DevCycle Provider
 
 Create or update your main App component:
 
 ```javascript
-import React from "react";
-import { DevCycleProvider } from "@devcycle/react-native-client-sdk";
-import Config from "react-native-config"; // If using react-native-config
+import React from "react"
+import { View, Text } from "react-native"
+import "react-native-get-random-values"
+import DeviceInfo from "react-native-device-info"
+import "@react-native-async-storage/async-storage"
+import { withDevCycleProvider } from "@devcycle/react-native-client-sdk"
 
-const user = {
-  user_id: "default-user", // Replace with actual user ID when available
-  email: "user@example.com", // Optional
-  isAnonymous: false,
-};
-
-const App = () => {
+global.DeviceInfo = DeviceInfo
+function App() {
   return (
-    <DevCycleProvider
-      config={{
-        sdkKey: Config.DEVCYCLE_MOBILE_SDK_KEY, // Use config variable
-        user: user,
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
       }}
     >
-      {/* Your app components */}
-    </DevCycleProvider>
-  );
-};
+      <Text>My React App</Text>
+    </View>
+  )
+}
 
-export default App;
+export default withDevCycleProvider({ sdkKey: "<DEVCYCLE_CLIENT_SDK_KEY>" })(
+  App,
+)
 ```
 
 <verification_checkpoint>
 **Verify before continuing:**
 
-- [ ] DevCycle provider wraps the app
+- [ ] DevCycle provider HOC wraps the app
 - [ ] SDK key is properly referenced
-- [ ] User object includes required fields
+- [ ] Required imports added and `global.DeviceInfo = DeviceInfo` is set
 - [ ] Application compiles without errors
       </verification_checkpoint>
+
+#### Optional: Blocking initialization
+
+```javascript
+import {
+  useIsDevCycleInitialized,
+  withDevCycleProvider,
+} from "@devcycle/react-native-client-sdk"
+
+function App() {
+  const devcycleReady = useIsDevCycleInitialized()
+  if (!devcycleReady) return <LoadingState />
+  return <TheRestofYourApp />
+}
+
+export default withDevCycleProvider({ sdkKey: "<DEVCYCLE_CLIENT_SDK_KEY>" })(
+  App,
+)
+```
+
+Alternatively, you can use the asynchronous HOC which delays rendering until initialization hooks are ready:
+
+```javascript
+import { asyncWithDVCProvider } from "@devcycle/react-native-client-sdk"
+
+export default asyncWithDVCProvider({ sdkKey: "<DEVCYCLE_CLIENT_SDK_KEY>" })(
+  App,
+)
+```
 
 ### Step 3: Test Your Application
 
@@ -164,7 +213,33 @@ npx react-native run-android
 - [ ] Application runs normally on device/simulator
       </verification_checkpoint>
 
-## 🎉 Installation Complete!
+### React Native Web
+
+If using React Native Web, update your webpack config to ensure `.cjs` files are transpiled and not treated as assets:
+
+```javascript
+const createExpoWebpackConfigAsync = require('@expo/webpack-config')
+
+module.exports = async function (env, argv) {
+  const config = await createExpoWebpackConfigAsync(env, argv)
+
+  config.module.rules = config.module.rules.map((rule) => {
+    if (rule.oneOf instanceof Array) {
+      // add "cjs" as an exclusion to this rule to prevent it from being regarded as an asset
+      rule.oneOf[rule.oneOf.length - 1].exclude = [
+        /\.(js|mjs|jsx|cjs|ts|tsx)$/,
+        /\.html$/,
+        /\.json$/,
+      ]
+    }
+    return rule
+  })
+
+  return config
+}
+```
+
+## 🎉 Installation Complete
 
 **STOP HERE** - The DevCycle React Native installation is now complete.
 
@@ -205,8 +280,10 @@ Installation is complete when ALL of the following are true:
 **Scenario:** Expo managed workflow, npm, full file access
 **Actions taken:**
 1. ✅ Created .env with mobile SDK key
-2. ✅ Installed DevCycle React Native SDK
-3. ✅ Configured provider in App.js
+2. ✅ Installed DevCycle React Native Expo SDK
+   - `npx expo install @devcycle/react-native-expo-client-sdk`
+   - `npx expo install @react-native-async-storage/async-storage react-native-get-random-values react-native-device-info react-native-sse`
+3. ✅ Configured provider in App.js using Expo client SDK
 4. ✅ Expo app builds and runs successfully
 **Result:** Installation successful
 </example>
@@ -216,7 +293,7 @@ Installation is complete when ALL of the following are true:
 **Actions taken:**
 1. ✅ Created .env with SDK key
 2. ✅ Installed SDK and react-native-config
-3. ✅ Ran pod install for iOS
+3. ✅ Installed required dependencies and ran `npx pod-install` for iOS
 4. ✅ App builds on both iOS and Android
 **Result:** Installation successful with CLI
 </example>
@@ -228,12 +305,12 @@ Installation is complete when ALL of the following are true:
 <error type="sdk_not_initialized">
 <symptom>"DevCycle is not initialized" or hooks return undefined</symptom>
 <diagnosis>
-1. Check: Is DevCycleProvider wrapping your app?
+1. Check: Is the withDevCycleProvider HOC applied to your root component?
 2. Check: Is the SDK key valid?
 3. Check: Does the user object have required fields?
 </diagnosis>
 <solution>
-- Ensure DevCycleProvider is at the app root
+- Ensure withDevCycleProvider wraps the app's root component
 - Verify mobile SDK key (starts with dvc_mobile_)
 - User must have user_id or isAnonymous: true
 </solution>
@@ -247,9 +324,19 @@ Installation is complete when ALL of the following are true:
 3. Check: Are native dependencies linked?
 </diagnosis>
 <solution>
-- Run: cd ios && pod install && cd ..
+- Run: `npx pod-install`
 - Set minSdkVersion to 21 in android/app/build.gradle
 - For React Native < 0.60, manually link the library
+</solution>
+</error>
+
+<error type="flipper_sse_android">
+<symptom>Realtime updates (SSE) not working on Android with older React Native + Flipper</symptom>
+<diagnosis>
+1. Using Flipper with React Native versions below 0.75.0 can break SSE connections on Android
+</diagnosis>
+<solution>
+- Upgrade to React Native 0.75+ or disable Flipper to restore SSE functionality
 </solution>
 </error>
 </troubleshooting>

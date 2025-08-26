@@ -128,6 +128,9 @@ app.get("/", async (req, res) => {
     name: req.user?.name,
   };
 
+  // Example evaluation (for reference only - do not implement yet)
+  const enabled = await client.getBooleanValue("your-flag-key", false, context);
+
   res.send("Node.js app with OpenFeature and DevCycle!");
 });
 
@@ -235,7 +238,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
-- [OpenFeature Node.js SDK](https://openfeature.dev/docs/reference/technologies/server/nodejs/)
+- [DevCycle Node.js OpenFeature Guide](https://docs.devcycle.com/sdk/server-side-sdks/node/node-openfeature/)
+- [OpenFeature Server JavaScript](https://openfeature.dev/docs/reference/technologies/server/javascript/)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)

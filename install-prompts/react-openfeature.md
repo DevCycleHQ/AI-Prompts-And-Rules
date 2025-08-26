@@ -59,9 +59,14 @@ Before proceeding, verify using the DevCycle MCP that you have:
    REACT_APP_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
    ```
 
+   ```bash
+   # Vite (.env)
+   VITE_DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
+   ```
+
    - Verify the file is in .gitignore
-   - Ensure Create React App can read the variable
-   - Test that `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` is accessible
+   - Ensure your build tool can read the variable (e.g., CRA: `REACT_APP_`, Vite: `VITE_`)
+   - Test that your env var is accessible in code (e.g., `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` for CRA, `import.meta.env.VITE_DEVCYCLE_CLIENT_SDK_KEY` for Vite)
      </success_path>
 
 3. **If environment file creation fails:**
@@ -69,7 +74,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    **Temporary hardcoding for testing**
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
-   - Provie the user guidance that they MUST replace this before committing or deploying
+   - Provide the user guidance that they MUST replace this before committing or deploying
      </fallback_path>
      </decision_tree>
 
@@ -304,7 +309,7 @@ Remember: The user will guide you on when and what feature flags to create. Do n
 ## Helpful Resources
 
 - [OpenFeature Documentation](https://openfeature.dev/)
-- [DevCycle OpenFeature Provider](https://docs.devcycle.com/integrations/openfeature/)
-- [React OpenFeature SDK](https://openfeature.dev/docs/reference/technologies/client/web/react/)
+- [DevCycle OpenFeature Provider](https://docs.devcycle.com/sdk/client-side-sdks/react/react-openfeature/)
+- [React OpenFeature SDK](https://openfeature.dev/docs/reference/technologies/client/web/react)
 - [DevCycle Dashboard](https://app.devcycle.com/)
 - [OpenFeature Specification](https://openfeature.dev/specification/)
