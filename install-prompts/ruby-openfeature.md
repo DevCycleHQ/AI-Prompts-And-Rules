@@ -108,7 +108,7 @@ bundle install
 For Rails, create initializer (`config/initializers/openfeature.rb`):
 
 ```ruby
-require 'openfeature'
+require 'open_feature/sdk'
 require 'devcycle_openfeature_provider'
 
 module OpenFeatureConfig
