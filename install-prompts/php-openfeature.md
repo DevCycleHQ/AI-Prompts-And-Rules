@@ -119,16 +119,29 @@ function initializeFeatureFlags() {
 initializeFeatureFlags();
 ```
 
-### Step 3: Verify OpenFeature Client Initialization
+### Step 3: Use in Your Application
 
 ```php
 <?php
 use OpenFeature\OpenFeatureAPI;
+use OpenFeature\Interfaces\Flags\EvaluationContext;
 
-// Retrieve OpenFeature client after provider is set
-$client = OpenFeatureAPI::getInstance()->getClient();
+// After initialization, use throughout your application
 
-// Ready to evaluate flags when requested
+// Helper to create user context for each request
+function createUserContext($userId) {
+    return new EvaluationContext(targetingKey: $userId ?: 'anonymous');
+}
+
+// Example usage 
+function handleRequest($userId) {
+    $client = OpenFeatureAPI::getInstance()->getClient();;
+    $context = createUserContext($userId);
+    
+    $speed = $client->getStringValue('feature-flag', 'off', $context);
+    
+    return ['speed' => $speed];
+}
 ```
 
 <verification_checkpoint>
