@@ -96,7 +96,7 @@ Add to your `pom.xml`:
     </dependency>
     <dependency>
         <groupId>com.devcycle</groupId>
-        <artifactId>openfeature-java-provider</artifactId>
+        <artifactId>java-server-sdk</artifactId>
         <version>LATEST</version>
     </dependency>
 </dependencies>
@@ -109,7 +109,7 @@ Add to your `build.gradle`:
 ```gradle
 dependencies {
     implementation "dev.openfeature:sdk:+"
-    implementation "com.devcycle:openfeature-java-provider:+"
+    implementation "com.devcycle:java-server-sdk:+"
 }
 ```
 

@@ -78,7 +78,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 ### Step 1: Install OpenFeature SDK and DevCycle Provider
 
 ```bash
-composer require open-feature/sdk devcycle/openfeature-php-provider
+composer require open-feature/sdk devcycle/php-server-sdk
 ```
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
@@ -87,8 +87,9 @@ composer require open-feature/sdk devcycle/openfeature-php-provider
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
+use DevCycle\Api\DevCycleClient;
+use DevCycle\Model\DevCycleOptions;
 use OpenFeature\OpenFeatureAPI;
-use DevCycle\OpenFeature\DevCycleProvider;
 
 function initializeFeatureFlags() {
     $sdkKey = $_ENV['DEVCYCLE_SERVER_SDK_KEY'] ?? getenv('DEVCYCLE_SERVER_SDK_KEY');
@@ -102,9 +103,12 @@ function initializeFeatureFlags() {
         throw new Exception('DevCycle SDK key is not configured');
     }
 
-    // Create DevCycle provider
-    $provider = new DevCycleProvider($sdkKey);
-
+    $options = new DevCycleOptions();
+    $devCycleClient = new DevCycleClient(
+        sdkKey: $sdkKey,
+        dvcOptions: $options
+    );
+    $provider = $devCycleClient->getOpenFeatureProvider();
     // Set the provider
     OpenFeatureAPI::getInstance()->setProvider($provider);
 
