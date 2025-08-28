@@ -125,11 +125,11 @@ module OpenFeatureConfig
       raise 'DevCycle SDK key is not configured'
     end
 
-    # Create DevCycle provider
-    provider = DevCycleOpenFeatureProvider.new(sdk_key)
+    dvc_client = DevCycle::Client.new(sdk_key, DevCycle::Options.new)
 
-    # Set the provider
-    OpenFeature::API.set_provider(provider)
+    OpenFeature::SDK.configure do |config|
+      config.set_provider dvc_client.open_feature_provider
+    end
 
     Rails.logger.info 'OpenFeature with DevCycle initialized successfully'
   rescue => e
@@ -140,37 +140,23 @@ end
 
 # Initialize on Rails startup
 OpenFeatureConfig.initialize! if defined?(Rails)
+
+# Example usage (for reference only - do not implement yet)
+#current_user_context = OpenFeature::SDK::EvaluationContext.new(targeting_key: 'userId')
+#value = openfeature_client.fetch_string_value('variable-key', false, current_user_context)
 ```
 
-### Step 3: Use in Your Application
+### Step 3: Test Your Application
 
-```ruby
-# In a Rails controller
-class ApplicationController < ActionController::Base
-  private
+```bash
+# For Rails applications
+rails server
 
-  def openfeature_client
-    @openfeature_client ||= OpenFeature::API.client
-  end
+# For Sinatra or other frameworks
+ruby app.rb
 
-  def current_user_context
-    OpenFeature::EvaluationContext.new(
-      targeting_key: current_user&.id || 'anonymous',
-      attributes: {
-        email: current_user&.email,
-        plan: 'premium',
-        role: 'admin'
-      }
-    )
-  end
-end
-
-# Example route
-class HomeController < ApplicationController
-  def index
-    render json: { message: 'Ruby app with OpenFeature and DevCycle!' }
-  end
-end
+# For scripts
+ruby your_script.rb
 ```
 
 <verification_checkpoint>
