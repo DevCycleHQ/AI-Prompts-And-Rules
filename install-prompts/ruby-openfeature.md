@@ -168,13 +168,13 @@ end
 # Example route
 class HomeController < ApplicationController
   def index
-    speed = openfeature_client.fetch_string_value(
-      'togglebot-speed',
+    flag = openfeature_client.fetch_string_value(
+      'feature-flag',
       'off',
       current_user_context
     )
 
-    render json: { speed: speed }
+    render json: { flag: flag }
   end
 end
 ```

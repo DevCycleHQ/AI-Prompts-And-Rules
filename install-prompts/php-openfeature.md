@@ -138,9 +138,9 @@ function handleRequest($userId) {
     $client = OpenFeatureAPI::getInstance()->getClient();;
     $context = createUserContext($userId);
     
-    $speed = $client->getStringValue('feature-flag', 'off', $context);
+    $flag = $client->getStringValue('feature-flag', 'off', $context);
     
-    return ['speed' => $speed];
+    return ['flag' => $flag];
 }
 ```
 
