@@ -125,6 +125,12 @@ $devCycleClient = new DevCycleClient(
     sdkKey: getenv('DEVCYCLE_SERVER_SDK_KEY'),
     dvcOptions: $options
 );
+
+# Example usage (for reference only - do not implement yet)
+#$user_data = new DevCycleUser(array(
+#    "user_id"=>"my-user"
+#));
+#$value = $devCycleClient->variableValue($user_data, "variable-key", false);
 ?>
 ```
 

@@ -140,43 +140,23 @@ end
 
 # Initialize on Rails startup
 OpenFeatureConfig.initialize! if defined?(Rails)
+
+# Example usage (for reference only - do not implement yet)
+#current_user_context = OpenFeature::SDK::EvaluationContext.new(targeting_key: 'userId')
+#value = openfeature_client.fetch_string_value('variable-key', false, current_user_context)
 ```
 
-### Step 3: Use in Your Application
+### Step 3: Test Your Application
 
-```ruby
-# In a Rails controller
-class ApplicationController < ActionController::Base
-  private
+```bash
+# For Rails applications
+rails server
 
-  def openfeature_client
-    @openfeature_client ||= OpenFeature::API.client
-  end
+# For Sinatra or other frameworks
+ruby app.rb
 
-  def current_user_context
-    OpenFeature::SDK::EvaluationContext.new(
-      targeting_key: current_user&.id || 'anonymous',
-      attributes: {
-        email: current_user&.email,
-        plan: 'premium',
-        role: 'admin'
-      }
-    )
-  end
-end
-
-# Example route
-class HomeController < ApplicationController
-  def index
-    flag = openfeature_client.fetch_string_value(
-      'feature-flag',
-      'off',
-      current_user_context
-    )
-
-    render json: { flag: flag }
-  end
-end
+# For scripts
+ruby your_script.rb
 ```
 
 <verification_checkpoint>

@@ -117,31 +117,24 @@ function initializeFeatureFlags() {
 
 // Initialize before your application starts
 initializeFeatureFlags();
+
+
+# Example usage (for reference only - do not implement yet)
+#use OpenFeature\OpenFeatureAPI;
+#use OpenFeature\Interfaces\Flags\EvaluationContext;
+
+#$client = OpenFeatureAPI::getInstance()->getClient();;
+#$user_context = new EvaluationContext(targetingKey: 'usedId');
+#$value = $client->getStringValue('variable-key', 'off', $user_context);
 ```
 
-### Step 3: Use in Your Application
 
-```php
-<?php
-use OpenFeature\OpenFeatureAPI;
-use OpenFeature\Interfaces\Flags\EvaluationContext;
+### Step 3: Test Your Application
 
-// After initialization, use throughout your application
-
-// Helper to create user context for each request
-function createUserContext($userId) {
-    return new EvaluationContext(targetingKey: $userId ?: 'anonymous');
-}
-
-// Example usage 
-function handleRequest($userId) {
-    $client = OpenFeatureAPI::getInstance()->getClient();;
-    $context = createUserContext($userId);
-    
-    $flag = $client->getStringValue('feature-flag', 'off', $context);
-    
-    return ['flag' => $flag];
-}
+```bash
+# Start your PHP application
+php -S localhost:8000
+# or access via web server
 ```
 
 <verification_checkpoint>
