@@ -125,11 +125,11 @@ module OpenFeatureConfig
       raise 'DevCycle SDK key is not configured'
     end
 
-    # Create DevCycle provider
-    provider = DevCycleOpenFeatureProvider.new(sdk_key)
+    dvc_client = DevCycle::Client.new(sdk_key, DevCycle::Options.new)
 
-    # Set the provider
-    OpenFeature::API.set_provider(provider)
+    OpenFeature::SDK.configure do |config|
+      config.set_provider dvc_client.open_feature_provider
+    end
 
     Rails.logger.info 'OpenFeature with DevCycle initialized successfully'
   rescue => e
@@ -154,7 +154,7 @@ class ApplicationController < ActionController::Base
   end
 
   def current_user_context
-    OpenFeature::EvaluationContext.new(
+    OpenFeature::SDK::EvaluationContext.new(
       targeting_key: current_user&.id || 'anonymous',
       attributes: {
         email: current_user&.email,
@@ -168,7 +168,13 @@ end
 # Example route
 class HomeController < ApplicationController
   def index
-    render json: { message: 'Ruby app with OpenFeature and DevCycle!' }
+    speed = openfeature_client.fetch_string_value(
+      'togglebot-speed',
+      'off',
+      current_user_context
+    )
+
+    render json: { speed: speed }
   end
 end
 ```
