@@ -72,13 +72,13 @@ Before proceeding, verify using the DevCycle MCP that you have:
      </success_path>
 
 3. **If build configuration modification fails:**
-   <fallback_path>
-   **Temporary hardcoding for testing**
-   - Add the SDK key directly in code with clear TODO comments
-   - This is suitable for local testing only
-   - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+  <fallback_path>
+  **Temporary hardcoding for testing**
+  - Add the SDK key directly in code with clear TODO comments
+  - This is suitable for local testing only
+  - Provide the user guidance that they MUST replace this before committing or deploying
+  </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -109,7 +109,7 @@ Or using Maven:
 - [ ] Dependency added successfully (check build.gradle)
 - [ ] Gradle sync completed without errors
 - [ ] No dependency conflicts
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
@@ -149,7 +149,7 @@ class MyApplication : Application() {
 - [ ] SDK key is properly referenced
 - [ ] User object includes required fields
 - [ ] Application builds without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -166,7 +166,7 @@ class MyApplication : Application() {
 - [ ] No DevCycle-related runtime errors
 - [ ] Logcat shows successful initialization
 - [ ] Application runs normally on device/emulator
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -199,7 +199,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Logcat shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -258,9 +258,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

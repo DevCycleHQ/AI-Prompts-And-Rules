@@ -54,7 +54,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 2. **Decide where to store the key** in your app. For development, you may inline it as a variable. For production, store it securely according to your project’s practices. Avoid exposing it in public repositories.
 
 3. **Pass the key into the SDK initialization** as shown in the initialization step below.
-   </decision_tree>
+</decision_tree>
 
 ## Installation Steps
 
@@ -70,7 +70,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 - [ ] SDK files extracted into your project source tree
 - [ ] Files are properly included in channel structure
 - [ ] No file naming conflicts
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
@@ -119,7 +119,7 @@ end sub
 - [ ] SDK key is properly referenced
 - [ ] User object uses `user_id` when identifying a known user
 - [ ] Channel compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Channel
 
@@ -136,7 +136,7 @@ curl -d '' 'http://[roku-ip]:8060/keypress/Home'
 - [ ] No DevCycle-related runtime errors
 - [ ] Debug output shows successful initialization
 - [ ] Channel functions normally on Roku device
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -173,7 +173,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Channel deploys and runs without errors
 - ✅ Debug output shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -233,9 +233,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

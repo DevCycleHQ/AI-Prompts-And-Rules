@@ -54,7 +54,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - If blocked → Go to step 3 (fallback options)
 
 2. **If configuration file modification succeeds:**
-   <success_path>
+  <success_path>
 
    ```json
    {
@@ -72,16 +72,16 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
    - Verify the key is not committed to version control
    - Ensure your app can read the configuration
-     </success_path>
+  </success_path>
 
 3. **If configuration file modification fails:**
-   <fallback_path>
+  <fallback_path>
    **Temporary hardcoding for testing**
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+  </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -107,7 +107,7 @@ dotnet add package DevCycle.SDK.Server.Local
 - [ ] Package installed successfully
 - [ ] Package references updated in .csproj
 - [ ] No dependency conflicts
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
@@ -145,7 +145,7 @@ public class Program
 - [ ] SDK key is properly referenced
 - [ ] No initialization errors
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -165,7 +165,7 @@ dotnet run --project YourProject.csproj
 - [ ] No DevCycle-related errors
 - [ ] Console shows successful initialization
 - [ ] Application runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -198,7 +198,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -256,9 +256,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

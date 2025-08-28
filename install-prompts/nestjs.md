@@ -64,7 +64,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Verify the file is in .gitignore
    - Ensure NestJS ConfigModule can read the variable
    - Test that `process.env.DEVCYCLE_SERVER_SDK_KEY` is accessible
-     </success_path>
+   </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
@@ -72,8 +72,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -96,7 +96,7 @@ pnpm add @devcycle/nestjs-server-sdk
 - [ ] Package installed successfully (check package.json)
 - [ ] No peer dependency warnings
 - [ ] Node modules updated
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Register DevCycleModule in App Module
 
@@ -187,7 +187,7 @@ export class AppModule {}
 - [ ] `@devcycle/nestjs-server-sdk` is installed
 - [ ] App module imports `DevCycleModule`
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 4: Test Your Application
 
@@ -205,7 +205,7 @@ yarn start:dev
 - [ ] No DevCycle-related errors
 - [ ] Logs indicate DevCycle initialized
 - [ ] NestJS server runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -227,7 +227,6 @@ yarn start:dev
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
-
 ## Installation Success Criteria
 
 Installation is complete when ALL of the following are true:
@@ -238,7 +237,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application starts and runs without errors
 - ✅ Logs show successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -297,9 +296,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

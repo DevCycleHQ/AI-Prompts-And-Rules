@@ -54,7 +54,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - If blocked → Go to step 3 (fallback options)
 
 2. **If environment file modification succeeds:**
-   <success_path>
+  <success_path>
 
    ```typescript
    // src/environments/environment.ts
@@ -67,16 +67,16 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Verify the key is not committed to version control in production
    - Ensure Angular can access the environment variable
    - Test that `environment.DEVCYCLE_CLIENT_SDK_KEY` is accessible
-     </success_path>
+  </success_path>
 
 3. **If environment file modification fails:**
-   <fallback_path>
+  <fallback_path>
    **Temporary hardcoding for testing**
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+  </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -99,7 +99,7 @@ pnpm add @openfeature/angular-sdk @devcycle/openfeature-angular-provider
 - [ ] Packages installed successfully (check package.json)
 - [ ] No peer dependency warnings
 - [ ] Node modules updated
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Configure OpenFeature in App Module
 
@@ -147,7 +147,7 @@ Note: Import from `@openfeature/angular-sdk` directly. Avoid importing from `@op
 - [ ] SDK key is properly referenced
 - [ ] OpenFeature context includes `targetingKey` or `user_id`
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -163,7 +163,7 @@ ng serve
 - [ ] No DevCycle-related runtime errors
 - [ ] Browser console shows successful initialization
 - [ ] Application runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -197,7 +197,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -255,9 +255,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

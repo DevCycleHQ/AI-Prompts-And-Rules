@@ -65,7 +65,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
    - Verify the key is not committed to version control in production
    - Ensure your bundler can access the configuration
-     </success_path>
+   </success_path>
 
 3. **If using plain HTML (CDN approach):**
    <fallback_path>
@@ -73,8 +73,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in script with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -105,7 +105,7 @@ yarn add @devcycle/js-client-sdk
 - [ ] Package installed successfully (npm) OR script tag added (CDN)
 - [ ] No dependency conflicts
 - [ ] Build system updated (if applicable)
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
@@ -148,7 +148,7 @@ const dvcClient = initializeDevCycle(DEVCYCLE_CLIENT_SDK_KEY, user);
 - [ ] SDK key is properly referenced
 - [ ] User object includes required fields
 - [ ] No console errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -161,7 +161,7 @@ Load your application in a web browser and check the browser console:
 - [ ] No DevCycle-related errors in console
 - [ ] Console shows successful initialization
 - [ ] Application functions normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -194,7 +194,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application loads and runs without errors
 - ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -252,9 +252,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

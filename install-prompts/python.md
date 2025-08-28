@@ -64,7 +64,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Verify the file is in .gitignore
    - Ensure your app can read environment variables
    - Test that `os.environ.get("DEVCYCLE_SERVER_SDK_KEY")` is accessible
-     </success_path>
+   </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
@@ -72,8 +72,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -97,7 +97,7 @@ pip install -r requirements.txt
 - [ ] Package installed successfully
 - [ ] No dependency conflicts
 - [ ] Virtual environment activated (if used)
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
@@ -125,7 +125,7 @@ dvc_client = DevCycleLocalClient(sdk_key, options)
 - [ ] SDK key is properly referenced
 - [ ] No initialization errors
 - [ ] Application starts without issues
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -143,7 +143,7 @@ python manage.py runserver
 - [ ] No DevCycle-related errors
 - [ ] Console shows successful initialization
 - [ ] Server runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -176,7 +176,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application starts and runs without errors
 - ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -234,9 +234,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

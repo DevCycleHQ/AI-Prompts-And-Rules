@@ -75,7 +75,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
    - Verify the key is not committed to version control
    - Ensure the app can access the configuration
-     </success_path>
+   </success_path>
 
 3. **If configuration file modification fails:**
    <fallback_path>
@@ -83,8 +83,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -111,7 +111,7 @@ Then run: `pod install`
 - [ ] Package added successfully
 - [ ] Xcode builds without dependency errors
 - [ ] Framework is linked properly
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Client
 
@@ -151,7 +151,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 - [ ] SDK key is properly referenced
 - [ ] User object includes required fields
 - [ ] Application builds without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -169,7 +169,7 @@ xcodebuild -workspace YourApp.xcworkspace -scheme YourApp -destination 'platform
 - [ ] No DevCycle-related runtime errors
 - [ ] Console shows successful initialization
 - [ ] Application runs normally on device/simulator
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -202,7 +202,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -260,9 +260,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

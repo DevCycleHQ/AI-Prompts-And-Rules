@@ -67,7 +67,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Verify the file is in .gitignore
    - Ensure your build tool can read the variable (e.g., CRA: `REACT_APP_`, Vite: `VITE_`)
    - Test that your env var is accessible in code (e.g., `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` for CRA, `import.meta.env.VITE_DEVCYCLE_CLIENT_SDK_KEY` for Vite)
-     </success_path>
+   </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
@@ -75,8 +75,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -99,7 +99,7 @@ pnpm add @openfeature/react-sdk @devcycle/openfeature-web-provider
 - [ ] Both packages installed successfully
 - [ ] No peer dependency conflicts
 - [ ] package.json updated with both dependencies
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
 
@@ -137,7 +137,7 @@ export { setupOpenFeature };
 - [ ] SDK key properly referenced
 - [ ] User context structure is correct
 - [ ] No import errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Integrate with Your React App
 
@@ -190,7 +190,7 @@ export default App;
 - [ ] Initialization happens before rendering
 - [ ] Loading state is handled
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 <success_criteria>
 
@@ -205,7 +205,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application runs (using npm start or similar) without OpenFeature/DevCycle errors
 - ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -291,9 +291,9 @@ Installation is complete when ALL of the following are true:
 
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:
