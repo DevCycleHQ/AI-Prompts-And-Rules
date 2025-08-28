@@ -68,7 +68,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Verify the file is in .gitignore
    - Ensure your build tool can read the variable (e.g., CRA: `REACT_APP_`, Vite: `VITE_`)
    - Test that your env var is accessible in code (e.g., `process.env.REACT_APP_DEVCYCLE_CLIENT_SDK_KEY` for CRA, `import.meta.env.VITE_DEVCYCLE_CLIENT_SDK_KEY` for Vite)
-     </success_path>
+   </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
@@ -76,8 +76,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -100,7 +100,7 @@ pnpm add @devcycle/react-client-sdk
 - [ ] Package installed successfully (check package.json)
 - [ ] No peer dependency warnings
 - [ ] Node modules updated
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Initialize DevCycle Provider
 
@@ -136,7 +136,7 @@ export default AppWithDevCycle;
 - [ ] SDK key is properly referenced
 - [ ] User object includes required fields
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -154,7 +154,7 @@ yarn start
 - [ ] No DevCycle-related runtime errors
 - [ ] Browser console shows successful initialization
 - [ ] Application runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -188,7 +188,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -259,9 +259,9 @@ On React 17, some setups may fail to resolve `react/jsx-runtime` correctly.
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:

@@ -82,7 +82,7 @@ If you are using the App Router, ensure these minimum versions and settings:
    - Verify the file is in .gitignore
    - Ensure Next.js can read both variables
    - Test that environment variables are accessible
-     </success_path>
+   </success_path>
 
 3. **If environment file creation fails:**
    <fallback_path>
@@ -90,8 +90,8 @@ If you are using the App Router, ensure these minimum versions and settings:
    - Add the SDK keys directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -114,7 +114,7 @@ pnpm add @devcycle/nextjs-sdk
 - [ ] Package installed successfully (check package.json)
 - [ ] No peer dependency warnings
 - [ ] Node modules updated
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 2: Create DevCycle Context and Provider (App Router)
 
@@ -169,7 +169,7 @@ For Pages Router usage, refer to the official Pages Router guide: [Next.js Usage
 - [ ] Server SDK key used only on server; client SDK key used in client context
 - [ ] `app/devcycle.ts` exports `getClientContext` (and `getVariableValue` for server use)
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### Step 3: Test Your Application
 
@@ -187,7 +187,7 @@ yarn dev
 - [ ] No DevCycle-related runtime errors
 - [ ] Browser console shows successful initialization
 - [ ] Application runs normally
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ## 🎉 Installation Complete!
 
@@ -210,7 +210,6 @@ yarn dev
 **Wait for explicit user instruction** before implementing any feature flag usage.
 
 <success_criteria>
-
 ## Installation Success Criteria
 
 Installation is complete when ALL of the following are true:
@@ -221,7 +220,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Browser console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -279,9 +278,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively

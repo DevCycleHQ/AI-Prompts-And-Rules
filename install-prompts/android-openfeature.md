@@ -78,13 +78,13 @@ Before proceeding, verify using the DevCycle MCP that you have:
      </success_path>
 
 3. **If configuration fails:**
-   <fallback_path>
-   **Temporary hardcoding for testing**
-   - Add the SDK key directly in code with clear TODO comments
-   - This is suitable for local testing only
-   - Provide the user guidance that they MUST replace this before building for production
-     </fallback_path>
-     </decision_tree>
+    <fallback_path>
+    **Temporary hardcoding for testing**
+    - Add the SDK key directly in code with clear TODO comments
+    - This is suitable for local testing only
+    - Provide the user guidance that they MUST replace this before building for production
+    </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
 - [ ] DevCycle provider initialized in Application class
 - [ ] App builds and runs without errors
 - [ ] Log shows successful initialization
-      </verification_checkpoint>
+</verification_checkpoint>
 
 <success_criteria>
 
@@ -202,7 +202,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Log shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -262,9 +262,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 Suggest these as next steps to the user, be as concise as possible.
 
 After successful installation:

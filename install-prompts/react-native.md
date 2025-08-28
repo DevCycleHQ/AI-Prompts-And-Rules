@@ -71,7 +71,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Verify the file is in .gitignore
    - Ensure react-native-config can read the variable
    - Test that `Config.DEVCYCLE_MOBILE_SDK_KEY` is accessible
-     </success_path>
+   </success_path>
 
 3. **If configuration file creation fails:**
    <fallback_path>
@@ -79,8 +79,8 @@ Before proceeding, verify using the DevCycle MCP that you have:
    - Add the SDK key directly in code with clear TODO comments
    - This is suitable for local testing only
    - Provide the user guidance that they MUST replace this before committing or deploying
-     </fallback_path>
-     </decision_tree>
+   </fallback_path>
+</decision_tree>
 
 ## Installation Steps
 
@@ -108,7 +108,7 @@ npx pod-install
 - [ ] Required dependencies installed: AsyncStorage, get-random-values, device-info, sse
 - [ ] iOS pods installed (for iOS projects)
 - [ ] No peer dependency warnings
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### (Optional) Expo Installation
 
@@ -163,7 +163,7 @@ export default withDevCycleProvider({ sdkKey: "<DEVCYCLE_CLIENT_SDK_KEY>" })(
 - [ ] SDK key is properly referenced
 - [ ] Required imports added and `global.DeviceInfo = DeviceInfo` is set
 - [ ] Application compiles without errors
-      </verification_checkpoint>
+</verification_checkpoint>
 
 #### Optional: Blocking initialization
 
@@ -211,7 +211,7 @@ npx react-native run-android
 - [ ] No DevCycle-related runtime errors
 - [ ] Console/logs show successful initialization
 - [ ] Application runs normally on device/simulator
-      </verification_checkpoint>
+</verification_checkpoint>
 
 ### React Native Web
 
@@ -271,7 +271,7 @@ Installation is complete when ALL of the following are true:
 - ✅ Application builds and runs without errors
 - ✅ Console shows successful initialization
 - ✅ User has been informed about next steps (no flags created yet)
-  </success_criteria>
+</success_criteria>
 
 <examples>
 ## Common Installation Scenarios
@@ -341,9 +341,9 @@ Installation is complete when ALL of the following are true:
 </error>
 </troubleshooting>
 
+<next_steps>
 ## Next Steps
 
-<next_steps>
 After successful installation:
 
 1. **Wait for user guidance** before creating any feature flags or DevCycle Variables - do not create them proactively
