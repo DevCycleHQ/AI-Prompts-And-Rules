@@ -94,7 +94,7 @@ Add to your Gemfile:
 
 ```ruby
 gem 'openfeature-sdk'
-gem 'devcycle-openfeature-ruby-provider'
+gem 'devcycle-ruby-server-sdk'
 ```
 
 Then run:
@@ -109,7 +109,7 @@ For Rails, create initializer (`config/initializers/openfeature.rb`):
 
 ```ruby
 require 'open_feature/sdk'
-require 'devcycle_openfeature_provider'
+require 'devcycle-ruby-server-sdk'
 
 module OpenFeatureConfig
   def self.initialize!
