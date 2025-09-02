@@ -80,11 +80,11 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle SDK
 
 ```bash
 go get github.com/open-feature/go-sdk
-go get github.com/devcyclehq/go-openfeature-provider
+go get github.com/devcyclehq/go-server-sdk/v2
 ```
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
@@ -98,23 +98,44 @@ import (
     "os"
 
     "github.com/open-feature/go-sdk/openfeature"
-    "github.com/devcyclehq/go-openfeature-provider/pkg/provider"
+    devcycle "github.com/devcyclehq/go-server-sdk/v2"
 )
 
-func initializeFeatureFlags() error {
-    sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
-    if sdkKey == "" {
-        return fmt.Errorf("DevCycle SDK key is not configured")
+var devcycleClient *devcycle.Client
+var openFeatureClient *openfeature.Client
+
+func getDevCycleClient() *devcycle.Client {
+	if devcycleClient == nil {
+		sdkKey := os.Getenv("DEVCYCLE_SERVER_SDK_KEY")
+		if sdkKey == "" {
+			log.Fatal("DevCycle SDK key is not configured")
+		}
+		options := devcycle.Options{}
+		var err error
+		devcycleClient, err = devcycle.NewClient(sdkKey, &options)
+		if err != nil {
+			log.Fatalf("Error initializing DevCycle client: %v", err)
+		}
+		log.Println("DevCycle client initialized successfully")
+	}
+	return devcycleClient
+}
+
+func getOpenFeatureClient() *openfeature.Client {
+	if openFeatureClient == nil {
+		openFeatureClient = initializeOpenFeature()
+	}
+	return openFeatureClient
+}
+
+func initializeOpenFeature() *openfeature.Client {
+    client := getDevCycleClient()
+    if err := openfeature.SetProvider(client.OpenFeatureProvider()); err != nil {
+        log.Fatalf("Failed to set DevCycle provider: %v", err)
     }
-
-    // Create DevCycle provider
-    devCycleProvider := provider.NewDevCycleProvider(sdkKey)
-
-    // Set the provider
-    openfeature.SetProvider(devCycleProvider)
-
+    ofClient := openfeature.NewClient("devcycle")
     log.Println("OpenFeature with DevCycle initialized successfully")
-    return nil
+    return ofClient
 }
 ```
 
@@ -125,6 +146,7 @@ package main
 
 import (
     "fmt"
+    "context"
     "log"
     "net/http"
 
@@ -133,9 +155,7 @@ import (
 
 func main() {
     // Initialize OpenFeature
-    if err := initializeFeatureFlags(); err != nil {
-        log.Fatal(err)
-    }
+    getOpenFeatureClient()
 
     http.HandleFunc("/", homeHandler)
     log.Println("Server starting on :8080")
@@ -143,7 +163,7 @@ func main() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-    client := openfeature.NewClient("my-app")
+    client := getOpenFeatureClient()
 
     // Create evaluation context for the user
     evalCtx := openfeature.NewEvaluationContext(
@@ -154,10 +174,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
         },
     )
 
-    _ = evalCtx
-
-    fmt.Fprintf(w, "Go server with OpenFeature and DevCycle!")
-}
+    // Example usage - don't implement unless requested
+    // boolValue, err := client.BooleanValue(context.Background(), "variable-key", false, evalCtx)
 ```
 
 <verification_checkpoint>
