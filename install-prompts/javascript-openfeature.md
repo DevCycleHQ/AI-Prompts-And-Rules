@@ -74,7 +74,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Install OpenFeature SDK and DevCycle SDK
+### Step 1: Install OpenFeature SDK and DevCycle Provider
 
 ```bash
 # Using npm
