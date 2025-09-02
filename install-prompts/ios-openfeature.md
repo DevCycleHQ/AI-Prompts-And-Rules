@@ -83,7 +83,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Add OpenFeature SDK and DevCycle Provider
+### Step 1: Add OpenFeature SDK and DevCycle SDK
 
 #### Swift Package Manager
 

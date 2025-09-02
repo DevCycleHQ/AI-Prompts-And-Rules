@@ -87,7 +87,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle SDK
 
 Add to your Gemfile:
 
