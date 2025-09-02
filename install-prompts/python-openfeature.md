@@ -79,7 +79,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ```bash
 # Using pip
-pip install openfeature-sdk  devcycle-python-server-sdk
+pip install openfeature-sdk devcycle-python-server-sdk
 
 # Using poetry
 poetry add openfeature-sdk devcycle-openfeature-provider
