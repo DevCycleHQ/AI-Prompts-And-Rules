@@ -75,11 +75,11 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle SDK
 
 ```bash
 # Using pip
-pip install openfeature-sdk devcycle-openfeature-provider
+pip install openfeature-sdk devcycle-python-server-sdk
 
 # Using poetry
 poetry add openfeature-sdk devcycle-openfeature-provider
@@ -90,7 +90,7 @@ poetry add openfeature-sdk devcycle-openfeature-provider
 ```python
 import os
 from openfeature import api
-from devcycle_openfeature_provider import DevCycleProvider
+from devcycle_python_sdk import DevCycleLocalClient, DevCycleLocalOptions
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -103,10 +103,12 @@ def initialize_feature_flags():
     if not sdk_key or sdk_key == 'your_server_sdk_key_here':
         raise ValueError("DevCycle SDK key is not configured")
 
-    # Create and set the DevCycle provider
-    provider = DevCycleProvider(sdk_key)
-    api.set_provider(provider)
+    options = DevCycleLocalOptions()
+    devcycle_client = DevCycleLocalClient(sdk_key, options)
+    api.set_provider(devcycle_client.get_openfeature_provider())
 
+    # get the OpenFeature client
+    open_feature_client = api.get_client()
     print("OpenFeature with DevCycle initialized successfully")
 
 # Initialize before starting your application

@@ -75,24 +75,24 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
 ## Installation Steps
 
-### Step 1: Install OpenFeature SDK and DevCycle Provider
+### Step 1: Install OpenFeature SDK and DevCycle SDK
 
 ```bash
 # Using npm
-npm install --save @openfeature/server-sdk @devcycle/openfeature-nodejs-provider
+npm install --save @openfeature/server-sdk @devcycle/nodejs-server-sdk
 
 # Using yarn
-yarn add @openfeature/server-sdk @devcycle/openfeature-nodejs-provider
+yarn add @openfeature/server-sdk @devcycle/nodejs-server-sdk
 
 # Using pnpm
-pnpm add @openfeature/server-sdk @devcycle/openfeature-nodejs-provider
+pnpm add @openfeature/server-sdk @devcycle/nodejs-server-sdk
 ```
 
 ### Step 2: Initialize OpenFeature with DevCycle Provider
 
 ```javascript
-const { OpenFeature } = require("@openfeature/server-sdk");
-const { DevCycleProvider } = require("@devcycle/openfeature-nodejs-provider");
+const { OpenFeature, Client} = require("@openfeature/server-sdk");
+const { DevCycleProvider } = require("@devcycle/nodejs-server-sdk");
 
 async function initializeFeatureFlags() {
   // Create the DevCycle provider
@@ -103,7 +103,10 @@ async function initializeFeatureFlags() {
   // Set the provider
   await OpenFeature.setProviderAndWait(devCycleProvider);
 
-  console.log("OpenFeature with DevCycle initialized successfully");
+  console.log("OpenFeature with DevCycle initialized successfully"); 
+  openFeatureClient = OpenFeature.getClient();
+
+  return { devcycleProvider, openFeatureClient };
 }
 
 // Initialize before starting your server
