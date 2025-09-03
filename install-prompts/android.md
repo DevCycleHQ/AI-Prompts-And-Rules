@@ -117,7 +117,7 @@ Create or update your Application class or MainActivity:
 
 ```kotlin
 // Kotlin
-import com.devcycle.sdk.android.DevCycleClient
+import com.devcycle.sdk.android.api.DevCycleClient
 import com.devcycle.sdk.android.model.DevCycleUser
 
 class MyApplication : Application() {
