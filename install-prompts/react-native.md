@@ -34,12 +34,12 @@ If you detect an incompatible application, stop immediately and advise on the co
 Before proceeding, verify using the DevCycle MCP that you have:
 
 - [ ] A DevCycle account and project set up
-- [ ] A Development environment **Mobile SDK Key** (starts with `dvc_mobile_`)
+- [ ] A Development environment **Client SDK Key** (starts with `dvc_client_`)
 - [ ] React Native 0.64+ installed
 - [ ] iOS 12+ and/or Android API 21+ target platforms
 - [ ] The most recent DevCycle React Native SDK version available
 
-**Security Note:** Use a MOBILE SDK key for React Native apps, not a client or server SDK key. Store it securely using environment variables or secure storage solutions.
+**Security Note:** Use a CLIENT SDK key for React Native apps, not a server SDK key. Store it securely using environment variables or secure storage solutions.
 </prerequisites>
 
 ## SDK Key Configuration
@@ -59,7 +59,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
    ```bash
    # .env
-   DEVCYCLE_MOBILE_SDK_KEY=your_mobile_sdk_key_here
+   DEVCYCLE_CLIENT_SDK_KEY=your_client_sdk_key_here
    ```
 
    Then install react-native-config:
@@ -70,7 +70,7 @@ Before proceeding, verify using the DevCycle MCP that you have:
 
    - Verify the file is in .gitignore
    - Ensure react-native-config can read the variable
-   - Test that `Config.DEVCYCLE_MOBILE_SDK_KEY` is accessible
+   - Test that `Config.DEVCYCLE_CLIENT_SDK_KEY` is accessible
    </success_path>
 
 3. **If configuration file creation fails:**
@@ -279,7 +279,7 @@ Installation is complete when ALL of the following are true:
 <example scenario="expo_managed">
 **Scenario:** Expo managed workflow, npm, full file access
 **Actions taken:**
-1. ✅ Created .env with mobile SDK key
+1. ✅ Created .env with client SDK key
 2. ✅ Installed DevCycle React Native Expo SDK
    - `npx expo install @devcycle/react-native-expo-client-sdk`
    - `npx expo install @react-native-async-storage/async-storage react-native-get-random-values react-native-device-info react-native-sse`
@@ -311,7 +311,7 @@ Installation is complete when ALL of the following are true:
 </diagnosis>
 <solution>
 - Ensure withDevCycleProvider wraps the app's root component
-- Verify mobile SDK key (starts with dvc_mobile_)
+- Verify client SDK key (starts with dvc_client_)
 - User must have user_id or isAnonymous: true
 </solution>
 </error>
